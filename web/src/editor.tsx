@@ -1,7 +1,7 @@
 import { render } from "preact";
 import { useMemo, useState } from "preact/hooks";
 import { t, type Language } from "./i18n";
-import { previewReferences } from "./reference";
+import { previewReferences, validatePlan } from "./reference";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot } from "./types";
 import "./style.css";
 
@@ -45,9 +45,14 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
     link.href = url; link.download = `${plan.project.id || "theodore_project"}.director.json`; link.click();
     URL.revokeObjectURL(url);
   };
+  const savePlan = () => {
+    const errors = validatePlan(plan);
+    if (errors.length) { window.alert(`计划未通过校验：\n\n${errors.join("\n")}`); return; }
+    onSave(plan);
+  };
 
   return <div class="td-shell">
-    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { setPlan(JSON.parse(await file.text()) as DirectorPlan); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={() => onSave(plan)}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
+    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(imported as DirectorPlan); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
     <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">

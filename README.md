@@ -1,24 +1,124 @@
 # ComfyUI Theodore Director
 
-Theodore Director is a model-agnostic storyboard and media-planning extension
-for ComfyUI. It ships with a MiniMax H3 adapter and Impact-driven single- and
-dual-sampling V6 workflow templates.
+一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带已经融合好的 Impact V6 单采、双采工作流。
 
-> Development status: pre-release. Public node IDs and the project schema are
-> being implemented against ComfyUI 0.31.0 and `comfy_api.v0_0_2`.
+Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. Ready-to-import Impact V6 single- and dual-sampling workflows are included.
 
-## Design guarantees
+## 它解决什么问题
 
-- Impact Pack remains the only queue scheduler.
-- Project media libraries may contain more assets than a model can consume.
-- The H3 adapter activates assets by semantic aliases and compiles deterministic
-  `<Picture N>`, `<Video N>`, and `<Audio N>` labels.
-- H3 execution is limited to 9 pictures, 3 videos, 3 total active audio
-  references, and 12 mixed input files.
-- Plans are embedded in workflows and can also be imported/exported.
-- Run manifests are committed only after video, tail frame, and required latent
-  outputs are complete.
+- 一个项目可以管理超过 9 张图片、3 个视频或 3 路音频；每个分镜只按别名激活本轮所需素材。
+- 提示词写 `{{ref:角色正面}}`，执行时才稳定编译成 `<Picture 1>`、`<Video 1>` 或 `<Audio 1>`。
+- 每个分镜独立设置最终成片时长；H3 适配器负责 `17n+5` 帧网格与跨段上下文补偿。
+- 视频、尾帧和必要的 AV latent 全部存在并写入结果清单后，才允许 Impact 推进队列。
+- 计划直接嵌入工作流，同时支持 JSON 导入导出；换机时不会丢失导播配置。
 
-English and Chinese user documentation will be completed before the first
-release.
+规划与 JSON 校验只带来毫秒级 CPU 开销，不介入采样器。实际新增开销来自本轮被激活的参考视频/音频解码；未被当前分镜引用的素材不会加载。Impact Pack 仍是唯一的队列调度器。
 
+## 安装
+
+要求 ComfyUI `0.31.x` 或兼容 `comfy_api.v0_0_2` 的版本，Python 3.10+。
+
+```bash
+cd ComfyUI/custom_nodes
+git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
+```
+
+重启 ComfyUI。仓库已提交构建后的 `web/dist`，普通用户不需要安装 Node.js 或运行前端构建。
+
+然后任选一个成品工作流导入：
+
+- [Impact V6 单采 Theodore Director](workflows/Impact_V6_Single_Theodore_Director.json)
+- [Impact V6 双采 Theodore Director](workflows/Impact_V6_Dual_Theodore_Director.json)
+
+工作流本身还需要下表中的第三方节点。模型文件名和放置位置沿用原 V6 工作流。
+
+| 依赖 | 单采 | 双采 | 用途 |
+|---|---:|---:|---|
+| ComfyUI Impact Pack | ✓ | ✓ | 队列触发与控件写回 |
+| ComfyUI MiniMax H3 Turbo | ✓ | ✓ | H3 Turbo 采样/LoRA |
+| ComfyUI H3 Motion Context | ✓ | ✓ | 跨分镜 AV latent 连续性 |
+| ComfyUI-KJNodes | ✓ | ✓ | 加速与尾帧保存 |
+| ComfyUI-Easy-Use | ✓ | ✓ | 尾帧索引 |
+| NVIDIA RTX Video Nodes | — | ✓ | 双采工作流的中间增强 |
+
+## 快速使用
+
+1. 双击绿色区域内的 `Theodore Director Project`，点击“打开 Theodore 导播台”。
+2. 在“素材库”添加参考图、参考视频或音频。可以直接上传，文件会复制到 `ComfyUI/input/theodore_director/<project-id>/`；也可以填写 input 目录相对路径。
+3. 给素材设置唯一别名，例如 `hero_front`、`location_night`、`walk_cycle`。
+4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
+5. 设置每个分镜的时长和启用状态，保存到工作流，然后正常 Queue。
+
+固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
+
+## H3 严格限制
+
+本项目依据 [MiniMax H3 官方仓库文档](https://modelscope.cn/models/MiniMax/MiniMax-H3/files) 采用保守且可预测的执行规则：
+
+| 类型 | 单分镜上限 | 时长规则 |
+|---|---:|---|
+| 参考图 | 9 | — |
+| 参考视频 | 3 | 每个 2–15 秒，总计不超过 15 秒 |
+| 有效音频 | 3 路总计 | 每路 2–15 秒，总计不超过 15 秒 |
+| 混合输入文件 | 12 | 视频伴音不重复计文件 |
+
+“有效音频 3 路”包含显式启用的视频伴音和独立音频两者之和。独立音频不能作为唯一参考，必须同时有图片或视频。视频文件只有在“启用视频伴音”被勾选时才占用 Audio 槽位。
+
+详细规则见 [H3 适配与别名规范](docs/H3_ADAPTER.zh-CN.md)。
+
+## 执行流程
+
+```text
+可视化导播计划
+  → Project：冻结并哈希计划
+  → Impact 当前索引
+  → SelectShot：跳过禁用分镜、续跑检查、计算 seed
+  → H3Adapter：解析别名、校验上限、只加载当前素材、编译标签与时长
+  → 原 V6 H3 条件编码与单采/双采核心
+  → Motion Context：首段直通，后续段载入并裁切 AV latent
+  → SaveVideo + SaveLatent + SaveTail
+  → CommitResult：原子写入结果和总清单
+  → ImpactSetWidgetValue + ImpactQueueTrigger（有下一段时）
+```
+
+续跑模式会从当前 Impact 索引向后检查结果清单。只有计划哈希、分镜哈希和实际文件全部匹配，才视为已完成；修改提示词、素材或连续性配置会令对应旧结果失效。
+
+输出默认位于：
+
+```text
+ComfyUI/output/TheodoreDirector/<project>/<run>/
+  segments/
+  latent_context/
+  tail_frames/
+  results/
+  manifest.json
+```
+
+## 节点分层
+
+- `TheodoreDirector_Project`：通用计划入口及可视化编辑器。
+- `TheodoreDirector_SelectShot`：Impact 队列索引、禁用分镜、seed 与续跑策略。
+- `TheodoreDirector_H3Adapter`：H3 独有的媒体上限、槽位和提示词编译。
+- `TheodoreDirector_OutputPaths`：稳定的运行目录与文件前缀。
+- `TheodoreDirector_CommitResult`：完成态事务边界，之后才触发下一队列项。
+- `TheodoreDirector_LegacyImport`：导入旧版 `===` 分段、`& 时长 &` 脚本。
+
+架构与协议说明见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+
+## 开发与验证
+
+Python 核心不依赖 GPU；在安装有 ComfyUI 的 Python 环境中运行：
+
+```bash
+python -m pytest -q
+npm install
+npm run check
+npm test
+npm run build
+```
+
+成品工作流由 [build_v6_workflows.py](tools/build_v6_workflows.py) 从原始 V6 机械转换，并接受链接完整性、关键来源、节点 Schema 及单/双采拓扑测试。项目当前只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
+
+## License
+
+代码与本仓库工作流采用 [Apache License 2.0](LICENSE)。模型、ComfyUI 与第三方自定义节点仍遵循各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

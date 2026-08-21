@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { previewReferences } from "./reference";
+import { previewReferences, validatePlan } from "./reference";
 import type { DirectorPlan } from "./types";
 
 const plan: DirectorPlan = {
@@ -17,5 +17,10 @@ describe("H3 reference preview", () => {
     const result = previewReferences(plan, plan.shots[0]);
     expect(result.compiledPrompt).toBe("<Picture 1> follows <Video 1> with <Audio 1>");
     expect(result.errors).toEqual([]);
+  });
+  it("rejects duplicated aliases before saving", () => {
+    const duplicated = structuredClone(plan);
+    duplicated.assets[1].alias = "HERO";
+    expect(validatePlan(duplicated).some((error) => error.includes("别名"))).toBe(true);
   });
 });
