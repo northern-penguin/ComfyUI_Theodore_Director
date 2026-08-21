@@ -325,6 +325,12 @@ class TheodoreDirectorLegacyImport(io.ComfyNode):
 
 
 class TheodoreDirectorExtension(ComfyExtension):
+    async def on_load(self):
+        # 路由延迟注册，保证纯 Python 测试不依赖正在运行的 PromptServer。
+        from .server import register_routes
+
+        register_routes()
+
     async def get_node_list(self):
         return [
             TheodoreDirectorProject,
