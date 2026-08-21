@@ -206,7 +206,8 @@ class TheodoreDirectorOutputPaths(io.ComfyNode):
             outputs=[
                 PathsType.Output("paths", display_name="PATHS"),
                 io.String.Output("video_prefix"),
-                io.String.Output("latent_prefix"),
+                io.String.Output("latent_prefix", display_name="latent load directory"),
+                io.String.Output("latent_save_prefix"),
                 io.String.Output("tail_prefix"),
                 io.String.Output("manifest_path"),
                 io.String.Output("shot_result_path"),
@@ -220,6 +221,7 @@ class TheodoreDirectorOutputPaths(io.ComfyNode):
             paths,
             paths.video_prefix,
             paths.latent_prefix,
+            paths.latent_save_prefix,
             paths.tail_prefix,
             paths.manifest_path,
             paths.shot_result_path,

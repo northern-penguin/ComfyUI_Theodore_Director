@@ -37,6 +37,7 @@ def test_output_paths_are_relative_and_sanitized():
     paths = build_output_paths(plan, plan.active_shots[0], 0)
     assert paths.video_prefix.startswith("TheodoreDirector/")
     assert paths.video_prefix.endswith("001_shot_001")
+    assert paths.latent_save_prefix.endswith("latent_context/clip")
     assert ".." not in paths.video_prefix
 
 
@@ -44,4 +45,3 @@ def test_out_of_range_queue_index_fails():
     plan = load_plan(DEFAULT_PLAN)
     with pytest.raises(IndexError):
         select_shot(plan, 1)
-
