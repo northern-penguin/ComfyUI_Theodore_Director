@@ -1,0 +1,27 @@
+[project]
+name = "comfyui-theodore-director"
+version = "0.1.0"
+description = "A model-agnostic storyboard director for ComfyUI with a MiniMax H3 adapter"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "northern-penguin" }]
+keywords = ["comfyui", "minimax", "h3", "storyboard", "director"]
+
+[project.urls]
+Repository = "https://github.com/northern-penguin/ComfyUI_Theodore_Director"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.comfy]
+PublisherId = "northern-penguin"
+DisplayName = "Theodore Director"
+Icon = ""
+
