@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- 将每次运行收拢为 `output/TheodoreDirector/<project>_<run>/`，仅为 AV latent 和尾帧保留一层专用目录。
+- 修复 `SaveImageKJ` 只返回文件名时，`CommitResult` 从 output 根目录错误回读尾帧的问题。
+- 统一视频、尾帧、AV latent、结果清单和续跑校验所使用的保存路径。
+
 ## 0.1.0 - 2026-08-22
 
 - 发布版本化通用 Director Plan v1。

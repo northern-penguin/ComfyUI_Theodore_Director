@@ -86,13 +86,17 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 输出默认位于：
 
 ```text
-ComfyUI/output/TheodoreDirector/<project>/<run>/
-  segments/
+ComfyUI/output/TheodoreDirector/<project>_<run>/
+  001_<shot-id>_video_*.mp4
   latent_context/
+    clip_00001.safetensors
   tail_frames/
-  results/
+    001_<shot-id>_tail_*.png
+  001_<shot-id>_result.json
   manifest.json
 ```
+
+项目名与 Run ID 被拼成一个目录名；AV latent 和尾帧分别集中在一层 `latent_context/` 与 `tail_frames/` 目录，视频和结果清单直接位于项目目录。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
 
 ## 节点分层
 

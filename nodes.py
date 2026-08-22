@@ -13,7 +13,7 @@ from .theodore_director.duration import calculate_h3_frames
 from .theodore_director.legacy import import_legacy_script
 from .theodore_director.manifest import commit_shot_result
 from .theodore_director.media import load_audio, load_image, load_video
-from .theodore_director.paths import OutputPaths, build_output_paths
+from .theodore_director.paths import OutputPaths, build_output_paths, resolve_output_file
 from .theodore_director.references import resolve_references
 from .theodore_director.schema import DEFAULT_PLAN_JSON, Plan, load_plan
 from .theodore_director.selection import ShotSelection, select_shot
@@ -228,24 +228,6 @@ class TheodoreDirectorOutputPaths(io.ComfyNode):
         )
 
 
-def _resolve_output_file(root: Path, value: str, extensions: tuple[str, ...] = ()) -> Path:
-    candidate = Path(value)
-    if not candidate.is_absolute():
-        candidate = root / candidate
-    if candidate.is_file():
-        return candidate.resolve()
-    parent = candidate.parent
-    prefix = candidate.name
-    matches = sorted(
-        (path for path in parent.glob(f"{prefix}*") if path.is_file() and (not extensions or path.suffix.lower() in extensions)),
-        key=lambda path: path.stat().st_mtime_ns,
-        reverse=True,
-    )
-    if not matches:
-        raise FileNotFoundError(f"找不到已保存输出: {candidate}")
-    return matches[0].resolve()
-
-
 class TheodoreDirectorCommitResult(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -285,9 +267,28 @@ class TheodoreDirectorCommitResult(io.ComfyNode):
         import folder_paths
 
         root = Path(folder_paths.get_output_directory()).resolve()
-        video = _resolve_output_file(root, paths.video_prefix, (".mp4", ".webm", ".mov", ".mkv"))
-        tail = _resolve_output_file(root, tail_path or paths.tail_prefix, (".png", ".jpg", ".jpeg", ".webp"))
-        latent = _resolve_output_file(root, latent_path or paths.latent_prefix, (".safetensors",)) if latent_required else None
+        video = resolve_output_file(
+            root,
+            paths.video_prefix,
+            (".mp4", ".webm", ".mov", ".mkv"),
+            expected_prefix=paths.video_prefix,
+        )
+        tail = resolve_output_file(
+            root,
+            tail_path,
+            (".png", ".jpg", ".jpeg", ".webp"),
+            expected_prefix=paths.tail_prefix,
+        )
+        latent = (
+            resolve_output_file(
+                root,
+                latent_path,
+                (".safetensors",),
+                expected_prefix=paths.latent_save_prefix,
+            )
+            if latent_required
+            else None
+        )
         result = commit_shot_result(
             result_path=root / paths.shot_result_path,
             manifest_path=root / paths.manifest_path,
