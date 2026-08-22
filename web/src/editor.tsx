@@ -50,6 +50,27 @@ async function fetchGeneratedVideo(plan: DirectorPlan, shot: DirectorShot, activ
   return result;
 }
 
+async function writeClipboardText(value: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // 某些嵌入式浏览器虽然暴露 API，却会拒绝权限，继续使用兼容方案。
+    }
+  }
+  // 兼容未开放 Clipboard API 的本机浏览器环境。
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (!copied) throw new Error("浏览器拒绝写入剪贴板");
+}
+
 interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void }
 
 function Editor({ initial, onSave, onClose }: EditorProps) {
@@ -63,6 +84,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
   const [resultRevision, setResultRevision] = useState(0);
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideoResult>({ found: false });
   const [generatedLoading, setGeneratedLoading] = useState(false);
+  const [copiedAssetId, setCopiedAssetId] = useState("");
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
@@ -111,7 +133,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
           </div>
           <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>）</span><textarea rows={10} value={shot.prompt} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
           <label><span class="td-field-label">负面提示词 / Negative prompt</span><textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label>
-          <fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const filename = assetFileName(asset.path) || asset.alias; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><div class="td-shot-media-name" title={asset.path || asset.alias}>{filename}</div></div>; })}</fieldset>
+          <fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const filename = assetFileName(asset.path) || asset.alias; const reference = `{{ref:${asset.alias}}}`; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><button class={`td-shot-media-name ${copiedAssetId === asset.id ? "copied" : ""}`} title={`${filename}\n${language === "zh" ? "点击复制" : "Click to copy"} ${reference}`} onClick={async () => { try { await writeClipboardText(reference); setCopiedAssetId(asset.id); window.setTimeout(() => setCopiedAssetId((current) => current === asset.id ? "" : current), 1400); } catch (error) { window.alert(`${language === "zh" ? "复制失败" : "Copy failed"}: ${String(error)}`); } }}><span>{filename}</span>{copiedAssetId === asset.id && <em>{language === "zh" ? "已复制" : "Copied"}</em>}</button></div>; })}</fieldset>
         </section>}
         <aside class="td-preview">
           <details open={previewOpen} onToggle={(event) => setPreviewOpen(event.currentTarget.open)}>
