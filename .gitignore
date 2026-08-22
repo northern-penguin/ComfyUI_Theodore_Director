@@ -9,3 +9,5 @@ node_modules/
 *.egg-info/
 .idea/
 .vscode/
+# 本地前端媒体预览测试，不随节点发行包提交。
+/web/src/media.test.ts
