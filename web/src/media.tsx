@@ -4,15 +4,19 @@ import type { DirectorAsset } from "./types";
  * 将 ComfyUI input 目录相对路径转换成内置 /view 地址。
  * 预览只读取 input 内文件，绝对路径继续交给后端执行阶段处理。
  */
-export function assetViewUrl(path: string): string | null {
+export function comfyViewUrl(path: string, type: "input" | "output"): string | null {
   const normalized = path.trim().replace(/\\/g, "/").replace(/^\.\//, "");
   if (!normalized || normalized.startsWith("/") || /^[A-Za-z]:\//.test(normalized)) return null;
   const segments = normalized.split("/").filter(Boolean);
   const filename = segments.pop();
   if (!filename || segments.some((segment) => segment === "..")) return null;
-  const query = new URLSearchParams({ filename, type: "input" });
+  const query = new URLSearchParams({ filename, type });
   if (segments.length) query.set("subfolder", segments.join("/"));
   return `/view?${query.toString()}`;
+}
+
+export function assetViewUrl(path: string): string | null {
+  return comfyViewUrl(path, "input");
 }
 
 /** 返回适合显示在文件选择器旁的短文件名。 */

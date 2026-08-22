@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiohttp import web
 from pathlib import Path
 
+from .theodore_director.paths import find_generated_video
 from .theodore_director.uploads import allocate_upload_path
 
 _ROUTES_REGISTERED = False
@@ -24,6 +25,34 @@ def register_routes() -> None:
     @routes.get("/theodore-director/v1/health")
     async def health(_request):
         return web.json_response({"ok": True, "apiVersion": 1})
+
+    @routes.get("/theodore-director/v1/generated-video")
+    async def generated_video(request):
+        """只在 Theodore 的预期输出前缀中查询当前分镜视频。"""
+        query = request.rel_url.query
+        try:
+            active_index = int(query.get("activeIndex", "0"))
+            if active_index < 0 or active_index > 999_999:
+                raise ValueError("activeIndex 超出范围")
+            root = Path(folder_paths.get_output_directory()).resolve()
+            video = find_generated_video(
+                root=root,
+                project_name=query.get("projectName", ""),
+                run_id=query.get("runId", ""),
+                shot_id=query.get("shotId", ""),
+                active_index=active_index,
+            )
+            if video is None:
+                return web.json_response({"found": False})
+            stat = video.stat()
+            return web.json_response({
+                "found": True,
+                "path": video.relative_to(root).as_posix(),
+                "bytes": stat.st_size,
+                "modifiedAt": stat.st_mtime,
+            })
+        except (OSError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
 
     @routes.post("/theodore-director/v1/assets")
     async def upload_asset(request):

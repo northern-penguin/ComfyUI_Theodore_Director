@@ -9,6 +9,7 @@ import re
 from .schema import Plan, Shot
 
 _UNSAFE = re.compile(r"[^\w.-]+", re.UNICODE)
+VIDEO_EXTENSIONS = (".mp4", ".webm", ".mov", ".mkv")
 
 
 def slug(value: str, fallback: str) -> str:
@@ -27,10 +28,13 @@ class OutputPaths:
     shot_result_path: str
 
 
-def build_output_paths(plan: Plan, shot: Shot, active_index: int) -> OutputPaths:
-    project = slug(plan.project_name, "project")
-    run_id = slug(plan.run_id, "run")
-    shot_name = slug(shot.id, f"shot_{active_index + 1:03d}")
+def build_output_paths_from_values(project_name: str, run_id_value: str, shot_id: str, active_index: int) -> OutputPaths:
+    """用界面可提供的最小字段计算路径，保证预览查询与执行节点完全同源。"""
+    if active_index < 0:
+        raise ValueError("active_index 不得小于 0")
+    project = slug(project_name, "project")
+    run_id = slug(run_id_value, "run")
+    shot_name = slug(shot_id, f"shot_{active_index + 1:03d}")
     # 项目名与 Run ID 合并成一层运行目录；只有需要集中回读的 latent 和
     # 尾帧各自使用一层专用目录，不再按分镜继续创建更深目录。
     base = f"TheodoreDirector/{project}_{run_id}"
@@ -44,6 +48,30 @@ def build_output_paths(plan: Plan, shot: Shot, active_index: int) -> OutputPaths
         manifest_path=f"{base}/manifest.json",
         shot_result_path=f"{base}/{stem}_result.json",
     )
+
+
+def build_output_paths(plan: Plan, shot: Shot, active_index: int) -> OutputPaths:
+    return build_output_paths_from_values(plan.project_name, plan.run_id, shot.id, active_index)
+
+
+def find_generated_video(
+    root: Path,
+    project_name: str,
+    run_id: str,
+    shot_id: str,
+    active_index: int,
+) -> Path | None:
+    """在预期分镜前缀下查找最新视频；找不到时返回 None。"""
+    paths = build_output_paths_from_values(project_name, run_id, shot_id, active_index)
+    try:
+        return resolve_output_file(
+            root,
+            "",
+            VIDEO_EXTENSIONS,
+            expected_prefix=paths.video_prefix,
+        )
+    except FileNotFoundError:
+        return None
 
 
 def resolve_output_file(

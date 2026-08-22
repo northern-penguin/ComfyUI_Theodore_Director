@@ -1,7 +1,7 @@
 import { render } from "preact";
-import { useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { t, type Language } from "./i18n";
-import { assetFileName, MediaPreview } from "./media";
+import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { previewReferences, validatePlan } from "./reference";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot } from "./types";
 
@@ -29,6 +29,27 @@ async function uploadAsset(projectId: string, kind: AssetKind, file: File): Prom
   return result.path;
 }
 
+interface GeneratedVideoResult {
+  found: boolean;
+  path?: string;
+  bytes?: number;
+  modifiedAt?: number;
+  error?: string;
+}
+
+async function fetchGeneratedVideo(plan: DirectorPlan, shot: DirectorShot, activeIndex: number): Promise<GeneratedVideoResult> {
+  const query = new URLSearchParams({
+    projectName: plan.project.name,
+    runId: plan.project.runId,
+    shotId: shot.id,
+    activeIndex: String(activeIndex),
+  });
+  const response = await fetch(`/theodore-director/v1/generated-video?${query.toString()}`);
+  const result = await response.json() as GeneratedVideoResult;
+  if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+  return result;
+}
+
 interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void }
 
 function Editor({ initial, onSave, onClose }: EditorProps) {
@@ -37,8 +58,15 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
   const [selected, setSelected] = useState(0);
   const [language, setLanguage] = useState<Language>(() => navigator.language.startsWith("zh") ? "zh" : "en");
   const [uploadNames, setUploadNames] = useState<Record<string, string>>({});
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [resultOpen, setResultOpen] = useState(true);
+  const [resultRevision, setResultRevision] = useState(0);
+  const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideoResult>({ found: false });
+  const [generatedLoading, setGeneratedLoading] = useState(false);
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
+  const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
+  const generatedVideoUrl = generatedVideo.path ? comfyViewUrl(generatedVideo.path, "output") : null;
   const mutate = (fn: (draft: DirectorPlan) => void) => setPlan((current) => { const draft = clone(current); fn(draft); return draft; });
   const moveShot = (from: number, direction: number) => mutate((draft) => { const to = from + direction; if (to < 0 || to >= draft.shots.length) return; [draft.shots[from], draft.shots[to]] = [draft.shots[to], draft.shots[from]]; setSelected(to); });
   const exportPlan = () => {
@@ -53,14 +81,51 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
     onSave(plan);
   };
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!shot?.enabled || activeIndex < 0) {
+      setGeneratedVideo({ found: false });
+      setGeneratedLoading(false);
+      return () => { cancelled = true; };
+    }
+    setGeneratedLoading(true);
+    void fetchGeneratedVideo(plan, shot, activeIndex)
+      .then((result) => { if (!cancelled) setGeneratedVideo(result); })
+      .catch((error) => { if (!cancelled) setGeneratedVideo({ found: false, error: String(error) }); })
+      .finally(() => { if (!cancelled) setGeneratedLoading(false); });
+    return () => { cancelled = true; };
+  }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision]);
+
   return <div class="td-shell">
     <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(imported as DirectorPlan); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
     <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
         <aside>{plan.shots.map((item, index) => <div class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div><button onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}<button class="wide" onClick={() => mutate((draft) => { draft.shots.push(newShot(draft.shots.length)); setSelected(draft.shots.length - 1); })}>＋ {t(language, "addShot")}</button></aside>
-        {shot && <section class="td-form"><label>ID<input value={shot.id} onInput={(event) => mutate((draft) => { draft.shots[selected].id = event.currentTarget.value; })}/></label><label>标题 / Title<input value={shot.title} onInput={(event) => mutate((draft) => { draft.shots[selected].title = event.currentTarget.value; })}/></label><label>时长 / Duration<input type="number" min="0.1" step="0.1" value={shot.durationSeconds} onInput={(event) => mutate((draft) => { draft.shots[selected].durationSeconds = Number(event.currentTarget.value); })}/></label><label class="check"><input type="checkbox" checked={shot.enabled} onChange={(event) => mutate((draft) => { draft.shots[selected].enabled = event.currentTarget.checked; })}/>启用 / Enabled</label><label>提示词（使用 <code>{"{{ref:别名}}"}</code>）<textarea rows={10} value={shot.prompt} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label><label>负面提示词<textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label><fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const filename = assetFileName(asset.path) || asset.alias; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><div class="td-shot-media-name" title={asset.path || asset.alias}>{filename}</div></div>; })}</fieldset></section>}
-        <aside class="td-preview"><h2>{t(language, "preview")}</h2><div class="td-counters">Picture {preview?.slots.filter((x) => x.kind === "picture").length ?? 0}/9 · Video {preview?.slots.filter((x) => x.kind === "video").length ?? 0}/3 · Audio {preview?.audioCount ?? 0}/3 · Files {preview?.mixedFiles ?? 0}/12</div>{preview?.errors.length ? <ul class="errors">{preview.errors.map((error) => <li>{error}</li>)}</ul> : <p class="ok">{t(language, "noErrors")}</p>}<ol>{preview?.slots.map((slot) => <li><code>{slot.label}</code> ← {slot.alias}</li>)}</ol><pre>{preview?.compiledPrompt}</pre></aside>
+        {shot && <section class="td-form">
+          <div class="td-shot-meta">
+            <label>ID<input value={shot.id} onInput={(event) => mutate((draft) => { draft.shots[selected].id = event.currentTarget.value; })}/></label>
+            <label>标题 / Title<input value={shot.title} onInput={(event) => mutate((draft) => { draft.shots[selected].title = event.currentTarget.value; })}/></label>
+            <label>时长 / Duration<input type="number" min="0.1" step="0.1" value={shot.durationSeconds} onInput={(event) => mutate((draft) => { draft.shots[selected].durationSeconds = Number(event.currentTarget.value); })}/></label>
+            <label class="td-shot-enabled"><input type="checkbox" checked={shot.enabled} onChange={(event) => mutate((draft) => { draft.shots[selected].enabled = event.currentTarget.checked; })}/><span>启用 / Enabled</span></label>
+          </div>
+          <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>）</span><textarea rows={10} value={shot.prompt} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
+          <label><span class="td-field-label">负面提示词 / Negative prompt</span><textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label>
+          <fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const filename = assetFileName(asset.path) || asset.alias; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><div class="td-shot-media-name" title={asset.path || asset.alias}>{filename}</div></div>; })}</fieldset>
+        </section>}
+        <aside class="td-preview">
+          <details open={previewOpen} onToggle={(event) => setPreviewOpen(event.currentTarget.open)}>
+            <summary><strong>{t(language, "preview")}</strong><span class="td-summary-counts">Picture {preview?.slots.filter((x) => x.kind === "picture").length ?? 0}/9 · Video {preview?.slots.filter((x) => x.kind === "video").length ?? 0}/3 · Audio {preview?.audioCount ?? 0}/3 · Files {preview?.mixedFiles ?? 0}/12</span></summary>
+            <div class="td-preview-body">{preview?.errors.length ? <ul class="errors">{preview.errors.map((error) => <li>{error}</li>)}</ul> : <p class="ok">{t(language, "noErrors")}</p>}<ol>{preview?.slots.map((slot) => <li><code>{slot.label}</code> ← {slot.alias}</li>)}</ol><pre>{preview?.compiledPrompt}</pre></div>
+          </details>
+          <details open={resultOpen} onToggle={(event) => setResultOpen(event.currentTarget.open)}>
+            <summary><strong>{language === "zh" ? "生成结果" : "Generated result"}</strong><span class={`td-result-state ${generatedVideo.found ? "found" : ""}`}>{generatedLoading ? (language === "zh" ? "查询中" : "Checking") : generatedVideo.found ? (language === "zh" ? "已生成" : "Found") : (language === "zh" ? "空" : "Empty")}</span></summary>
+            <div class="td-preview-body td-result-body">
+              <div class="td-result-actions"><button onClick={() => setResultRevision((value) => value + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
+              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{language === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again."}</div> : generatedVideo.found && generatedVideoUrl ? <div class="td-generated-video"><video key={generatedVideo.path} src={generatedVideoUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={generatedVideo.path}>{generatedVideo.path}{generatedVideo.bytes ? ` · ${(generatedVideo.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div> : <div class="td-result-empty">{language === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path"}</div>}
+            </div>
+          </details>
+        </aside>
       </div>}
       {tab === "assets" && <div class="td-assets">
         <div class="td-toolbar">{(["image", "video", "audio"] as AssetKind[]).map((kind) => <button onClick={() => mutate((draft) => draft.assets.push(newAsset(kind)))}>＋ {kind}</button>)}</div>

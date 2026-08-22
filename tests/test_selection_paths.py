@@ -1,8 +1,9 @@
 import copy
+import os
 
 import pytest
 
-from theodore_director.paths import build_output_paths, resolve_output_file
+from theodore_director.paths import build_output_paths, find_generated_video, resolve_output_file
 from theodore_director.schema import DEFAULT_PLAN, load_plan
 from theodore_director.selection import select_shot
 
@@ -78,6 +79,23 @@ def test_resolve_output_file_falls_back_to_expected_latent_prefix(tmp_path):
     )
 
     assert resolved == latent.resolve()
+
+
+def test_find_generated_video_uses_the_same_expected_prefix(tmp_path):
+    run_dir = tmp_path / "TheodoreDirector" / "Demo_run_001"
+    run_dir.mkdir(parents=True)
+    older = run_dir / "001_shot_001_video_00001.mp4"
+    newer = run_dir / "001_shot_001_video_00002.webm"
+    older.write_bytes(b"old")
+    newer.write_bytes(b"new")
+    # Windows 上连续写入可能得到相同时间戳，显式制造稳定的先后顺序。
+    os.utime(older, ns=(1_000_000_000, 1_000_000_000))
+    os.utime(newer, ns=(2_000_000_000, 2_000_000_000))
+
+    found = find_generated_video(tmp_path, "Demo", "run_001", "shot_001", 0)
+
+    assert found == newer.resolve()
+    assert find_generated_video(tmp_path, "Demo", "run_001", "shot_002", 1) is None
 
 
 def test_out_of_range_queue_index_fails():
