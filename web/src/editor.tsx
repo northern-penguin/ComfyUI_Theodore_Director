@@ -3,7 +3,6 @@ import { useMemo, useState } from "preact/hooks";
 import { t, type Language } from "./i18n";
 import { previewReferences, validatePlan } from "./reference";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot } from "./types";
-import "./style.css";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -67,9 +66,24 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
 }
 
 export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void): void {
+  const existing = document.getElementById("theodore-director-modal");
+  if (existing) {
+    // 防止快速重复点击在画布上叠加多个编辑器实例。
+    existing.focus();
+    return;
+  }
   const host = document.createElement("div");
+  host.id = "theodore-director-modal";
   host.className = "td-modal";
+  host.tabIndex = -1;
   document.body.append(host);
-  const close = () => { render(null, host); host.remove(); };
+  const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
+  const close = () => {
+    document.removeEventListener("keydown", onKeyDown);
+    render(null, host);
+    host.remove();
+  };
+  document.addEventListener("keydown", onKeyDown);
   render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close}/>, host);
+  host.focus();
 }

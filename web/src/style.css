@@ -1,5 +1,5 @@
 :root { --td-bg:#11151b; --td-panel:#1a2029; --td-line:#354052; --td-text:#edf2f8; --td-muted:#9daabd; --td-accent:#74c7a5; --td-danger:#ff7d7d; }
-.td-modal { position:fixed; inset:0; z-index:100000; background:rgba(4,7,11,.88); color:var(--td-text); font:14px/1.45 Inter,Segoe UI,sans-serif; }
+.td-modal { position:fixed; inset:0; z-index:2147483000; display:block; overflow:hidden; pointer-events:auto; background:rgba(4,7,11,.96); color:var(--td-text); font:14px/1.45 Inter,Segoe UI,sans-serif; isolation:isolate; }
 .td-shell { height:100vh; display:grid; grid-template-rows:auto auto 1fr; background:var(--td-bg); }
 .td-shell header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--td-line); }
 .td-shell h1,.td-shell h2 { margin:0; font-weight:650; }.td-shell h1{font-size:20px}.td-shell h2{font-size:15px;margin-bottom:10px}

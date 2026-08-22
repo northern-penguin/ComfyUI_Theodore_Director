@@ -1,5 +1,19 @@
 import { openEditor } from "./editor";
 import type { DirectorPlan } from "./types";
+import directorStyles from "./style.css?inline";
+
+const STYLE_ID = "theodore-director-styles";
+
+function ensureDirectorStyles(): void {
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = directorStyles;
+  document.head.append(style);
+}
+
+// ComfyUI 只自动加载 web 目录中的 JavaScript，样式必须由扩展主动注入。
+ensureDirectorStyles();
 
 interface Widget { name: string; value: unknown; type?: string; computeSize?: () => [number, number] }
 interface ComfyNode { widgets?: Widget[]; addWidget: (type: string, name: string, value: unknown, callback: () => void) => Widget; setDirtyCanvas: (foreground: boolean, background: boolean) => void; size?: [number, number] }
