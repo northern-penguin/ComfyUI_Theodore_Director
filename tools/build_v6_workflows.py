@@ -20,7 +20,7 @@ REMOVE_IDS = {
 
 def default_plan(variant: str) -> dict[str, Any]:
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 3,
         "project": {
             "id": f"impact_v6_{variant}",
             "name": f"Impact V6 Theodore {variant.title()}",
@@ -44,6 +44,7 @@ def default_plan(variant: str) -> dict[str, Any]:
                 "negativePrompt": "",
                 "durationSeconds": 5,
                 "enabled": True,
+                "latentRelay": True,
                 "seed": None,
                 "disabledAssetIds": [],
             }
@@ -95,7 +96,7 @@ def director_nodes(first_id: int, variant: str) -> dict[str, dict[str, Any]]:
         "shot": node(
             ids["shot"], "TheodoreDirector_SelectShot", [-520, -500], [390, 310],
             [socket("plan", "THEODORE_DIRECTOR_PLAN"), socket("queue_index", "INT", widget=True), socket("base_seed", "INT", widget=True), socket("resume_mode", "COMBO", widget=True)],
-            [output("SHOT", "THEODORE_DIRECTOR_SHOT"), output("prompt", "STRING"), output("negative_prompt", "STRING"), output("duration_seconds", "FLOAT"), output("seed", "INT"), output("shot_id", "STRING"), output("active_index", "INT"), output("source_index", "INT"), output("active_count", "INT"), output("is_first", "BOOLEAN"), output("is_last", "BOOLEAN"), output("next_index", "INT"), output("has_next", "BOOLEAN"), output("shot_hash", "STRING")],
+            [output("SHOT", "THEODORE_DIRECTOR_SHOT"), output("prompt", "STRING"), output("negative_prompt", "STRING"), output("duration_seconds", "FLOAT"), output("seed", "INT"), output("shot_id", "STRING"), output("active_index", "INT"), output("source_index", "INT"), output("active_count", "INT"), output("is_first", "BOOLEAN"), output("is_last", "BOOLEAN"), output("next_index", "INT"), output("has_next", "BOOLEAN"), output("shot_hash", "STRING"), output("latent relay", "BOOLEAN")],
             [0, 123456790, "resume"], "② 当前分镜（支持续跑）",
         ),
         "adapter": node(
@@ -160,8 +161,13 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
     connect(ids["shot"], 0, ids["paths"], 1, "THEODORE_DIRECTOR_SHOT")
     connect(ids["shot"], 0, ids["commit"], 1, "THEODORE_DIRECTOR_SHOT")
     connect(ids["shot"], 4, 129, 0, "INT")
-    connect(ids["shot"], 9, 390, 2, "BOOLEAN")
-    connect(ids["shot"], 9, 391, 2, "BOOLEAN")
+    # cond=true 选 Motion Context，cond=false 选 H3 原始条件与 0 裁切。
+    connect(389, 0, 390, 0, "CONDITIONING")
+    connect(136, 0, 390, 1, "CONDITIONING")
+    connect(389, 1, 391, 0, "INT")
+    connect(328, 0, 391, 1, "INT")
+    connect(ids["shot"], 14, 390, 2, "BOOLEAN")
+    connect(ids["shot"], 14, 391, 2, "BOOLEAN")
     connect(ids["adapter"], 0, 136, 15, "STRING")
     connect(ids["adapter"], 1, 136, 18, "INT")
     for index in range(9):
@@ -212,7 +218,7 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
     for item in data["nodes"]:
         if item["id"] == 290 and item["type"] == "MarkdownNote":
             item["widgets_values"] = ["## Theodore Director 开源工作流\n\n由通用导播台、H3 适配器和 Impact Pack 队列组成。计划数据嵌入工作流；每段只有在视频、尾帧与 AV latent 清单全部提交后才进入下一段。\n\n工作流与 Theodore 节点按 Apache-2.0 发布；模型及第三方节点遵循各自许可证。"]
-    data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 1, "variant": variant, "generated": True}
+    data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 3, "variant": variant, "generated": True}
     return data
 
 
@@ -259,6 +265,21 @@ def validate_workflow(data: dict[str, Any]) -> None:
         raise ValueError("Impact 游标在结果清单提交之前被触发")
     if origin_type("ImpactQueueTrigger", "mode") != "TheodoreDirector_CommitResult":
         raise ValueError("Impact 队列终止条件未使用 Theodore has_next")
+
+    # 逐镜头 BOOL 必须直接选择“接力”或“独立镜头”两条已有分支。
+    def origin_type_by_id(target_id: int, input_name: str) -> str:
+        target = nodes[target_id]
+        target_input = next(item for item in target["inputs"] if item["name"] == input_name)
+        return nodes[links_by_id[target_input["link"]][1]]["type"]
+
+    if origin_type_by_id(390, "cond") != "TheodoreDirector_SelectShot":
+        raise ValueError("Conditioning 分支未由当前镜头 latent relay 开关控制")
+    if origin_type_by_id(390, "tt_value") != "MiniMaxH3MotionContext" or origin_type_by_id(390, "ff_value") != "MiniMaxH3ReferenceToVideo":
+        raise ValueError("Conditioning 的 latent relay 真/假分支接反")
+    if origin_type_by_id(391, "cond") != "TheodoreDirector_SelectShot":
+        raise ValueError("裁切帧分支未由当前镜头 latent relay 开关控制")
+    if origin_type_by_id(391, "tt_value") != "MiniMaxH3MotionContext" or origin_type_by_id(391, "ff_value") != "PrimitiveInt":
+        raise ValueError("裁切帧的 latent relay 真/假分支接反")
     obsolete = {"TextSplitByDelimiter", "PrimitiveStringMultiline", "ImagePass", "easy isFileExist"}
     if present := obsolete & {item["type"] for item in data["nodes"]}:
         raise ValueError(f"仍含已替换的旧导播逻辑: {sorted(present)}")

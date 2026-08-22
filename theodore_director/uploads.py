@@ -20,10 +20,10 @@ def safe_segment(value: str, fallback: str) -> str:
     return cleaned[:96] or fallback
 
 
-def allocate_upload_path(input_root: Path, project_id: str, filename: str, kind: str) -> tuple[Path, str]:
+def allocate_upload_path(input_root: Path, project_name: str, filename: str, kind: str) -> tuple[Path, str]:
     if kind not in ALLOWED_EXTENSIONS:
         raise ValueError(f"未知素材类型: {kind}")
-    project = safe_segment(project_id, "theodore_project")
+    project = safe_segment(project_name, "theodore_project")
     original = Path(filename)
     suffix = original.suffix.lower()
     if suffix not in ALLOWED_EXTENSIONS[kind]:

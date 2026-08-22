@@ -14,7 +14,7 @@ from typing import Any
 
 from .errors import PlanValidationError
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 _ALIAS_INVALID = re.compile(r"[\s{}]")
 
 
@@ -81,6 +81,7 @@ class Shot:
     prompt: str
     duration_seconds: float
     enabled: bool = True
+    latent_relay: bool = True
     negative_prompt: str = ""
     seed: int | None = None
     disabled_asset_ids: tuple[str, ...] = ()
@@ -100,6 +101,8 @@ class Shot:
             prompt=str(data.get("prompt", "")),
             duration_seconds=duration,
             enabled=bool(data.get("enabled", True)),
+            # 旧计划默认开启，保持 V6 原有的逐段 latent 接力行为。
+            latent_relay=bool(data.get("latentRelay", True)),
             negative_prompt=str(data.get("negativePrompt", "")),
             seed=None if seed_value is None else int(seed_value),
             disabled_asset_ids=tuple(str(item) for item in data.get("disabledAssetIds", []) if str(item)),
@@ -137,8 +140,16 @@ class Plan:
         return json.dumps(self.to_dict(), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @property
+    def generation_json(self) -> str:
+        """只序列化会影响生成或结果归属的字段，内部 Project ID 不参与续跑 hash。"""
+        data = self.to_dict()
+        data["project"] = dict(data["project"])
+        data["project"].pop("id", None)
+        return json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+    @property
     def plan_hash(self) -> str:
-        return hashlib.sha256(self.canonical_json.encode("utf-8")).hexdigest()
+        return hashlib.sha256(self.generation_json.encode("utf-8")).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -178,6 +189,7 @@ class Plan:
                     "negativePrompt": shot.negative_prompt,
                     "durationSeconds": shot.duration_seconds,
                     "enabled": shot.enabled,
+                    "latentRelay": shot.latent_relay,
                     "seed": shot.seed,
                     "disabledAssetIds": list(shot.disabled_asset_ids),
                 }
@@ -193,11 +205,24 @@ def _optional_float(value: Any) -> float | None:
 
 
 def migrate_plan(data: dict[str, Any]) -> dict[str, Any]:
-    """将历史协议逐级迁移；当前只有首个公开版本。"""
+    """将历史协议逐级迁移；v3 增加逐镜头 latent 接力开关。"""
     version = int(data.get("schemaVersion", 1))
     if version > SCHEMA_VERSION:
         raise PlanValidationError(f"计划版本 {version} 高于当前支持版本 {SCHEMA_VERSION}")
     migrated = dict(data)
+    project = dict(migrated.get("project") or {})
+    if not str(project.get("id") or "").strip():
+        # 对缺少旧 ID 的计划生成确定性内部 ID，重复加载不会发生漂移。
+        project_name = str(project.get("name") or "Theodore Project")
+        project["id"] = f"td_{hashlib.sha256(project_name.encode('utf-8')).hexdigest()[:12]}"
+    migrated["project"] = project
+    shots = []
+    for item in migrated.get("shots", []):
+        shot = dict(item)
+        # v1/v2 只有全局接力流程，缺省值必须为开才能无损迁移。
+        shot.setdefault("latentRelay", True)
+        shots.append(shot)
+    migrated["shots"] = shots
     migrated["schemaVersion"] = SCHEMA_VERSION
     return migrated
 
@@ -259,8 +284,8 @@ def load_plan(value: str | dict[str, Any]) -> Plan:
 
 
 DEFAULT_PLAN = {
-    "schemaVersion": 1,
-    "project": {"id": "theodore_project", "name": "Theodore Project", "runId": "run_001"},
+    "schemaVersion": 3,
+    "project": {"id": "", "name": "Theodore Project", "runId": "run_001"},
     "defaults": {"fps": 24, "baseSeed": 123456790},
     "promptPrefix": "",
     "promptSuffix": "",
@@ -278,9 +303,9 @@ DEFAULT_PLAN = {
             "prompt": "Describe the first shot.",
             "durationSeconds": 5,
             "enabled": True,
+            "latentRelay": True,
         }
     ],
 }
 
 DEFAULT_PLAN_JSON = json.dumps(DEFAULT_PLAN, ensure_ascii=False, indent=2)
-

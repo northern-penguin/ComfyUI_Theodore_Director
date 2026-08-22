@@ -92,6 +92,7 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
                 io.Int.Output("next_index"),
                 io.Boolean.Output("has_next"),
                 io.String.Output("shot_hash"),
+                io.Boolean.Output("latent_relay", display_name="latent relay"),
             ],
         )
 
@@ -135,6 +136,7 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
             selected.next_index,
             selected.has_next,
             selected.shot_hash,
+            selected.latent_relay,
         )
 
 
@@ -166,7 +168,8 @@ class TheodoreDirectorH3Adapter(io.ComfyNode):
         generated, expected = calculate_h3_frames(
             shot.shot.duration_seconds,
             fps=plan.fps,
-            is_first=shot.is_first,
+            # 未开启接力的镜头不会裁掉 Motion Context 帧，时长按独立镜头计算。
+            is_first=not shot.latent_relay,
             context_frames=plan.continuity.video_context_frames,
             duration_mode=plan.continuity.duration_mode,
         )

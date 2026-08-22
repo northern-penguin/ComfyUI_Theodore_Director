@@ -33,6 +33,22 @@ def test_seed_override_and_sequence_seed():
     assert select_shot(plan, 1, 10).seed == 99
 
 
+def test_latent_relay_uses_current_active_shot_switch():
+    data = copy.deepcopy(DEFAULT_PLAN)
+    data["shots"] = [
+        {"id": "one", "prompt": "x", "durationSeconds": 5, "latentRelay": True},
+        {"id": "disabled", "prompt": "skip", "durationSeconds": 5, "enabled": False, "latentRelay": True},
+        {"id": "two", "prompt": "y", "durationSeconds": 5, "latentRelay": False},
+        {"id": "three", "prompt": "z", "durationSeconds": 5, "latentRelay": True},
+    ]
+    plan = load_plan(data)
+
+    # 首个启用镜头无论配置为何都不读取上一段。
+    assert select_shot(plan, 0).latent_relay is False
+    assert select_shot(plan, 1).latent_relay is False
+    assert select_shot(plan, 2).latent_relay is True
+
+
 def test_output_paths_are_relative_and_sanitized():
     plan = load_plan(DEFAULT_PLAN)
     paths = build_output_paths(plan, plan.active_shots[0], 0)

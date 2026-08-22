@@ -56,7 +56,8 @@ export function previewReferences(plan: DirectorPlan, shot: DirectorShot): Resol
 
 export function validatePlan(plan: DirectorPlan): string[] {
   const errors: string[] = [];
-  if (!plan.project?.id?.trim()) errors.push("Project ID 不能为空");
+  if (!plan.project?.name?.trim()) errors.push("Project name 不能为空");
+  if (!plan.project?.runId?.trim()) errors.push("Run ID 不能为空");
   if (!Array.isArray(plan.shots) || !plan.shots.some((shot) => shot.enabled)) errors.push("至少需要一个启用分镜");
   const shotIds = new Set<string>();
   for (const shot of plan.shots ?? []) {

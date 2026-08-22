@@ -22,12 +22,13 @@ export interface DirectorShot {
   negativePrompt: string;
   durationSeconds: number;
   enabled: boolean;
+  latentRelay: boolean;
   seed: number | null;
   disabledAssetIds: string[];
 }
 
 export interface DirectorPlan {
-  schemaVersion: 1;
+  schemaVersion: 3;
   project: { id: string; name: string; runId: string };
   defaults: { fps: number; baseSeed: number };
   promptPrefix: string;

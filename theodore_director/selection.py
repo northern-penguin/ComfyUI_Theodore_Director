@@ -17,6 +17,7 @@ class ShotSelection:
     active_count: int
     is_first: bool
     is_last: bool
+    latent_relay: bool
     next_index: int
     has_next: bool
     seed: int
@@ -41,6 +42,8 @@ def select_shot(plan: Plan, queue_index: int, base_seed: int | None = None) -> S
     shot = active[queue_index]
     source_index = next(index for index, item in enumerate(plan.shots) if item.id == shot.id)
     has_next = queue_index + 1 < len(active)
+    # 首个启用镜头没有上一段可供读取；全局非 latent 模式也必须直通。
+    latent_relay = queue_index > 0 and shot.latent_relay and plan.continuity.mode == "h3_av_latent"
     seed_base = plan.base_seed if base_seed is None else int(base_seed)
     return ShotSelection(
         shot=shot,
@@ -49,9 +52,9 @@ def select_shot(plan: Plan, queue_index: int, base_seed: int | None = None) -> S
         active_count=len(active),
         is_first=queue_index == 0,
         is_last=not has_next,
+        latent_relay=latent_relay,
         next_index=queue_index + 1 if has_next else 0,
         has_next=has_next,
         seed=shot.seed if shot.seed is not None else seed_base + queue_index,
         shot_hash=shot_hash(plan, shot),
     )
-

@@ -57,12 +57,13 @@ def register_routes() -> None:
     @routes.post("/theodore-director/v1/assets")
     async def upload_asset(request):
         reader = await request.multipart()
-        project_id = "theodore_project"
+        project_name = "theodore_project"
         kind = ""
         upload = None
         while part := await reader.next():
-            if part.name == "projectId":
-                project_id = await part.text()
+            if part.name in {"projectName", "projectId"}:
+                # projectId 仅用于兼容旧版前端，新版统一使用用户填写的 Project name。
+                project_name = await part.text()
             elif part.name == "kind":
                 kind = await part.text()
             elif part.name == "file":
@@ -73,7 +74,7 @@ def register_routes() -> None:
         try:
             target, relative = allocate_upload_path(
                 input_root=Path(folder_paths.get_input_directory()),
-                project_id=project_id,
+                project_name=project_name,
                 filename=upload.filename or kind,
                 kind=kind,
             )

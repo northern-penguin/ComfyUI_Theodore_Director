@@ -9,8 +9,23 @@ const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.ran
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const KIND_LABELS: Record<AssetKind, string> = { image: "图片", video: "视频", audio: "音频" };
 
+function normalizePlan(value: DirectorPlan): DirectorPlan {
+  const plan = clone(value);
+  plan.schemaVersion = 3;
+  // 内部 ID 只用于兼容协议，不展示给用户，也不参与生成 hash。
+  if (!plan.project.id?.trim()) plan.project.id = uid("project");
+  // v1/v2 工作流没有逐镜头开关，默认保持原有接力流程。
+  plan.shots = plan.shots.map((shot) => ({ ...shot, latentRelay: shot.latentRelay ?? true }));
+  return plan;
+}
+
+function exportFileStem(value: string): string {
+  // 保留中文项目名，只替换 Windows/macOS/Linux 文件名共同不安全的字符。
+  return value.trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g, "_").replace(/[. ]+$/g, "").slice(0, 96) || "theodore_project";
+}
+
 function newShot(index: number): DirectorShot {
-  return { id: `shot_${String(index + 1).padStart(3, "0")}`, title: `Shot ${index + 1}`, prompt: "", negativePrompt: "", durationSeconds: 5, enabled: true, seed: null, disabledAssetIds: [] };
+  return { id: `shot_${String(index + 1).padStart(3, "0")}`, title: `Shot ${index + 1}`, prompt: "", negativePrompt: "", durationSeconds: 5, enabled: true, latentRelay: true, seed: null, disabledAssetIds: [] };
 }
 
 function newAsset(kind: AssetKind): DirectorAsset {
@@ -18,9 +33,9 @@ function newAsset(kind: AssetKind): DirectorAsset {
   return { id, alias: id, kind, path: "", enabled: true, fixed: false, fixedOrder: 0, shotIds: [], includeVideoAudio: false, durationSeconds: kind === "image" ? null : 2, audioDurationSeconds: null, fingerprint: "" };
 }
 
-async function uploadAsset(projectId: string, kind: AssetKind, file: File): Promise<string> {
+async function uploadAsset(projectName: string, kind: AssetKind, file: File): Promise<string> {
   const body = new FormData();
-  body.append("projectId", projectId);
+  body.append("projectName", projectName);
   body.append("kind", kind);
   body.append("file", file);
   const response = await fetch("/theodore-director/v1/assets", { method: "POST", body });
@@ -74,7 +89,7 @@ async function writeClipboardText(value: string): Promise<void> {
 interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void }
 
 function Editor({ initial, onSave, onClose }: EditorProps) {
-  const [plan, setPlan] = useState<DirectorPlan>(() => clone(initial));
+  const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
   const [tab, setTab] = useState<"shots" | "assets" | "settings">("shots");
   const [selected, setSelected] = useState(0);
   const [language, setLanguage] = useState<Language>(() => navigator.language.startsWith("zh") ? "zh" : "en");
@@ -94,7 +109,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
   const exportPlan = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
-    link.href = url; link.download = `${plan.project.id || "theodore_project"}.director.json`; link.click();
+    link.href = url; link.download = `${exportFileStem(plan.project.name)}.director.json`; link.click();
     URL.revokeObjectURL(url);
   };
   const savePlan = () => {
@@ -119,7 +134,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
   }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision]);
 
   return <div class="td-shell">
-    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(imported as DirectorPlan); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
+    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(normalizePlan(imported as DirectorPlan)); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
     <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
@@ -130,6 +145,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
             <label>标题 / Title<input value={shot.title} onInput={(event) => mutate((draft) => { draft.shots[selected].title = event.currentTarget.value; })}/></label>
             <label>时长 / Duration<input type="number" min="0.1" step="0.1" value={shot.durationSeconds} onInput={(event) => mutate((draft) => { draft.shots[selected].durationSeconds = Number(event.currentTarget.value); })}/></label>
             <label class="td-shot-enabled"><input type="checkbox" checked={shot.enabled} onChange={(event) => mutate((draft) => { draft.shots[selected].enabled = event.currentTarget.checked; })}/><span>启用 / Enabled</span></label>
+            <label class="td-shot-enabled" title={activeIndex === 0 ? "首个启用镜头没有上一段，执行时会自动忽略接力" : "开启后读取上一段 AV latent 作为 Motion Context"}><input type="checkbox" checked={shot.latentRelay} onChange={(event) => mutate((draft) => { draft.shots[selected].latentRelay = event.currentTarget.checked; })}/><span>latent接力 / Relay{activeIndex === 0 ? "（首段忽略）" : ""}</span></label>
           </div>
           <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>）</span><textarea rows={10} value={shot.prompt} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
           <label><span class="td-field-label">负面提示词 / Negative prompt</span><textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label>
@@ -152,11 +168,11 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
       {tab === "assets" && <div class="td-assets">
         <div class="td-toolbar">{(["image", "video", "audio"] as AssetKind[]).map((kind) => <button onClick={() => mutate((draft) => draft.assets.push(newAsset(kind)))}>＋ {kind}</button>)}</div>
         {plan.assets.map((asset, index) => <article key={asset.id}><div class="td-asset-layout"><div>
-          <div class="td-grid"><label>别名 / Alias<input value={asset.alias} onInput={(event) => mutate((draft) => { draft.assets[index].alias = event.currentTarget.value; })}/></label><label>类型 / Kind<select value={asset.kind} onChange={(event) => mutate((draft) => { draft.assets[index].kind = event.currentTarget.value as AssetKind; })}><option>image</option><option>video</option><option>audio</option></select></label><label>输入目录相对路径 / Path<input value={asset.path} onInput={(event) => mutate((draft) => { draft.assets[index].path = event.currentTarget.value; })}/><span class="td-file-picker"><label class="td-file-button">选择文件 / Choose file<input type="file" accept={asset.kind === "image" ? "image/*" : asset.kind === "video" ? "video/*" : "audio/*"} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; setUploadNames((current) => ({ ...current, [asset.id]: file.name })); try { const path = await uploadAsset(plan.project.id, asset.kind, file); mutate((draft) => { const target = draft.assets.find((item) => item.id === asset.id); if (target) target.path = path; }); } catch (error) { window.alert(String(error)); } finally { setUploadNames((current) => { const next = { ...current }; delete next[asset.id]; return next; }); input.value = ""; } }}/></label><span class="td-file-name" title={uploadNames[asset.id] || asset.path}>{uploadNames[asset.id] ? `${language === "zh" ? "上传中" : "Uploading"}: ${uploadNames[asset.id]}` : assetFileName(asset.path) || (language === "zh" ? "未选择文件" : "No file selected")}</span></span></label><label>时长 / Duration<input type="number" min="0" step="0.1" value={asset.durationSeconds ?? ""} onInput={(event) => mutate((draft) => { draft.assets[index].durationSeconds = event.currentTarget.value ? Number(event.currentTarget.value) : null; })}/></label><label>固定顺序 / Fixed order<input type="number" value={asset.fixedOrder} onInput={(event) => mutate((draft) => { draft.assets[index].fixedOrder = Number(event.currentTarget.value); })}/></label><label>限定分镜 ID（逗号分隔）<input value={asset.shotIds.join(", ")} onInput={(event) => mutate((draft) => { draft.assets[index].shotIds = event.currentTarget.value.split(",").map((value) => value.trim()).filter(Boolean); })}/></label></div>
+          <div class="td-grid"><label>别名 / Alias<input value={asset.alias} onInput={(event) => mutate((draft) => { draft.assets[index].alias = event.currentTarget.value; })}/></label><label>类型 / Kind<select value={asset.kind} onChange={(event) => mutate((draft) => { draft.assets[index].kind = event.currentTarget.value as AssetKind; })}><option>image</option><option>video</option><option>audio</option></select></label><label>输入目录相对路径 / Path<input value={asset.path} onInput={(event) => mutate((draft) => { draft.assets[index].path = event.currentTarget.value; })}/><span class="td-file-picker"><label class="td-file-button">选择文件 / Choose file<input type="file" accept={asset.kind === "image" ? "image/*" : asset.kind === "video" ? "video/*" : "audio/*"} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; setUploadNames((current) => ({ ...current, [asset.id]: file.name })); try { const path = await uploadAsset(plan.project.name, asset.kind, file); mutate((draft) => { const target = draft.assets.find((item) => item.id === asset.id); if (target) target.path = path; }); } catch (error) { window.alert(String(error)); } finally { setUploadNames((current) => { const next = { ...current }; delete next[asset.id]; return next; }); input.value = ""; } }}/></label><span class="td-file-name" title={uploadNames[asset.id] || asset.path}>{uploadNames[asset.id] ? `${language === "zh" ? "上传中" : "Uploading"}: ${uploadNames[asset.id]}` : assetFileName(asset.path) || (language === "zh" ? "未选择文件" : "No file selected")}</span></span></label><label>时长 / Duration<input type="number" min="0" step="0.1" value={asset.durationSeconds ?? ""} onInput={(event) => mutate((draft) => { draft.assets[index].durationSeconds = event.currentTarget.value ? Number(event.currentTarget.value) : null; })}/></label><label>固定顺序 / Fixed order<input type="number" value={asset.fixedOrder} onInput={(event) => mutate((draft) => { draft.assets[index].fixedOrder = Number(event.currentTarget.value); })}/></label><label>限定分镜 ID（逗号分隔）<input value={asset.shotIds.join(", ")} onInput={(event) => mutate((draft) => { draft.assets[index].shotIds = event.currentTarget.value.split(",").map((value) => value.trim()).filter(Boolean); })}/></label></div>
           <div class="td-flags"><label><input type="checkbox" checked={asset.enabled} onChange={(event) => mutate((draft) => { draft.assets[index].enabled = event.currentTarget.checked; })}/>启用</label><label><input type="checkbox" checked={asset.fixed} onChange={(event) => mutate((draft) => { draft.assets[index].fixed = event.currentTarget.checked; })}/>固定引用</label>{asset.kind === "video" && <label><input type="checkbox" checked={asset.includeVideoAudio} onChange={(event) => mutate((draft) => { draft.assets[index].includeVideoAudio = event.currentTarget.checked; })}/>启用视频伴音</label>}<button class="danger" onClick={() => mutate((draft) => { draft.assets.splice(index, 1); })}>删除</button></div>
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
-      {tab === "settings" && <section class="td-form settings"><label>Project ID<input value={plan.project.id} onInput={(event) => mutate((draft) => { draft.project.id = event.currentTarget.value; })}/></label><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<textarea value={plan.promptPrefix} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<textarea value={plan.promptSuffix} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
+      {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<textarea value={plan.promptPrefix} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<textarea value={plan.promptSuffix} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
     </main>
   </div>;
 }
