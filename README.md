@@ -107,7 +107,11 @@ ComfyUI/output/TheodoreDirector/<project>_<run>/
 - `TheodoreDirector_CommitResult`：完成态事务边界，之后才触发下一队列项。
 - `TheodoreDirector_LegacyImport`：导入旧版 `===` 分段、`& 时长 &` 脚本。
 
-架构与协议说明见 [ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+更多文档：
+
+- [节点参数讲解（中文）](docs/节点参数讲解.md) / [Node Parameter Reference (English)](docs/节点参数讲解.en.md)
+- [导播台使用说明（中文）](docs/导播台说明.md) / [Director UI Guide (English)](docs/导播台说明.en.md)
+- [架构与协议](docs/ARCHITECTURE.md)
 
 ## 开发与验证
 
