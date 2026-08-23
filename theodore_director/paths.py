@@ -62,16 +62,42 @@ def find_generated_video(
     active_index: int,
 ) -> Path | None:
     """在预期分镜前缀下查找最新视频；找不到时返回 None。"""
+    videos = find_generated_videos(root, project_name, run_id, shot_id, active_index)
+    return videos[0] if videos else None
+
+
+def find_generated_videos(
+    root: Path,
+    project_name: str,
+    run_id: str,
+    shot_id: str,
+    active_index: int,
+) -> list[Path]:
+    """返回当前分镜的全部生成视频，并按修改时间从新到旧排列。"""
     paths = build_output_paths_from_values(project_name, run_id, shot_id, active_index)
+    output_root = root.resolve()
+    expected = (output_root / paths.video_prefix).resolve(strict=False)
     try:
-        return resolve_output_file(
-            root,
-            "",
-            VIDEO_EXTENSIONS,
-            expected_prefix=paths.video_prefix,
+        expected.relative_to(output_root)
+    except ValueError as error:
+        raise ValueError(f"拒绝读取 ComfyUI output 目录之外的文件: {expected}") from error
+    if not expected.parent.is_dir():
+        return []
+    matches_with_stats = []
+    for path in expected.parent.glob(f"{expected.name}*"):
+        if not path.is_file() or path.suffix.lower() not in VIDEO_EXTENSIONS:
+            continue
+        # 排序阶段只 stat 一次，避免比较函数为大量历史结果重复访问磁盘。
+        stat = path.stat()
+        matches_with_stats.append((stat.st_mtime_ns, path.resolve()))
+    return [
+        path
+        for _modified, path in sorted(
+            matches_with_stats,
+            key=lambda item: item[0],
+            reverse=True,
         )
-    except FileNotFoundError:
-        return None
+    ]
 
 
 def resolve_output_file(

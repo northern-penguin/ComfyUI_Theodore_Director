@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from theodore_director.paths import build_output_paths, find_generated_video, resolve_output_file
+from theodore_director.paths import build_output_paths, find_generated_video, find_generated_videos, resolve_output_file
 from theodore_director.schema import DEFAULT_PLAN, load_plan
 from theodore_director.selection import select_shot
 
@@ -125,7 +125,12 @@ def test_find_generated_video_uses_the_same_expected_prefix(tmp_path):
     found = find_generated_video(tmp_path, "Demo", "run_001", "shot_001", 0)
 
     assert found == newer.resolve()
+    assert find_generated_videos(tmp_path, "Demo", "run_001", "shot_001", 0) == [
+        newer.resolve(),
+        older.resolve(),
+    ]
     assert find_generated_video(tmp_path, "Demo", "run_001", "shot_002", 1) is None
+    assert find_generated_videos(tmp_path, "Demo", "run_001", "shot_002", 1) == []
 
 
 def test_out_of_range_queue_index_fails():

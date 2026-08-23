@@ -2,6 +2,8 @@ import { render } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { HighlightedTextarea } from "./highlighted-textarea";
 import { t, type Language } from "./i18n";
+import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
+import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
@@ -46,15 +48,7 @@ async function uploadAsset(projectName: string, kind: AssetKind, file: File): Pr
   return result.path;
 }
 
-interface GeneratedVideoResult {
-  found: boolean;
-  path?: string;
-  bytes?: number;
-  modifiedAt?: number;
-  error?: string;
-}
-
-async function fetchGeneratedVideo(plan: DirectorPlan, shot: DirectorShot, activeIndex: number): Promise<GeneratedVideoResult> {
+async function fetchGeneratedVideo(plan: DirectorPlan, shot: DirectorShot, activeIndex: number): Promise<GeneratedVideoResponse> {
   const query = new URLSearchParams({
     projectName: plan.project.name,
     runId: plan.project.runId,
@@ -62,7 +56,7 @@ async function fetchGeneratedVideo(plan: DirectorPlan, shot: DirectorShot, activ
     activeIndex: String(activeIndex),
   });
   const response = await fetch(`/theodore-director/v1/generated-video?${query.toString()}`);
-  const result = await response.json() as GeneratedVideoResult;
+  const result = await response.json() as GeneratedVideoResponse;
   if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
   return result;
 }
@@ -99,7 +93,8 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   const [previewOpen, setPreviewOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(true);
   const [resultRevision, setResultRevision] = useState(0);
-  const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideoResult>({ found: false });
+  const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideoResponse>({ found: false, results: [] });
+  const [selectedGeneratedPath, setSelectedGeneratedPath] = useState("");
   const [generatedLoading, setGeneratedLoading] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState("");
   const [batchOpen, setBatchOpen] = useState(false);
@@ -111,7 +106,9 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
   const allSecondSampling = plan.shots.length > 0 && plan.shots.every((item) => item.secondSampling);
-  const generatedVideoUrl = generatedVideo.path ? comfyViewUrl(generatedVideo.path, "output") : null;
+  const generatedResults = useMemo(() => normalizeGeneratedResults(generatedVideo), [generatedVideo]);
+  const selectedGenerated = generatedResults.find((item) => item.path === selectedGeneratedPath) ?? generatedResults[0];
+  const generatedVideoUrl = selectedGenerated?.path ? comfyViewUrl(selectedGenerated.path, "output") : null;
   const mutate = (fn: (draft: DirectorPlan) => void) => setPlan((current) => { const draft = clone(current); fn(draft); return draft; });
   const moveShot = (from: number, direction: number) => mutate((draft) => { const to = from + direction; if (to < 0 || to >= draft.shots.length) return; [draft.shots[from], draft.shots[to]] = [draft.shots[to], draft.shots[from]]; setSelected(to); });
   const deleteShot = (index: number) => mutate((draft) => {
@@ -174,14 +171,20 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   useEffect(() => {
     let cancelled = false;
     if (!shot?.enabled || activeIndex < 0) {
-      setGeneratedVideo({ found: false });
+      setGeneratedVideo({ found: false, results: [] });
+      setSelectedGeneratedPath("");
       setGeneratedLoading(false);
       return () => { cancelled = true; };
     }
     setGeneratedLoading(true);
     void fetchGeneratedVideo(plan, shot, activeIndex)
-      .then((result) => { if (!cancelled) setGeneratedVideo(result); })
-      .catch((error) => { if (!cancelled) setGeneratedVideo({ found: false, error: String(error) }); })
+      .then((result) => {
+        if (cancelled) return;
+        const results = normalizeGeneratedResults(result);
+        setGeneratedVideo(result);
+        setSelectedGeneratedPath((current) => results.some((item) => item.path === current) ? current : (results[0]?.path ?? ""));
+      })
+      .catch((error) => { if (!cancelled) { setGeneratedVideo({ found: false, results: [], error: String(error) }); setSelectedGeneratedPath(""); } })
       .finally(() => { if (!cancelled) setGeneratedLoading(false); });
     return () => { cancelled = true; };
   }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision]);
@@ -213,10 +216,10 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
             <div class="td-preview-body">{preview?.errors.length ? <ul class="errors">{preview.errors.map((error) => <li>{error}</li>)}</ul> : <p class="ok">{t(language, "noErrors")}</p>}<ol>{preview?.slots.map((slot) => <li><code>{slot.label}</code> ← {slot.alias}</li>)}</ol><pre>{preview?.compiledPrompt}</pre></div>
           </details>
           <details open={resultOpen} onToggle={(event) => setResultOpen(event.currentTarget.open)}>
-            <summary><strong>{language === "zh" ? "生成结果" : "Generated result"}</strong><span class={`td-result-state ${generatedVideo.found ? "found" : ""}`}>{generatedLoading ? (language === "zh" ? "查询中" : "Checking") : generatedVideo.found ? (language === "zh" ? "已生成" : "Found") : (language === "zh" ? "空" : "Empty")}</span></summary>
+            <summary><strong>{language === "zh" ? "生成结果" : "Generated result"}</strong><span class={`td-result-state ${generatedResults.length ? "found" : ""}`}>{generatedLoading ? (language === "zh" ? "查询中" : "Checking") : generatedResults.length ? (language === "zh" ? `${generatedResults.length} 个结果` : `${generatedResults.length} results`) : (language === "zh" ? "空" : "Empty")}</span></summary>
             <div class="td-preview-body td-result-body">
               <div class="td-result-actions"><button onClick={() => setResultRevision((value) => value + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
-              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{language === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again."}</div> : generatedVideo.found && generatedVideoUrl ? <div class="td-generated-video"><video key={generatedVideo.path} src={generatedVideoUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={generatedVideo.path}>{generatedVideo.path}{generatedVideo.bytes ? ` · ${(generatedVideo.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div> : <div class="td-result-empty">{language === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path"}</div>}
+              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{language === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again."}</div> : selectedGenerated && generatedVideoUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedGenerated.path} src={generatedVideoUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedGenerated.path}>{selectedGenerated.path}{selectedGenerated.bytes ? ` · ${(selectedGenerated.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div><div class="td-result-list" aria-label={language === "zh" ? "全部生成结果" : "All generated results"}>{generatedResults.map((item, index) => { const url = comfyViewUrl(item.path, "output"); const number = generatedResultNumber(item.path, generatedResults.length - index); const time = item.modifiedAt ? new Date(item.modifiedAt * 1000).toLocaleString(language === "zh" ? "zh-CN" : "en-US") : ""; return <button class={`td-result-item ${item.path === selectedGenerated.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedGeneratedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "结果" : "Result"} ${number}`}/> : <div class="td-result-thumb"><span>×</span></div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `结果 ${number}` : `Result ${number}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{[item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : "", time].filter(Boolean).join(" · ")}</small></span></button>; })}</div></div> : <div class="td-result-empty">{language === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path"}</div>}
             </div>
           </details>
         </aside>
