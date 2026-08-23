@@ -4,6 +4,7 @@ import { HighlightedTextarea } from "./highlighted-textarea";
 import { t, type Language } from "./i18n";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
+import { appendShots } from "./shot-batch";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot } from "./types";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
@@ -27,10 +28,6 @@ function normalizePlan(value: DirectorPlan): DirectorPlan {
 function exportFileStem(value: string): string {
   // 保留中文项目名，只替换 Windows/macOS/Linux 文件名共同不安全的字符。
   return value.trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g, "_").replace(/[. ]+$/g, "").slice(0, 96) || "theodore_project";
-}
-
-function newShot(index: number): DirectorShot {
-  return { id: `shot_${String(index + 1).padStart(3, "0")}`, title: `Shot ${index + 1}`, prompt: "", negativePrompt: "", durationSeconds: 5, enabled: true, latentRelay: true, secondSampling: true, seed: null, disabledAssetIds: [] };
 }
 
 function newAsset(kind: AssetKind): DirectorAsset {
@@ -105,6 +102,11 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideoResult>({ found: false });
   const [generatedLoading, setGeneratedLoading] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState("");
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [batchShots, setBatchShots] = useState<DirectorShot[]>([]);
+  const [uniformDuration, setUniformDuration] = useState("5");
+  const [appendCount, setAppendCount] = useState("1");
+  const [appendDuration, setAppendDuration] = useState("5");
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
@@ -122,6 +124,41 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
       return current;
     });
   });
+  const openBatchEditor = () => {
+    // 批量编辑使用独立副本，用户取消面板时不改动当前导播台计划。
+    setBatchShots(clone(plan.shots));
+    setBatchOpen(true);
+  };
+  const applyUniformDuration = () => {
+    const duration = Number(uniformDuration);
+    if (!Number.isFinite(duration) || duration <= 0) {
+      window.alert(language === "zh" ? "统一时长必须大于 0 秒" : "The shared duration must be greater than 0 seconds.");
+      return;
+    }
+    setBatchShots((current) => current.map((item) => ({ ...item, durationSeconds: duration })));
+  };
+  const appendBatchShots = () => {
+    const count = Number(appendCount);
+    const duration = Number(appendDuration);
+    if (!Number.isInteger(count) || count < 1 || count > 100) {
+      window.alert(language === "zh" ? "新增镜头数量必须是 1–100 的整数" : "The shot count must be an integer from 1 to 100.");
+      return;
+    }
+    if (!Number.isFinite(duration) || duration <= 0) {
+      window.alert(language === "zh" ? "新增镜头时长必须大于 0 秒" : "The new-shot duration must be greater than 0 seconds.");
+      return;
+    }
+    setBatchShots((current) => appendShots(current, count, duration));
+  };
+  const applyBatchChanges = () => {
+    if (batchShots.some((item) => !Number.isFinite(item.durationSeconds) || item.durationSeconds <= 0)) {
+      window.alert(language === "zh" ? "每个镜头的时长都必须大于 0 秒" : "Every shot duration must be greater than 0 seconds.");
+      return;
+    }
+    mutate((draft) => { draft.shots = clone(batchShots); });
+    setSelected((current) => Math.min(current, batchShots.length - 1));
+    setBatchOpen(false);
+  };
   const exportPlan = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
@@ -154,7 +191,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
     <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
-        <aside>{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}{plan.shots.map((item, index) => <div key={item.id} class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><div class="td-shot-delete-action"><button class="td-shot-delete" disabled={plan.shots.length <= 1} title={language === "zh" ? (plan.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头") : (plan.shots.length <= 1 ? "Keep at least one shot" : "Delete shot")} aria-label={language === "zh" ? "删除镜头" : "Delete shot"} onClick={(event) => { event.stopPropagation(); deleteShot(index); }}>×</button></div><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div class="td-shot-move-actions"><button title={language === "zh" ? "上移镜头" : "Move shot up"} onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button title={language === "zh" ? "下移镜头" : "Move shot down"} onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}<button class="wide" onClick={() => mutate((draft) => { draft.shots.push(newShot(draft.shots.length)); setSelected(draft.shots.length - 1); })}>＋ {t(language, "addShot")}</button></aside>
+        <aside class="td-shot-sidebar">{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}<div class="td-shot-list">{plan.shots.map((item, index) => <div key={item.id} class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><div class="td-shot-delete-action"><button class="td-shot-delete" disabled={plan.shots.length <= 1} title={language === "zh" ? (plan.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头") : (plan.shots.length <= 1 ? "Keep at least one shot" : "Delete shot")} aria-label={language === "zh" ? "删除镜头" : "Delete shot"} onClick={(event) => { event.stopPropagation(); deleteShot(index); }}>×</button></div><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div class="td-shot-move-actions"><button title={language === "zh" ? "上移镜头" : "Move shot up"} onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button title={language === "zh" ? "下移镜头" : "Move shot down"} onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}</div><button class="wide" onClick={() => mutate((draft) => { const addedIndex = draft.shots.length; draft.shots = appendShots(draft.shots, 1, 5); setSelected(addedIndex); })}>＋ {t(language, "addShot")}</button><div class="td-shot-batch-entry"><button class="wide" onClick={openBatchEditor}>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</button></div></aside>
         {shot && <section class="td-form">
           <div class="td-shot-meta">
             <label>ID<input value={shot.id} onInput={(event) => mutate((draft) => { draft.shots[selected].id = event.currentTarget.value; })}/></label>
@@ -193,6 +230,15 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
       </div>}
       {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
     </main>
+    {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
+      <header class="td-batch-header"><div><h2>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</h2><p>{language === "zh" ? `当前共 ${batchShots.length} 个镜头` : `${batchShots.length} shots`}</p></div><button aria-label={language === "zh" ? "关闭" : "Close"} onClick={() => setBatchOpen(false)}>×</button></header>
+      <div class="td-batch-tools">
+        <div><label>{language === "zh" ? "所有镜头时长" : "Duration for all shots"}<span><input type="number" min="0.1" step="0.1" value={uniformDuration} onInput={(event) => setUniformDuration(event.currentTarget.value)}/><em>{language === "zh" ? "秒" : "sec"}</em></span></label><button onClick={applyUniformDuration}>{language === "zh" ? "一键设置所有时长" : "Set all durations"}</button></div>
+        <div><label>{language === "zh" ? "新增镜头数量" : "New shot count"}<input type="number" min="1" max="100" step="1" value={appendCount} onInput={(event) => setAppendCount(event.currentTarget.value)}/></label><label>{language === "zh" ? "每个镜头时长" : "Duration per shot"}<span><input type="number" min="0.1" step="0.1" value={appendDuration} onInput={(event) => setAppendDuration(event.currentTarget.value)}/><em>{language === "zh" ? "秒" : "sec"}</em></span></label><button onClick={appendBatchShots}>{language === "zh" ? "批量新增镜头" : "Add shots"}</button></div>
+      </div>
+      <div class="td-batch-table"><div class="td-batch-row td-batch-table-head"><span>#</span><span>{language === "zh" ? "镜头名" : "Shot name"}</span><span>{language === "zh" ? "具体时长" : "Duration"}</span><span>latent {language === "zh" ? "接力" : "relay"}</span></div>{batchShots.map((item, index) => <div class="td-batch-row" key={item.id}><span>{index + 1}</span><input value={item.title} aria-label={`${language === "zh" ? "镜头名" : "Shot name"} ${index + 1}`} onInput={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, title: event.currentTarget.value } : shotItem))}/><label class="td-batch-duration"><input type="number" min="0.1" step="0.1" value={item.durationSeconds} onInput={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, durationSeconds: Number(event.currentTarget.value) } : shotItem))}/><span>{language === "zh" ? "秒" : "sec"}</span></label><label class="td-batch-relay"><input type="checkbox" checked={item.latentRelay} onChange={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, latentRelay: event.currentTarget.checked } : shotItem))}/><span>{item.latentRelay ? (language === "zh" ? "开" : "ON") : (language === "zh" ? "关" : "OFF")}</span></label></div>)}</div>
+      <footer><button onClick={() => setBatchOpen(false)}>{language === "zh" ? "取消" : "Cancel"}</button><button class="primary" onClick={applyBatchChanges}>{language === "zh" ? "应用更改" : "Apply changes"}</button></footer>
+    </section></div>}
   </div>;
 }
 
