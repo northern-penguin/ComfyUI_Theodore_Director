@@ -4,6 +4,10 @@
 
 Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. Ready-to-import Impact V6 single- and dual-sampling workflows are included.
 
+## 版权说明
+
+### 本工作流由抖音博主Theodore（抖音号:q1503623946）以及 b站up主 南极来の企鹅制作。
+
 ## 它解决什么问题
 
 - 一个项目可以管理超过 9 张图片、3 个视频或 3 路音频；每个分镜只按别名激活本轮所需素材。

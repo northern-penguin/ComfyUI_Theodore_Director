@@ -240,7 +240,8 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
     data["groups"].append({"id": max([group.get("id", 0) for group in data["groups"]] + [0]) + 1, "title": "01 Theodore 通用导播台 + H3 适配器", "bounding": [-3120, -570, 3310, 1780], "color": "#2f8f78", "flags": {}})
     for item in data["nodes"]:
         if item["id"] == 290 and item["type"] == "MarkdownNote":
-            item["widgets_values"] = ["## Theodore Director 开源工作流\n\n由通用导播台、H3 适配器和 Impact Pack 队列组成。计划数据嵌入工作流；每段只有在视频、尾帧与 AV latent 清单全部提交后才进入下一段。\n\n工作流与 Theodore 节点按 Apache-2.0 发布；模型及第三方节点遵循各自许可证。"]
+            # 版权署名统一由构建工具写入，避免重新生成示例工作流时丢失。
+            item["widgets_values"] = ["## Theodore Director 开源工作流\n\n### 本工作流由抖音博主Theodore（抖音号:q1503623946）以及 b站up主 南极来の企鹅制作。\n\n由通用导播台、H3 适配器和 Impact Pack 队列组成。导播台负责调度数据，并送入原先的 Impact 循环工作流。每段只有在视频、尾帧与 AV latent 清单全部提交后才进入下一段。\n\n工作流与 Theodore 节点按 Apache-2.0 发布；模型及第三方节点遵循各自许可证。"]
     data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 4, "variant": variant, "generated": True}
     return data
 
