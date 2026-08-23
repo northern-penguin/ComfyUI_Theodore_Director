@@ -111,6 +111,16 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   const generatedVideoUrl = generatedVideo.path ? comfyViewUrl(generatedVideo.path, "output") : null;
   const mutate = (fn: (draft: DirectorPlan) => void) => setPlan((current) => { const draft = clone(current); fn(draft); return draft; });
   const moveShot = (from: number, direction: number) => mutate((draft) => { const to = from + direction; if (to < 0 || to >= draft.shots.length) return; [draft.shots[from], draft.shots[to]] = [draft.shots[to], draft.shots[from]]; setSelected(to); });
+  const deleteShot = (index: number) => mutate((draft) => {
+    // 至少保留一个分镜，避免产生无法通过计划校验的空项目。
+    if (draft.shots.length <= 1) return;
+    draft.shots.splice(index, 1);
+    setSelected((current) => {
+      if (current > index) return current - 1;
+      if (current === index) return Math.min(index, draft.shots.length - 1);
+      return current;
+    });
+  });
   const exportPlan = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(plan, null, 2)], { type: "application/json" }));
     const link = document.createElement("a");
@@ -143,7 +153,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
     <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
-        <aside>{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}{plan.shots.map((item, index) => <div class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div><button onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}<button class="wide" onClick={() => mutate((draft) => { draft.shots.push(newShot(draft.shots.length)); setSelected(draft.shots.length - 1); })}>＋ {t(language, "addShot")}</button></aside>
+        <aside>{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}{plan.shots.map((item, index) => <div key={item.id} class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><div class="td-shot-delete-action"><button class="td-shot-delete" disabled={plan.shots.length <= 1} title={language === "zh" ? (plan.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头") : (plan.shots.length <= 1 ? "Keep at least one shot" : "Delete shot")} aria-label={language === "zh" ? "删除镜头" : "Delete shot"} onClick={(event) => { event.stopPropagation(); deleteShot(index); }}>×</button></div><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div class="td-shot-move-actions"><button title={language === "zh" ? "上移镜头" : "Move shot up"} onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button title={language === "zh" ? "下移镜头" : "Move shot down"} onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}<button class="wide" onClick={() => mutate((draft) => { draft.shots.push(newShot(draft.shots.length)); setSelected(draft.shots.length - 1); })}>＋ {t(language, "addShot")}</button></aside>
         {shot && <section class="td-form">
           <div class="td-shot-meta">
             <label>ID<input value={shot.id} onInput={(event) => mutate((draft) => { draft.shots[selected].id = event.currentTarget.value; })}/></label>
