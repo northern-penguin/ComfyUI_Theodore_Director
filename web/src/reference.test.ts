@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { previewReferences, validatePlan } from "./reference";
+import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import type { DirectorPlan } from "./types";
 
 const plan: DirectorPlan = {
@@ -22,5 +22,38 @@ describe("H3 reference preview", () => {
     const duplicated = structuredClone(plan);
     duplicated.assets[1].alias = "HERO";
     expect(validatePlan(duplicated).some((error) => error.includes("别名"))).toBe(true);
+  });
+
+  it("classifies references using current-shot availability", () => {
+    expect(referenceTokenIsAvailable(plan, plan.shots[0], "hero")).toBe(true);
+    expect(referenceTokenIsAvailable(plan, plan.shots[0], "walk.audio")).toBe(true);
+    expect(referenceTokenIsAvailable(plan, plan.shots[0], "missing")).toBe(false);
+    expect(referenceTokenIsAvailable(plan, plan.shots[0], "hero.audio")).toBe(false);
+
+    const mutedVideo = structuredClone(plan);
+    mutedVideo.assets[1].includeVideoAudio = false;
+    expect(referenceTokenIsAvailable(mutedVideo, mutedVideo.shots[0], "walk.audio")).toBe(false);
+
+    const unavailable = structuredClone(plan);
+    unavailable.assets[0].enabled = false;
+    unavailable.assets[1].path = "";
+    expect(referenceTokenIsAvailable(unavailable, unavailable.shots[0], "hero")).toBe(false);
+    expect(referenceTokenIsAvailable(unavailable, unavailable.shots[0], "walk")).toBe(false);
+  });
+
+  it("respects shot restrictions and per-shot disabled media", () => {
+    const restricted = structuredClone(plan);
+    restricted.shots.push({ ...structuredClone(restricted.shots[0]), id: "s2", title: "S2", disabledAssetIds: ["walk"] });
+    restricted.assets[0].shotIds = ["s1"];
+    expect(referenceTokenIsAvailable(restricted, restricted.shots[1], "hero")).toBe(false);
+    expect(referenceTokenIsAvailable(restricted, restricted.shots[1], "walk")).toBe(false);
+  });
+
+  it("requires global references to work in every enabled shot", () => {
+    const global = structuredClone(plan);
+    global.shots.push({ ...structuredClone(global.shots[0]), id: "s2", title: "S2", disabledAssetIds: ["hero"] });
+    expect(referenceTokenIsGloballyAvailable(global, "hero")).toBe(false);
+    global.shots[1].enabled = false;
+    expect(referenceTokenIsGloballyAvailable(global, "hero")).toBe(true);
   });
 });

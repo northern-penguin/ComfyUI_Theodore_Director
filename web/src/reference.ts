@@ -1,18 +1,42 @@
 import type { DirectorAsset, DirectorPlan, DirectorShot, ResolvedPreview } from "./types";
 
-const TOKEN = /\{\{ref:([^{}]+)}}/g;
+export const REFERENCE_TOKEN_SOURCE = String.raw`\{\{ref:([^{}]+)}}`;
+
+function referenceTokenRegex(): RegExp {
+  return new RegExp(REFERENCE_TOKEN_SOURCE, "g");
+}
+
+function availableAssetCatalog(plan: DirectorPlan, shot: DirectorShot): Map<string, DirectorAsset> {
+  const catalog = new Map<string, DirectorAsset>();
+  for (const asset of plan.assets) {
+    if (asset.enabled && asset.path.trim() && (!asset.shotIds.length || asset.shotIds.includes(shot.id)) && !shot.disabledAssetIds.includes(asset.id)) {
+      catalog.set(asset.alias, asset);
+    }
+  }
+  return catalog;
+}
+
+export function referenceTokenIsAvailable(plan: DirectorPlan, shot: DirectorShot, rawAlias: string): boolean {
+  const alias = rawAlias.trim();
+  const pairedAudio = alias.endsWith(".audio");
+  const baseAlias = pairedAudio ? alias.slice(0, -6) : alias;
+  const asset = availableAssetCatalog(plan, shot).get(baseAlias);
+  if (!asset) return false;
+  return !pairedAudio || (asset.kind === "video" && asset.includeVideoAudio);
+}
+
+export function referenceTokenIsGloballyAvailable(plan: DirectorPlan, rawAlias: string): boolean {
+  // 全局前后缀会进入每个启用镜头，因此必须对所有启用镜头都有效。
+  const activeShots = plan.shots.filter((shot) => shot.enabled);
+  return activeShots.length > 0 && activeShots.every((shot) => referenceTokenIsAvailable(plan, shot, rawAlias));
+}
 
 // 浏览器端只负责即时预检；Python 后端始终是执行前校验的最终权威。
 export function previewReferences(plan: DirectorPlan, shot: DirectorShot): ResolvedPreview {
   const errors: string[] = [];
-  const catalog = new Map<string, DirectorAsset>();
-  for (const asset of plan.assets) {
-    if (asset.enabled && (!asset.shotIds.length || asset.shotIds.includes(shot.id)) && !shot.disabledAssetIds.includes(asset.id)) {
-      catalog.set(asset.alias, asset);
-    }
-  }
+  const catalog = availableAssetCatalog(plan, shot);
   const prompt = [plan.promptPrefix, shot.prompt, plan.promptSuffix].filter(Boolean).join("\n");
-  const tokens = [...prompt.matchAll(TOKEN)].map((match) => match[1].trim());
+  const tokens = [...prompt.matchAll(referenceTokenRegex())].map((match) => match[1].trim());
   const ordered: DirectorAsset[] = [];
   const seen = new Set<string>();
   const add = (asset: DirectorAsset) => {
@@ -49,7 +73,7 @@ export function previewReferences(plan: DirectorPlan, shot: DirectorShot): Resol
   videos.forEach((asset, index) => labels.set(asset.alias, `<Video ${index + 1}>`));
   paired.forEach((asset, index) => labels.set(`${asset.alias}.audio`, `<Audio ${index + 1}>`));
   audios.forEach((asset, index) => labels.set(asset.alias, `<Audio ${paired.length + index + 1}>`));
-  const compiledPrompt = prompt.replace(TOKEN, (whole, alias: string) => labels.get(alias.trim()) ?? whole);
+  const compiledPrompt = prompt.replace(referenceTokenRegex(), (whole, alias: string) => labels.get(alias.trim()) ?? whole);
   const slots = [...labels.entries()].map(([alias, label]) => ({ label, alias, kind: label.slice(1).split(" ")[0].toLowerCase() }));
   return { compiledPrompt, errors, slots, mixedFiles, audioCount };
 }
