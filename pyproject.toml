@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "northern-penguin" }]
 keywords = ["comfyui", "minimax", "h3", "storyboard", "director"]
+dependencies = ["imageio-ffmpeg>=0.5.1"]
 
 [project.urls]
 Repository = "https://github.com/northern-penguin/ComfyUI_Theodore_Director"
@@ -24,4 +25,3 @@ line-length = 120
 PublisherId = "northern-penguin"
 DisplayName = "Theodore Director"
 Icon = ""
-

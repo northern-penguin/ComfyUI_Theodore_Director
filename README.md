@@ -29,6 +29,8 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 重启 ComfyUI。仓库已提交构建后的 `web/dist`，普通用户不需要安装 Node.js 或运行前端构建。
 
+“后处理 → 合并视频”需要 FFmpeg。程序依次查找 `THEODORE_DIRECTOR_FFMPEG` 环境变量、系统 `PATH` 和可选的 `imageio-ffmpeg` 内置程序；整合包若未提供 FFmpeg，请自行安装并加入 `PATH`。合并使用无损流复制，不重新编码，也不占用 ComfyUI 生成队列或 GPU。
+
 然后任选一个成品工作流导入：
 
 - [Impact V6 单采 Theodore Director](workflows/Impact_V6_Single_Theodore_Director.json)
@@ -52,6 +54,7 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 3. 给素材设置唯一别名，例如 `hero_front`、`location_night`、`walk_cycle`。
 4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
 5. 设置每个分镜的时长和启用状态，保存到工作流，然后正常 Queue。
+6. 全部分镜生成后进入“后处理”，逐镜头选择一个结果并点击“合并所选视频”。
 
 固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
 
@@ -99,10 +102,11 @@ ComfyUI/output/TheodoreDirector/<project>_<run>/
     001_<shot-id>_tail_*.png
   shot_results/
     001_<shot-id>_result.json
+  merged_video_00001_.mp4
   manifest.json
 ```
 
-项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，视频和项目级 `manifest.json` 位于项目目录。升级前平铺在项目目录的旧结果清单仍可用于续跑，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
+项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，分镜视频、合并视频和项目级 `manifest.json` 位于项目目录。升级前平铺在项目目录的旧结果清单仍可用于续跑，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
 
 ## 节点分层
 

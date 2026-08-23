@@ -5,6 +5,7 @@ import { t, type Language } from "./i18n";
 import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
+import { PostprocessPanel } from "./postprocess";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot } from "./types";
@@ -86,7 +87,7 @@ interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => v
 
 function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProps) {
   const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
-  const [tab, setTab] = useState<"shots" | "assets" | "settings">("shots");
+  const [tab, setTab] = useState<"shots" | "assets" | "settings" | "postprocess">("shots");
   const [selected, setSelected] = useState(0);
   const [language, setLanguage] = useState<Language>(() => navigator.language.startsWith("zh") ? "zh" : "en");
   const [uploadNames, setUploadNames] = useState<Record<string, string>>({});
@@ -191,7 +192,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
 
   return <div class="td-shell">
     <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(normalizePlan(imported as DirectorPlan)); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
-    <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
+    <nav>{(["shots", "assets", "settings", "postprocess"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
         <aside class="td-shot-sidebar">{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}<div class="td-shot-list">{plan.shots.map((item, index) => <div key={item.id} class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><div class="td-shot-delete-action"><button class="td-shot-delete" disabled={plan.shots.length <= 1} title={language === "zh" ? (plan.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头") : (plan.shots.length <= 1 ? "Keep at least one shot" : "Delete shot")} aria-label={language === "zh" ? "删除镜头" : "Delete shot"} onClick={(event) => { event.stopPropagation(); deleteShot(index); }}>×</button></div><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div class="td-shot-move-actions"><button title={language === "zh" ? "上移镜头" : "Move shot up"} onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button title={language === "zh" ? "下移镜头" : "Move shot down"} onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}</div><button class="wide" onClick={() => mutate((draft) => { const addedIndex = draft.shots.length; draft.shots = appendShots(draft.shots, 1, 5); setSelected(addedIndex); })}>＋ {t(language, "addShot")}</button><div class="td-shot-batch-entry"><button class="wide" onClick={openBatchEditor}>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</button></div></aside>
@@ -232,6 +233,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
       {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
+      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
       <header class="td-batch-header"><div><h2>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</h2><p>{language === "zh" ? `当前共 ${batchShots.length} 个镜头` : `${batchShots.length} shots`}</p></div><button aria-label={language === "zh" ? "关闭" : "Close"} onClick={() => setBatchOpen(false)}>×</button></header>

@@ -2,14 +2,42 @@
 
 from __future__ import annotations
 
+import asyncio
 from aiohttp import web
 from pathlib import Path
+import tempfile
 
 from .theodore_director.paths import find_generated_videos
+from .theodore_director.postprocess import (
+    allocate_merged_video,
+    build_ffmpeg_concat_args,
+    ffmpeg_concat_line,
+    find_ffmpeg_executable,
+    find_merged_videos,
+    validate_merge_selections,
+)
 from .theodore_director.uploads import allocate_upload_path
 
 _ROUTES_REGISTERED = False
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
+_MERGE_LOCKS: dict[str, asyncio.Lock] = {}
+
+
+def _video_response(root: Path, videos: list[Path]) -> dict:
+    """把 output 内视频转换为前端共用的结果列表结构。"""
+    results = []
+    for video in videos:
+        stat = video.stat()
+        results.append({
+            "path": video.relative_to(root).as_posix(),
+            "bytes": stat.st_size,
+            "modifiedAt": stat.st_mtime,
+        })
+    response = {"found": bool(results), "count": len(results), "results": results}
+    if results:
+        # 保留旧版单结果字段，避免第三方前端在升级后立即失效。
+        response.update(results[0])
+    return response
 
 
 def register_routes() -> None:
@@ -42,20 +70,82 @@ def register_routes() -> None:
                 shot_id=query.get("shotId", ""),
                 active_index=active_index,
             )
-            results = []
-            for video in videos:
-                stat = video.stat()
-                results.append({
-                    "path": video.relative_to(root).as_posix(),
-                    "bytes": stat.st_size,
-                    "modifiedAt": stat.st_mtime,
-                })
-            response = {"found": bool(results), "count": len(results), "results": results}
-            if results:
-                # 保留旧版单结果字段，避免第三方前端在升级后立即失效。
-                response.update(results[0])
-            return web.json_response(response)
+            return web.json_response(_video_response(root, videos))
         except (OSError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.get("/theodore-director/v1/postprocess/merged-videos")
+    async def merged_videos(request):
+        """查询当前项目和 Run 的全部合并结果。"""
+        query = request.rel_url.query
+        try:
+            root = Path(folder_paths.get_output_directory()).resolve()
+            videos = find_merged_videos(root, query.get("projectName", ""), query.get("runId", ""))
+            return web.json_response(_video_response(root, videos))
+        except (OSError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.post("/theodore-director/v1/postprocess/merge")
+    async def merge_videos(request):
+        """按前端选择顺序使用 FFmpeg 无损合并分镜视频。"""
+        try:
+            payload = await request.json()
+            project_name = str(payload.get("projectName", ""))
+            run_id = str(payload.get("runId", ""))
+            root = Path(folder_paths.get_output_directory()).resolve()
+            selections = validate_merge_selections(
+                root,
+                project_name,
+                run_id,
+                payload.get("selections", []),
+            )
+            lock_key = f"{project_name}\0{run_id}"
+            lock = _MERGE_LOCKS.setdefault(lock_key, asyncio.Lock())
+            if lock.locked():
+                return web.json_response({"error": "当前项目已有一个视频合并任务正在执行"}, status=409)
+
+            async with lock:
+                ffmpeg = find_ffmpeg_executable()
+                output_path = allocate_merged_video(root, project_name, run_id)
+                list_path: Path | None = None
+                try:
+                    # 临时清单与输出放在同一运行目录，结束后立即删除清单。
+                    with tempfile.NamedTemporaryFile(
+                        mode="w",
+                        encoding="utf-8",
+                        newline="\n",
+                        prefix=".theodore_concat_",
+                        suffix=".txt",
+                        dir=output_path.parent,
+                        delete=False,
+                    ) as stream:
+                        list_path = Path(stream.name)
+                        for source in selections:
+                            stream.write(ffmpeg_concat_line(source))
+                    process = await asyncio.create_subprocess_exec(
+                        *build_ffmpeg_concat_args(ffmpeg, list_path, output_path),
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    _stdout, stderr = await process.communicate()
+                    if process.returncode != 0:
+                        message = stderr.decode("utf-8", errors="replace").strip()
+                        raise RuntimeError(message or f"FFmpeg 退出码为 {process.returncode}")
+                    if not output_path.is_file() or output_path.stat().st_size <= 0:
+                        raise RuntimeError("FFmpeg 未生成有效的合并视频")
+                    return web.json_response({
+                        "ok": True,
+                        "sourceCount": len(selections),
+                        "result": _video_response(root, [output_path])["results"][0],
+                    })
+                except Exception:
+                    # 只清理由本次任务创建的不完整输出，不触碰已有用户文件。
+                    output_path.unlink(missing_ok=True)
+                    raise
+                finally:
+                    if list_path is not None:
+                        list_path.unlink(missing_ok=True)
+        except (OSError, RuntimeError, TypeError, ValueError, FileNotFoundError) as exc:
             return web.json_response({"error": str(exc)}, status=400)
 
     @routes.post("/theodore-director/v1/assets")
