@@ -46,12 +46,27 @@ def build_output_paths_from_values(project_name: str, run_id_value: str, shot_id
         latent_save_prefix=f"{base}/latent_context/clip",
         tail_prefix=f"{base}/tail_frames/{stem}_tail",
         manifest_path=f"{base}/manifest.json",
-        shot_result_path=f"{base}/{stem}_result.json",
+        # 每个镜头的事务结果集中存放，避免与成片文件混在运行目录根层。
+        shot_result_path=f"{base}/shot_results/{stem}_result.json",
     )
 
 
 def build_output_paths(plan: Plan, shot: Shot, active_index: int) -> OutputPaths:
     return build_output_paths_from_values(plan.project_name, plan.run_id, shot.id, active_index)
+
+
+def shot_result_candidates(root: Path, paths: OutputPaths) -> list[Path]:
+    """按新路径优先返回分镜结果文件，并兼容升级前的根层文件。"""
+    output_root = root.resolve()
+    current = (output_root / paths.shot_result_path).resolve(strict=False)
+    legacy = (output_root / paths.run_prefix / current.name).resolve(strict=False)
+    candidates = [current, legacy]
+    for candidate in candidates:
+        try:
+            candidate.relative_to(output_root)
+        except ValueError as error:
+            raise ValueError(f"拒绝读取 ComfyUI output 目录之外的结果文件: {candidate}") from error
+    return candidates
 
 
 def find_generated_video(

@@ -97,11 +97,12 @@ ComfyUI/output/TheodoreDirector/<project>_<run>/
     clip_00001.safetensors
   tail_frames/
     001_<shot-id>_tail_*.png
-  001_<shot-id>_result.json
+  shot_results/
+    001_<shot-id>_result.json
   manifest.json
 ```
 
-项目名与 Run ID 被拼成一个目录名；AV latent 和尾帧分别集中在一层 `latent_context/` 与 `tail_frames/` 目录，视频和结果清单直接位于项目目录。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
+项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，视频和项目级 `manifest.json` 位于项目目录。升级前平铺在项目目录的旧结果清单仍可用于续跑，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
 
 ## 节点分层
 

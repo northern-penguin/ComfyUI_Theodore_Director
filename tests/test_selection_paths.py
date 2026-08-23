@@ -3,7 +3,13 @@ import os
 
 import pytest
 
-from theodore_director.paths import build_output_paths, find_generated_video, find_generated_videos, resolve_output_file
+from theodore_director.paths import (
+    build_output_paths,
+    find_generated_video,
+    find_generated_videos,
+    resolve_output_file,
+    shot_result_candidates,
+)
 from theodore_director.schema import DEFAULT_PLAN, load_plan
 from theodore_director.selection import select_shot
 
@@ -71,12 +77,27 @@ def test_output_paths_are_relative_and_sanitized():
     assert paths.latent_prefix.endswith("/latent_context")
     assert paths.latent_save_prefix.endswith("/latent_context/clip")
     assert paths.tail_prefix.endswith("/tail_frames/001_shot_001_tail")
-    assert paths.shot_result_path.endswith("/001_shot_001_result.json")
-    # 视频仍平铺在项目目录；latent 和尾帧只允许各自增加一层目录。
+    assert paths.shot_result_path.endswith("/shot_results/001_shot_001_result.json")
+    # 视频仍平铺在项目目录；latent、尾帧和分镜结果各自只增加一层目录。
     assert len(paths.video_prefix.split("/")) == 3
     assert len(paths.latent_save_prefix.split("/")) == 4
     assert len(paths.tail_prefix.split("/")) == 4
+    assert len(paths.shot_result_path.split("/")) == 4
     assert ".." not in paths.video_prefix
+
+
+def test_shot_result_candidates_prefer_new_folder_and_keep_legacy_fallback(tmp_path):
+    plan = load_plan(DEFAULT_PLAN)
+    paths = build_output_paths(plan, plan.active_shots[0], 0)
+
+    candidates = shot_result_candidates(tmp_path, paths)
+
+    assert candidates[0] == (
+        tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "shot_results" / "001_shot_001_result.json"
+    ).resolve()
+    assert candidates[1] == (
+        tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "001_shot_001_result.json"
+    ).resolve()
 
 
 def test_resolve_output_file_uses_expected_folder_for_bare_save_name(tmp_path):

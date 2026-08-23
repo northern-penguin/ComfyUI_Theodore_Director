@@ -13,7 +13,7 @@ from .theodore_director.duration import calculate_h3_frames
 from .theodore_director.legacy import import_legacy_script
 from .theodore_director.manifest import commit_shot_result
 from .theodore_director.media import load_audio, load_image, load_video
-from .theodore_director.paths import OutputPaths, build_output_paths, resolve_output_file
+from .theodore_director.paths import OutputPaths, build_output_paths, resolve_output_file, shot_result_candidates
 from .theodore_director.references import resolve_references
 from .theodore_director.schema import DEFAULT_PLAN_JSON, Plan, load_plan
 from .theodore_director.selection import ShotSelection, select_shot
@@ -110,12 +110,17 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
             while resolved_index < len(plan.active_shots):
                 candidate = plan.active_shots[resolved_index]
                 candidate_paths = build_output_paths(plan, candidate, resolved_index)
-                if not is_shot_complete(
-                    root / candidate_paths.shot_result_path,
-                    shot_hash=shot_hash(plan, candidate),
-                    plan_hash=plan.plan_hash,
-                    latent_required=plan.continuity.mode == "h3_av_latent",
-                ):
+                # 新目录优先，旧的根层结果文件仅作为续跑兼容回退。
+                complete = any(
+                    is_shot_complete(
+                        result_path,
+                        shot_hash=shot_hash(plan, candidate),
+                        plan_hash=plan.plan_hash,
+                        latent_required=plan.continuity.mode == "h3_av_latent",
+                    )
+                    for result_path in shot_result_candidates(root, candidate_paths)
+                )
+                if not complete:
                     break
                 resolved_index += 1
             if resolved_index >= len(plan.active_shots):

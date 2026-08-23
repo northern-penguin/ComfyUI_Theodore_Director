@@ -51,7 +51,7 @@ v4 增加 `secondSampling`。双采图中，`SelectShot` 同样只输出当前�
 
 工作流不再用“某个尾帧文件是否存在”作为唯一完成标志。`CommitResult` 依赖保存视频、保存 AV latent、保存尾帧三条链路；只有三者都能解析为真实文件时才原子替换分镜结果 JSON 和项目 manifest。崩溃时最多留下未提交文件，不会产生假的 completed 记录。
 
-输出运行目录固定为 `output/TheodoreDirector/<project>_<run>/`。AV latent 与尾帧分别只增加一层 `latent_context/`、`tail_frames/` 目录，不再按分镜创建更深目录；视频和结果清单平铺在运行目录。`OutputPaths` 同时产生保存前缀与回读基准；对于只返回纯文件名的第三方保存节点，`CommitResult` 会在该前缀的父目录中解析文件，并把解析后的绝对路径写入结果清单，供尾帧、latent 校验和续跑共同使用。
+输出运行目录固定为 `output/TheodoreDirector/<project>_<run>/`。AV latent、尾帧与分镜结果分别只增加一层 `latent_context/`、`tail_frames/`、`shot_results/` 目录，不再按分镜创建更深目录；视频和项目级 `manifest.json` 保留在运行目录根层。升级前平铺在根层的结果 JSON 仍可用于续跑兼容，新结果只写入 `shot_results/`。`OutputPaths` 同时产生保存前缀与回读基准；对于只返回纯文件名的第三方保存节点，`CommitResult` 会在该前缀的父目录中解析文件，并把解析后的绝对路径写入结果清单，供尾帧、latent 校验和续跑共同使用。
 
 ## 安全边界
 
