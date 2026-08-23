@@ -1,4 +1,4 @@
-"""将已填写素材和分镜的 Theodore V6 工作流原位升级为逐镜头 latent relay。"""
+"""将已填写素材和分镜的 Theodore V6 工作流升级到当前逐镜头协议。"""
 
 from __future__ import annotations
 
@@ -56,6 +56,13 @@ def upgrade(data: dict[str, Any]) -> dict[str, Any]:
     else:
         outputs[14]["name"] = "latent relay"
         outputs[14]["type"] = "BOOLEAN"
+    if len(outputs) == 15:
+        outputs.append({"name": "second sampling", "type": "BOOLEAN", "links": None})
+    elif len(outputs) < 16:
+        raise ValueError("SelectShot 二次采样输出端口数量异常")
+    else:
+        outputs[15]["name"] = "second sampling"
+        outputs[15]["type"] = "BOOLEAN"
 
     next_link = max((item[0] for item in links), default=0) + 1
 
@@ -86,14 +93,15 @@ def upgrade(data: dict[str, Any]) -> dict[str, Any]:
         by_id[origin]["outputs"][origin_slot]["links"] = current
 
     plan = json.loads(project["widgets_values"][0])
-    plan["schemaVersion"] = 3
+    plan["schemaVersion"] = 4
     for shot in plan.get("shots", []):
         shot.setdefault("latentRelay", True)
+        shot.setdefault("secondSampling", True)
     project["widgets_values"][0] = json.dumps(plan, ensure_ascii=False, indent=2)
 
     data["links"] = sorted(links, key=lambda item: item[0])
     data["last_link_id"] = max(item[0] for item in links)
-    data.setdefault("extra", {}).setdefault("theodoreDirector", {})["schemaVersion"] = 3
+    data.setdefault("extra", {}).setdefault("theodoreDirector", {})["schemaVersion"] = 4
     return data
 
 
@@ -122,7 +130,7 @@ def main() -> None:
     upgraded = upgrade(data)
     output.parent.mkdir(parents=True, exist_ok=True)
     write_json_atomic(output, upgraded)
-    print(f"latent relay v3: {len(upgraded['nodes'])} nodes, {len(upgraded['links'])} links -> {output}")
+    print(f"Theodore protocol v4: {len(upgraded['nodes'])} nodes, {len(upgraded['links'])} links -> {output}")
 
 
 if __name__ == "__main__":

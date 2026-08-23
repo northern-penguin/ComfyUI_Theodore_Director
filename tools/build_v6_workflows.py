@@ -20,7 +20,7 @@ REMOVE_IDS = {
 
 def default_plan(variant: str) -> dict[str, Any]:
     return {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "project": {
             "id": f"impact_v6_{variant}",
             "name": f"Impact V6 Theodore {variant.title()}",
@@ -45,6 +45,7 @@ def default_plan(variant: str) -> dict[str, Any]:
                 "durationSeconds": 5,
                 "enabled": True,
                 "latentRelay": True,
+                "secondSampling": True,
                 "seed": None,
                 "disabledAssetIds": [],
             }
@@ -96,7 +97,7 @@ def director_nodes(first_id: int, variant: str) -> dict[str, dict[str, Any]]:
         "shot": node(
             ids["shot"], "TheodoreDirector_SelectShot", [-520, -500], [390, 310],
             [socket("plan", "THEODORE_DIRECTOR_PLAN"), socket("queue_index", "INT", widget=True), socket("base_seed", "INT", widget=True), socket("resume_mode", "COMBO", widget=True)],
-            [output("SHOT", "THEODORE_DIRECTOR_SHOT"), output("prompt", "STRING"), output("negative_prompt", "STRING"), output("duration_seconds", "FLOAT"), output("seed", "INT"), output("shot_id", "STRING"), output("active_index", "INT"), output("source_index", "INT"), output("active_count", "INT"), output("is_first", "BOOLEAN"), output("is_last", "BOOLEAN"), output("next_index", "INT"), output("has_next", "BOOLEAN"), output("shot_hash", "STRING"), output("latent relay", "BOOLEAN")],
+            [output("SHOT", "THEODORE_DIRECTOR_SHOT"), output("prompt", "STRING"), output("negative_prompt", "STRING"), output("duration_seconds", "FLOAT"), output("seed", "INT"), output("shot_id", "STRING"), output("active_index", "INT"), output("source_index", "INT"), output("active_count", "INT"), output("is_first", "BOOLEAN"), output("is_last", "BOOLEAN"), output("next_index", "INT"), output("has_next", "BOOLEAN"), output("shot_hash", "STRING"), output("latent relay", "BOOLEAN"), output("second sampling", "BOOLEAN")],
             [0, 123456790, "resume"], "② 当前分镜（支持续跑）",
         ),
         "adapter": node(
@@ -139,6 +140,23 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
     by_id.update({item["id"]: item for item in created.values()})
     ids = {name: value["id"] for name, value in created.items()}
 
+    second_sample_branch_id: int | None = None
+    if variant == "dual":
+        # 放在第二采样解码与最终裁切之间，false 分支可惰性跳过整条二采计算。
+        second_sample_branch_id = max(by_id) + 1
+        second_sample_branch = node(
+            second_sample_branch_id,
+            "ImpactConditionalBranch",
+            [2860, 1600],
+            [330, 110],
+            [socket("tt_value", "IMAGE"), socket("ff_value", "IMAGE"), socket("cond", "BOOLEAN", widget=True)],
+            [output("*", "IMAGE")],
+            [False],
+            "Theodore 二次采样选择",
+        )
+        data["nodes"].append(second_sample_branch)
+        by_id[second_sample_branch_id] = second_sample_branch
+
     # 先保留两端都存在的原链接，然后按目标端口替换导播台接线。
     links = [item for item in data["links"] if item[1] in by_id and item[3] in by_id]
     next_link = max((item[0] for item in links), default=0) + 1
@@ -168,6 +186,11 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
     connect(328, 0, 391, 1, "INT")
     connect(ids["shot"], 14, 390, 2, "BOOLEAN")
     connect(ids["shot"], 14, 391, 2, "BOOLEAN")
+    if second_sample_branch_id is not None:
+        connect(384, 0, second_sample_branch_id, 0, "IMAGE")
+        connect(122, 0, second_sample_branch_id, 1, "IMAGE")
+        connect(ids["shot"], 15, second_sample_branch_id, 2, "BOOLEAN")
+        connect(second_sample_branch_id, 0, 392, 0, "IMAGE")
     connect(ids["adapter"], 0, 136, 15, "STRING")
     connect(ids["adapter"], 1, 136, 18, "INT")
     for index in range(9):
@@ -218,7 +241,7 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
     for item in data["nodes"]:
         if item["id"] == 290 and item["type"] == "MarkdownNote":
             item["widgets_values"] = ["## Theodore Director 开源工作流\n\n由通用导播台、H3 适配器和 Impact Pack 队列组成。计划数据嵌入工作流；每段只有在视频、尾帧与 AV latent 清单全部提交后才进入下一段。\n\n工作流与 Theodore 节点按 Apache-2.0 发布；模型及第三方节点遵循各自许可证。"]
-    data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 3, "variant": variant, "generated": True}
+    data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 4, "variant": variant, "generated": True}
     return data
 
 
@@ -280,9 +303,37 @@ def validate_workflow(data: dict[str, Any]) -> None:
         raise ValueError("裁切帧分支未由当前镜头 latent relay 开关控制")
     if origin_type_by_id(391, "tt_value") != "MiniMaxH3MotionContext" or origin_type_by_id(391, "ff_value") != "PrimitiveInt":
         raise ValueError("裁切帧的 latent relay 真/假分支接反")
+
+    variant = data.get("extra", {}).get("theodoreDirector", {}).get("variant")
+    second_branches = [item for item in data["nodes"] if item.get("title") == "Theodore 二次采样选择"]
+    if variant == "dual":
+        if len(second_branches) != 1:
+            raise ValueError(f"双采工作流应有 1 个二次采样分支，实际为 {len(second_branches)}")
+        branch = second_branches[0]
+        if origin_type_by_id(branch["id"], "cond") != "TheodoreDirector_SelectShot":
+            raise ValueError("二次采样分支未由当前分镜 BOOL 控制")
+        if origin_type_by_id(branch["id"], "tt_value") != "VAEDecode" or origin_type_by_id(branch["id"], "ff_value") != "VAEDecode":
+            raise ValueError("二次采样分支的一采/二采画面来源无效")
+        trim_input = next(item for item in nodes[392]["inputs"] if item["name"] == "images")
+        if nodes[links_by_id[trim_input["link"]][1]].get("title") != "Theodore 二次采样选择":
+            raise ValueError("最终 Motion Context Trim 未使用二次采样选择结果")
+    elif second_branches:
+        raise ValueError("单采工作流不应包含二次采样分支")
     obsolete = {"TextSplitByDelimiter", "PrimitiveStringMultiline", "ImagePass", "easy isFileExist"}
     if present := obsolete & {item["type"] for item in data["nodes"]}:
         raise ValueError(f"仍含已替换的旧导播逻辑: {sorted(present)}")
+
+
+def transplant_director_plan(data: dict[str, Any], donor: dict[str, Any]) -> None:
+    """只复制导播计划，用于保留用户素材/提示词并换用双采图结构。"""
+    target_node = next(item for item in data["nodes"] if item["type"] == "TheodoreDirector_Project")
+    donor_node = next(item for item in donor["nodes"] if item["type"] == "TheodoreDirector_Project")
+    plan = json.loads(donor_node["widgets_values"][0])
+    plan["schemaVersion"] = 4
+    for shot in plan.get("shots", []):
+        shot.setdefault("latentRelay", True)
+        shot.setdefault("secondSampling", True)
+    target_node["widgets_values"][0] = json.dumps(plan, ensure_ascii=False, indent=2)
 
 
 def main() -> None:
@@ -290,9 +341,13 @@ def main() -> None:
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--variant", choices=("single", "dual"), required=True)
+    parser.add_argument("--plan-from", type=Path, help="从另一份 Theodore 工作流复制素材和分镜计划")
     args = parser.parse_args()
     source = json.loads(args.source.read_text(encoding="utf-8"))
     result = transform(source, args.variant)
+    if args.plan_from:
+        donor = json.loads(args.plan_from.read_text(encoding="utf-8"))
+        transplant_director_plan(result, donor)
     validate_workflow(result)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

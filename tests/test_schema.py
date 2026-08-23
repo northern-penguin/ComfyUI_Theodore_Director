@@ -27,7 +27,7 @@ def test_project_id_is_preserved_but_does_not_affect_generation_hash():
     assert first_plan.plan_hash == second_plan.plan_hash
 
 
-def test_v1_plan_without_project_id_migrates_to_stable_v3_plan():
+def test_v1_plan_without_project_id_migrates_to_stable_v4_plan():
     legacy = json.loads(DEFAULT_PLAN_JSON)
     legacy["schemaVersion"] = 1
     legacy["project"].pop("id")
@@ -35,10 +35,11 @@ def test_v1_plan_without_project_id_migrates_to_stable_v3_plan():
     first = load_plan(legacy)
     second = load_plan(legacy)
 
-    assert first.schema_version == 3
+    assert first.schema_version == 4
     assert first.project_id.startswith("td_")
     assert first.project_id == second.project_id
     assert first.active_shots[0].latent_relay is True
+    assert first.active_shots[0].second_sampling is True
 
 
 def test_v2_plan_without_relay_switch_preserves_existing_continuity():
@@ -48,8 +49,19 @@ def test_v2_plan_without_relay_switch_preserves_existing_continuity():
 
     migrated = load_plan(legacy)
 
-    assert migrated.schema_version == 3
+    assert migrated.schema_version == 4
     assert migrated.active_shots[0].latent_relay is True
+
+
+def test_v3_plan_without_second_sampling_switch_preserves_dual_sampling():
+    legacy = json.loads(DEFAULT_PLAN_JSON)
+    legacy["schemaVersion"] = 3
+    legacy["shots"][0].pop("secondSampling")
+
+    migrated = load_plan(legacy)
+
+    assert migrated.schema_version == 4
+    assert migrated.active_shots[0].second_sampling is True
 
 
 def test_duplicate_aliases_are_case_insensitive():

@@ -49,6 +49,20 @@ def test_latent_relay_uses_current_active_shot_switch():
     assert select_shot(plan, 2).latent_relay is True
 
 
+def test_second_sampling_uses_current_active_shot_switch():
+    data = copy.deepcopy(DEFAULT_PLAN)
+    data["shots"] = [
+        {"id": "one", "prompt": "x", "durationSeconds": 5, "secondSampling": False},
+        {"id": "disabled", "prompt": "skip", "durationSeconds": 5, "enabled": False, "secondSampling": False},
+        {"id": "two", "prompt": "y", "durationSeconds": 5, "secondSampling": True},
+    ]
+    plan = load_plan(data)
+
+    assert select_shot(plan, 0).second_sampling is False
+    # Impact 索引 1 直接对应第二个启用分镜，不会被禁用分镜错位。
+    assert select_shot(plan, 1).second_sampling is True
+
+
 def test_output_paths_are_relative_and_sanitized():
     plan = load_plan(DEFAULT_PLAN)
     paths = build_output_paths(plan, plan.active_shots[0], 0)

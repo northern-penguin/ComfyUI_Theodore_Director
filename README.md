@@ -72,16 +72,17 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 可视化导播计划
   → Project：冻结并哈希计划
   → Impact 当前索引
-  → SelectShot：跳过禁用分镜、续跑检查、计算 seed，输出当前 latentRelay BOOL
+  → SelectShot：跳过禁用分镜、续跑检查、计算 seed，输出当前 latentRelay / secondSampling BOOL
   → H3Adapter：解析别名、校验上限、只加载当前素材、编译标签与时长
   → 原 V6 H3 条件编码与单采/双采核心
   → Motion Context 分支：latentRelay=true 载入并裁切上一段 AV latent，false 直通
+  → 双采画面分支：secondSampling=true 选二采画面，false 选一采画面
   → SaveVideo + SaveLatent + SaveTail
   → CommitResult：原子写入结果和总清单
   → ImpactSetWidgetValue + ImpactQueueTrigger（有下一段时）
 ```
 
-续跑模式会从当前 Impact 索引向后检查结果清单。只有计划哈希、分镜哈希和实际文件全部匹配，才视为已完成；修改提示词、素材、latentRelay 或连续性配置会令对应旧结果失效。开关只控制是否消费上一段 latent；每段的 AV latent 仍会照常保存和校验。
+续跑模式会从当前 Impact 索引向后检查结果清单。只有计划哈希、分镜哈希和实际文件全部匹配，才视为已完成；修改提示词、素材、latentRelay、secondSampling 或连续性配置会令对应旧结果失效。latentRelay 只控制是否消费上一段 latent；每段的 AV latent 仍会照常保存和校验。双采图中 secondSampling=false 会惰性跳过整条二采计算链。
 
 输出默认位于：
 

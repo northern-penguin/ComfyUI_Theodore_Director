@@ -18,6 +18,7 @@ class ShotSelection:
     is_first: bool
     is_last: bool
     latent_relay: bool
+    second_sampling: bool
     next_index: int
     has_next: bool
     seed: int
@@ -53,6 +54,7 @@ def select_shot(plan: Plan, queue_index: int, base_seed: int | None = None) -> S
         is_first=queue_index == 0,
         is_last=not has_next,
         latent_relay=latent_relay,
+        second_sampling=shot.second_sampling,
         next_index=queue_index + 1 if has_next else 0,
         has_next=has_next,
         seed=shot.seed if shot.seed is not None else seed_base + queue_index,

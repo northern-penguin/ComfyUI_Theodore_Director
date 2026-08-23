@@ -93,6 +93,7 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
                 io.Boolean.Output("has_next"),
                 io.String.Output("shot_hash"),
                 io.Boolean.Output("latent_relay", display_name="latent relay"),
+                io.Boolean.Output("second_sampling", display_name="second sampling"),
             ],
         )
 
@@ -137,6 +138,7 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
             selected.has_next,
             selected.shot_hash,
             selected.latent_relay,
+            selected.second_sampling,
         )
 
 

@@ -11,11 +11,15 @@ const KIND_LABELS: Record<AssetKind, string> = { image: "图片", video: "视频
 
 function normalizePlan(value: DirectorPlan): DirectorPlan {
   const plan = clone(value);
-  plan.schemaVersion = 3;
+  plan.schemaVersion = 4;
   // 内部 ID 只用于兼容协议，不展示给用户，也不参与生成 hash。
   if (!plan.project.id?.trim()) plan.project.id = uid("project");
   // v1/v2 工作流没有逐镜头开关，默认保持原有接力流程。
-  plan.shots = plan.shots.map((shot) => ({ ...shot, latentRelay: shot.latentRelay ?? true }));
+  plan.shots = plan.shots.map((shot) => ({
+    ...shot,
+    latentRelay: shot.latentRelay ?? true,
+    secondSampling: shot.secondSampling ?? true,
+  }));
   return plan;
 }
 
@@ -25,7 +29,7 @@ function exportFileStem(value: string): string {
 }
 
 function newShot(index: number): DirectorShot {
-  return { id: `shot_${String(index + 1).padStart(3, "0")}`, title: `Shot ${index + 1}`, prompt: "", negativePrompt: "", durationSeconds: 5, enabled: true, latentRelay: true, seed: null, disabledAssetIds: [] };
+  return { id: `shot_${String(index + 1).padStart(3, "0")}`, title: `Shot ${index + 1}`, prompt: "", negativePrompt: "", durationSeconds: 5, enabled: true, latentRelay: true, secondSampling: true, seed: null, disabledAssetIds: [] };
 }
 
 function newAsset(kind: AssetKind): DirectorAsset {
@@ -86,9 +90,9 @@ async function writeClipboardText(value: string): Promise<void> {
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
 }
 
-interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void }
+interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean }
 
-function Editor({ initial, onSave, onClose }: EditorProps) {
+function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProps) {
   const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
   const [tab, setTab] = useState<"shots" | "assets" | "settings">("shots");
   const [selected, setSelected] = useState(0);
@@ -103,6 +107,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
+  const allSecondSampling = plan.shots.length > 0 && plan.shots.every((item) => item.secondSampling);
   const generatedVideoUrl = generatedVideo.path ? comfyViewUrl(generatedVideo.path, "output") : null;
   const mutate = (fn: (draft: DirectorPlan) => void) => setPlan((current) => { const draft = clone(current); fn(draft); return draft; });
   const moveShot = (from: number, direction: number) => mutate((draft) => { const to = from + direction; if (to < 0 || to >= draft.shots.length) return; [draft.shots[from], draft.shots[to]] = [draft.shots[to], draft.shots[from]]; setSelected(to); });
@@ -138,14 +143,17 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
     <nav>{(["shots", "assets", "settings"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
-        <aside>{plan.shots.map((item, index) => <div class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div><button onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}<button class="wide" onClick={() => mutate((draft) => { draft.shots.push(newShot(draft.shots.length)); setSelected(draft.shots.length - 1); })}>＋ {t(language, "addShot")}</button></aside>
+        <aside>{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}{plan.shots.map((item, index) => <div class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div><button onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}<button class="wide" onClick={() => mutate((draft) => { draft.shots.push(newShot(draft.shots.length)); setSelected(draft.shots.length - 1); })}>＋ {t(language, "addShot")}</button></aside>
         {shot && <section class="td-form">
           <div class="td-shot-meta">
             <label>ID<input value={shot.id} onInput={(event) => mutate((draft) => { draft.shots[selected].id = event.currentTarget.value; })}/></label>
             <label>标题 / Title<input value={shot.title} onInput={(event) => mutate((draft) => { draft.shots[selected].title = event.currentTarget.value; })}/></label>
             <label>时长 / Duration<input type="number" min="0.1" step="0.1" value={shot.durationSeconds} onInput={(event) => mutate((draft) => { draft.shots[selected].durationSeconds = Number(event.currentTarget.value); })}/></label>
-            <label class="td-shot-enabled"><input type="checkbox" checked={shot.enabled} onChange={(event) => mutate((draft) => { draft.shots[selected].enabled = event.currentTarget.checked; })}/><span>启用 / Enabled</span></label>
-            <label class="td-shot-enabled" title={activeIndex === 0 ? "首个启用镜头没有上一段，执行时会自动忽略接力" : "开启后读取上一段 AV latent 作为 Motion Context"}><input type="checkbox" checked={shot.latentRelay} onChange={(event) => mutate((draft) => { draft.shots[selected].latentRelay = event.currentTarget.checked; })}/><span>latent接力 / Relay{activeIndex === 0 ? "（首段忽略）" : ""}</span></label>
+            <div class="td-shot-switches">
+              <label class="td-shot-enabled"><input type="checkbox" checked={shot.enabled} onChange={(event) => mutate((draft) => { draft.shots[selected].enabled = event.currentTarget.checked; })}/><span>启用 / Enabled</span></label>
+              <label class="td-shot-enabled" title={activeIndex === 0 ? "首个启用镜头没有上一段，执行时会自动忽略接力" : "开启后读取上一段 AV latent 作为 Motion Context"}><input type="checkbox" checked={shot.latentRelay} onChange={(event) => mutate((draft) => { draft.shots[selected].latentRelay = event.currentTarget.checked; })}/><span>latent接力 / Relay{activeIndex === 0 ? "（首段忽略）" : ""}</span></label>
+              {supportsSecondSampling && <label class="td-shot-enabled" title="开启时执行 RTX 超分和第二次 H3 采样，关闭时直接使用第一采画面"><input type="checkbox" checked={shot.secondSampling} onChange={(event) => mutate((draft) => { draft.shots[selected].secondSampling = event.currentTarget.checked; })}/><span>二次采样 / 2nd pass</span></label>}
+            </div>
           </div>
           <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>）</span><textarea rows={10} value={shot.prompt} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
           <label><span class="td-field-label">负面提示词 / Negative prompt</span><textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label>
@@ -177,7 +185,7 @@ function Editor({ initial, onSave, onClose }: EditorProps) {
   </div>;
 }
 
-export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void): void {
+export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false): void {
   const existing = document.getElementById("theodore-director-modal");
   if (existing) {
     // 防止快速重复点击在画布上叠加多个编辑器实例。
@@ -196,6 +204,6 @@ export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) =
     host.remove();
   };
   document.addEventListener("keydown", onKeyDown);
-  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close}/>, host);
+  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling}/>, host);
   host.focus();
 }

@@ -16,12 +16,12 @@ function ensureDirectorStyles(): void {
 ensureDirectorStyles();
 
 interface Widget { name: string; value: unknown; type?: string; computeSize?: () => [number, number] }
-interface ComfyNode { widgets?: Widget[]; addWidget: (type: string, name: string, value: unknown, callback: () => void) => Widget; setDirtyCanvas: (foreground: boolean, background: boolean) => void; size?: [number, number] }
+interface ComfyNode { widgets?: Widget[]; addWidget: (type: string, name: string, value: unknown, callback: () => void) => Widget; setDirtyCanvas: (foreground: boolean, background: boolean) => void; size?: [number, number]; type?: string; title?: string }
 interface NodeType { prototype: { onNodeCreated?: () => void } }
 
 // ComfyUI 在浏览器运行时提供此模块，使用动态导入可让前端独立构建与测试。
 const comfyAppUrl = "/scripts/app.js";
-void import(/* @vite-ignore */ comfyAppUrl).then(({ app }: { app: { registerExtension: (extension: unknown) => void; graph?: { setDirtyCanvas?: (foreground: boolean, background: boolean) => void } } }) => {
+void import(/* @vite-ignore */ comfyAppUrl).then(({ app }: { app: { registerExtension: (extension: unknown) => void; graph?: { setDirtyCanvas?: (foreground: boolean, background: boolean) => void; _nodes?: ComfyNode[] } } }) => {
   app.registerExtension({
     name: "Theodore.Director.UI",
     beforeRegisterNodeDef(nodeType: NodeType, nodeData: { name: string }) {
@@ -37,11 +37,13 @@ void import(/* @vite-ignore */ comfyAppUrl).then(({ app }: { app: { registerExte
         this.addWidget("button", "打开 Theodore 导播台 / Open Director", null, () => {
           try {
             const initial = JSON.parse(String(dataWidget.value)) as DirectorPlan;
+            // 只在工作流确实含有第二采样分支时显示相关开关。
+            const supportsSecondSampling = Boolean(app.graph?._nodes?.some((node) => node.type === "ImpactConditionalBranch" && node.title === "Theodore 二次采样选择"));
             openEditor(initial, (plan) => {
               dataWidget.value = JSON.stringify(plan, null, 2);
               this.setDirtyCanvas(true, true);
               app.graph?.setDirtyCanvas?.(true, true);
-            });
+            }, supportsSecondSampling);
           } catch (error) {
             window.alert(`Theodore Director: ${error instanceof Error ? error.message : String(error)}`);
           }
