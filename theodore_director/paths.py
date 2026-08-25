@@ -38,7 +38,9 @@ def build_output_paths_from_values(project_name: str, run_id_value: str, shot_id
     # 项目名与 Run ID 合并成一层运行目录；只有需要集中回读的 latent 和
     # 尾帧各自使用一层专用目录，不再按分镜继续创建更深目录。
     base = f"TheodoreDirector/{project}_{run_id}"
-    stem = f"{active_index + 1:03d}_{shot_name}"
+    # 分镜文件使用稳定 shot ID，不再绑定会随启用状态变化的 active_index。
+    # active_index 仍由 Impact 用于执行顺序、seed、首尾和 latent 接力。
+    stem = shot_name
     return OutputPaths(
         run_prefix=base,
         video_prefix=f"{base}/{stem}_video",
@@ -56,17 +58,31 @@ def build_output_paths(plan: Plan, shot: Shot, active_index: int) -> OutputPaths
 
 
 def shot_result_candidates(root: Path, paths: OutputPaths) -> list[Path]:
-    """按新路径优先返回分镜结果文件，并兼容升级前的根层文件。"""
+    """按稳定路径优先返回结果文件，并兼容旧数字前缀及旧根层文件。"""
     output_root = root.resolve()
     current = (output_root / paths.shot_result_path).resolve(strict=False)
     legacy = (output_root / paths.run_prefix / current.name).resolve(strict=False)
     candidates = [current, legacy]
+    # 旧版文件名形如 003_shot_004_result.json。禁用前序镜头后 active index
+    # 会变化，因此必须按稳定 shot ID 收集所有历史数字前缀，而不是只猜当前索引。
+    legacy_name = re.compile(rf"^\d+_{re.escape(current.name)}$", re.IGNORECASE)
+    for directory in (current.parent, legacy.parent):
+        if not directory.is_dir():
+            continue
+        candidates.extend(
+            candidate.resolve()
+            for candidate in directory.iterdir()
+            if candidate.is_file() and legacy_name.match(candidate.name)
+        )
+    unique_candidates: list[Path] = []
     for candidate in candidates:
         try:
             candidate.relative_to(output_root)
         except ValueError as error:
             raise ValueError(f"拒绝读取 ComfyUI output 目录之外的结果文件: {candidate}") from error
-    return candidates
+        if candidate not in unique_candidates:
+            unique_candidates.append(candidate)
+    return unique_candidates
 
 
 def find_generated_video(
@@ -88,10 +104,14 @@ def find_generated_videos(
     shot_id: str,
     active_index: int,
 ) -> list[Path]:
-    """返回当前分镜的全部生成视频，并按修改时间从新到旧排列。"""
-    paths = build_output_paths_from_values(project_name, run_id, shot_id, active_index)
+    """按稳定 shot ID 返回新旧全部生成视频，并按修改时间从新到旧排列。"""
+    # active_index 为旧 API 保留，但不再参与结果定位；这样禁用或移动镜头不会隐藏历史视频。
+    _ = active_index
+    project = slug(project_name, "project")
+    run_id_value = slug(run_id, "run")
+    shot_name = slug(shot_id, "shot")
     output_root = root.resolve()
-    expected = (output_root / paths.video_prefix).resolve(strict=False)
+    expected = (output_root / f"TheodoreDirector/{project}_{run_id_value}/{shot_name}_video").resolve(strict=False)
     try:
         expected.relative_to(output_root)
     except ValueError as error:
@@ -99,7 +119,12 @@ def find_generated_videos(
     if not expected.parent.is_dir():
         return []
     matches_with_stats = []
-    for path in expected.parent.glob(f"{expected.name}*"):
+    stable_name = re.compile(rf"^{re.escape(expected.name)}_", re.IGNORECASE)
+    legacy_name = re.compile(rf"^\d+_{re.escape(expected.name)}_", re.IGNORECASE)
+    for path in expected.parent.iterdir():
+        # 同时接受新版 <shot-id>_video_* 与旧版 <active-index>_<shot-id>_video_*。
+        if not stable_name.match(path.name) and not legacy_name.match(path.name):
+            continue
         if not path.is_file() or path.suffix.lower() not in VIDEO_EXTENSIONS:
             continue
         # 排序阶段只 stat 一次，避免比较函数为大量历史结果重复访问磁盘。

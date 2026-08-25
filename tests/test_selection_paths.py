@@ -73,17 +73,27 @@ def test_output_paths_are_relative_and_sanitized():
     plan = load_plan(DEFAULT_PLAN)
     paths = build_output_paths(plan, plan.active_shots[0], 0)
     assert paths.run_prefix == "TheodoreDirector/Theodore_Project_run_001"
-    assert paths.video_prefix.endswith("/001_shot_001_video")
+    assert paths.video_prefix.endswith("/shot_001_video")
     assert paths.latent_prefix.endswith("/latent_context")
     assert paths.latent_save_prefix.endswith("/latent_context/clip")
-    assert paths.tail_prefix.endswith("/tail_frames/001_shot_001_tail")
-    assert paths.shot_result_path.endswith("/shot_results/001_shot_001_result.json")
+    assert paths.tail_prefix.endswith("/tail_frames/shot_001_tail")
+    assert paths.shot_result_path.endswith("/shot_results/shot_001_result.json")
     # 视频仍平铺在项目目录；latent、尾帧和分镜结果各自只增加一层目录。
     assert len(paths.video_prefix.split("/")) == 3
     assert len(paths.latent_save_prefix.split("/")) == 4
     assert len(paths.tail_prefix.split("/")) == 4
     assert len(paths.shot_result_path.split("/")) == 4
     assert ".." not in paths.video_prefix
+
+
+def test_output_paths_do_not_change_with_active_index():
+    plan = load_plan(DEFAULT_PLAN)
+    first = build_output_paths(plan, plan.active_shots[0], 0)
+    shifted = build_output_paths(plan, plan.active_shots[0], 7)
+
+    assert shifted.video_prefix == first.video_prefix
+    assert shifted.tail_prefix == first.tail_prefix
+    assert shifted.shot_result_path == first.shot_result_path
 
 
 def test_shot_result_candidates_prefer_new_folder_and_keep_legacy_fallback(tmp_path):
@@ -93,11 +103,22 @@ def test_shot_result_candidates_prefer_new_folder_and_keep_legacy_fallback(tmp_p
     candidates = shot_result_candidates(tmp_path, paths)
 
     assert candidates[0] == (
-        tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "shot_results" / "001_shot_001_result.json"
+        tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "shot_results" / "shot_001_result.json"
     ).resolve()
     assert candidates[1] == (
-        tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "001_shot_001_result.json"
+        tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "shot_001_result.json"
     ).resolve()
+
+
+def test_shot_result_candidates_find_all_legacy_active_indexes(tmp_path):
+    plan = load_plan(DEFAULT_PLAN)
+    paths = build_output_paths(plan, plan.active_shots[0], 0)
+    result_dir = tmp_path / "TheodoreDirector" / "Theodore_Project_run_001" / "shot_results"
+    result_dir.mkdir(parents=True)
+    old_result = result_dir / "004_shot_001_result.json"
+    old_result.write_text("{}", encoding="utf-8")
+
+    assert old_result.resolve() in shot_result_candidates(tmp_path, paths)
 
 
 def test_resolve_output_file_uses_expected_folder_for_bare_save_name(tmp_path):
@@ -136,7 +157,7 @@ def test_find_generated_video_uses_the_same_expected_prefix(tmp_path):
     run_dir = tmp_path / "TheodoreDirector" / "Demo_run_001"
     run_dir.mkdir(parents=True)
     older = run_dir / "001_shot_001_video_00001.mp4"
-    newer = run_dir / "001_shot_001_video_00002.webm"
+    newer = run_dir / "shot_001_video_00002.webm"
     older.write_bytes(b"old")
     newer.write_bytes(b"new")
     # Windows 上连续写入可能得到相同时间戳，显式制造稳定的先后顺序。
@@ -147,6 +168,11 @@ def test_find_generated_video_uses_the_same_expected_prefix(tmp_path):
 
     assert found == newer.resolve()
     assert find_generated_videos(tmp_path, "Demo", "run_001", "shot_001", 0) == [
+        newer.resolve(),
+        older.resolve(),
+    ]
+    # active index 改变后仍按 shot ID 找到同一组历史结果。
+    assert find_generated_videos(tmp_path, "Demo", "run_001", "shot_001", 8) == [
         newer.resolve(),
         older.resolve(),
     ]

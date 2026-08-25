@@ -15,7 +15,9 @@ from theodore_director.postprocess import (
 def create_shot_video(root: Path, index: int, shot_id: str, number: int, content: bytes = b"video") -> Path:
     run_dir = root / "TheodoreDirector" / "Demo_run_001"
     run_dir.mkdir(parents=True, exist_ok=True)
-    path = run_dir / f"{index + 1:03d}_{shot_id}_video_{number:05d}_.mp4"
+    # index 参数保留用于构造不同执行顺序，稳定文件名只使用 shot ID。
+    _ = index
+    path = run_dir / f"{shot_id}_video_{number:05d}_.mp4"
     path.write_bytes(content)
     return path
 

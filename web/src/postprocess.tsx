@@ -76,7 +76,7 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
     const loading: Record<string, ShotResultState> = {};
     entries.forEach((entry) => {
       defaults[entry.key] = entry.shot.enabled;
-      loading[entry.key] = { loading: entry.shot.enabled, response: { found: false, results: [] } };
+      loading[entry.key] = { loading: true, response: { found: false, results: [] } };
     });
     setSelectedShots((current) => {
       const updated: Record<string, boolean> = {};
@@ -89,7 +89,8 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
     setShotResults(loading);
     setMergeError("");
 
-    entries.filter((entry) => entry.shot.enabled).forEach((entry) => {
+    // 禁用镜头也查询历史结果供预览，但仍保持不可勾选、不可参与合并。
+    entries.forEach((entry) => {
       void fetchVideoResults(shotResultUrl(plan, entry.shot.id, entry.activeIndex))
         .then((response) => {
           if (cancelled) return;
@@ -210,8 +211,8 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
             <label><input type="checkbox" checked={checked} disabled={!entry.shot.enabled} onChange={(event) => setSelectedShots((current) => ({ ...current, [entry.key]: event.currentTarget.checked }))}/><span><strong>{entry.shot.id}</strong><em>{entry.shot.title}</em></span></label>
             <span>{entry.shot.durationSeconds}s</span>
           </header>
-          {!entry.shot.enabled ? <div class="td-post-shot-empty">{language === "zh" ? "该镜头当前已禁用，不参加合并。" : "This shot is disabled and will not be merged."}</div>
-            : state?.loading ? <div class="td-post-shot-empty">{language === "zh" ? "正在查询生成结果…" : "Loading generated results…"}</div>
+          {!entry.shot.enabled && <div class="td-post-shot-disabled-note">{language === "zh" ? "该镜头当前已禁用：历史结果可以预览，但不能参加合并。" : "This shot is disabled: historical results can be previewed but cannot be merged."}</div>}
+          {state?.loading ? <div class="td-post-shot-empty">{language === "zh" ? "正在查询生成结果…" : "Loading generated results…"}</div>
             : state?.response.error ? <div class="td-post-shot-empty errors">{language === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry."}</div>
             : !results.length ? <div class="td-post-shot-empty">{language === "zh" ? "未找到这个镜头的生成结果" : "No generated result found for this shot"}</div>
             : <div class="td-post-result-list">{results.map((item, index) => {

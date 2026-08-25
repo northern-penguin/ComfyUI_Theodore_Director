@@ -95,18 +95,18 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 ```text
 ComfyUI/output/TheodoreDirector/<project>_<run>/
-  001_<shot-id>_video_*.mp4
+  <shot-id>_video_*.mp4
   latent_context/
     clip_00001.safetensors
   tail_frames/
-    001_<shot-id>_tail_*.png
+    <shot-id>_tail_*.png
   shot_results/
-    001_<shot-id>_result.json
+    <shot-id>_result.json
   merged_video_00001_.mp4
   manifest.json
 ```
 
-项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，分镜视频、合并视频和项目级 `manifest.json` 位于项目目录。升级前平铺在项目目录的旧结果清单仍可用于续跑，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
+项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，分镜视频、合并视频和项目级 `manifest.json` 位于项目目录。视频、尾帧和结果清单使用稳定 `shot ID` 命名，不受镜头禁用、启用或排序导致的 Impact 索引变化影响；旧版带数字执行序号前缀的文件仍可查询和用于续跑。升级前平铺在项目目录的旧结果清单也继续兼容，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
 
 ## 节点分层
 

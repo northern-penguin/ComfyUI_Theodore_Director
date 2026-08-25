@@ -107,6 +107,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
   const allSecondSampling = plan.shots.length > 0 && plan.shots.every((item) => item.secondSampling);
+  const allBatchEnabled = batchShots.length > 0 && batchShots.every((item) => item.enabled);
   const generatedResults = useMemo(() => normalizeGeneratedResults(generatedVideo), [generatedVideo]);
   const selectedGenerated = generatedResults.find((item) => item.path === selectedGeneratedPath) ?? generatedResults[0];
   const generatedVideoUrl = selectedGenerated?.path ? comfyViewUrl(selectedGenerated.path, "output") : null;
@@ -148,6 +149,11 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
     }
     setBatchShots((current) => appendShots(current, count, duration));
   };
+  const toggleAllBatchShots = () => {
+    const enabled = !allBatchEnabled;
+    // 只更新批量面板的临时副本，用户点击“应用更改”后才写入正式计划。
+    setBatchShots((current) => current.map((item) => ({ ...item, enabled })));
+  };
   const applyBatchChanges = () => {
     if (batchShots.some((item) => !Number.isFinite(item.durationSeconds) || item.durationSeconds <= 0)) {
       window.alert(language === "zh" ? "每个镜头的时长都必须大于 0 秒" : "Every shot duration must be greater than 0 seconds.");
@@ -171,13 +177,14 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
 
   useEffect(() => {
     let cancelled = false;
-    if (!shot?.enabled || activeIndex < 0) {
+    if (!shot) {
       setGeneratedVideo({ found: false, results: [] });
       setSelectedGeneratedPath("");
       setGeneratedLoading(false);
       return () => { cancelled = true; };
     }
     setGeneratedLoading(true);
+    // 禁用镜头也按稳定 shot ID 查询历史结果；activeIndex=-1 只表达当前不参加执行。
     void fetchGeneratedVideo(plan, shot, activeIndex)
       .then((result) => {
         if (cancelled) return;
@@ -241,7 +248,8 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
         <div><label>{language === "zh" ? "所有镜头时长" : "Duration for all shots"}<span><input type="number" min="0.1" step="0.1" value={uniformDuration} onInput={(event) => setUniformDuration(event.currentTarget.value)}/><em>{language === "zh" ? "秒" : "sec"}</em></span></label><button onClick={applyUniformDuration}>{language === "zh" ? "一键设置所有时长" : "Set all durations"}</button></div>
         <div><label>{language === "zh" ? "新增镜头数量" : "New shot count"}<input type="number" min="1" max="100" step="1" value={appendCount} onInput={(event) => setAppendCount(event.currentTarget.value)}/></label><label>{language === "zh" ? "每个镜头时长" : "Duration per shot"}<span><input type="number" min="0.1" step="0.1" value={appendDuration} onInput={(event) => setAppendDuration(event.currentTarget.value)}/><em>{language === "zh" ? "秒" : "sec"}</em></span></label><button onClick={appendBatchShots}>{language === "zh" ? "批量新增镜头" : "Add shots"}</button></div>
       </div>
-      <div class="td-batch-table"><div class="td-batch-row td-batch-table-head"><span>#</span><span>{language === "zh" ? "镜头名" : "Shot name"}</span><span>{language === "zh" ? "具体时长" : "Duration"}</span><span>latent {language === "zh" ? "接力" : "relay"}</span></div>{batchShots.map((item, index) => <div class="td-batch-row" key={item.id}><span>{index + 1}</span><input value={item.title} aria-label={`${language === "zh" ? "镜头名" : "Shot name"} ${index + 1}`} onInput={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, title: event.currentTarget.value } : shotItem))}/><label class="td-batch-duration"><input type="number" min="0.1" step="0.1" value={item.durationSeconds} onInput={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, durationSeconds: Number(event.currentTarget.value) } : shotItem))}/><span>{language === "zh" ? "秒" : "sec"}</span></label><label class="td-batch-relay"><input type="checkbox" checked={item.latentRelay} onChange={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, latentRelay: event.currentTarget.checked } : shotItem))}/><span>{item.latentRelay ? (language === "zh" ? "开" : "ON") : (language === "zh" ? "关" : "OFF")}</span></label></div>)}</div>
+      <div class="td-batch-global-actions"><span>{language === "zh" ? `已启用 ${batchShots.filter((item) => item.enabled).length}/${batchShots.length} 个镜头` : `${batchShots.filter((item) => item.enabled).length}/${batchShots.length} shots enabled`}</span><button class={allBatchEnabled ? "active" : ""} onClick={toggleAllBatchShots}>{allBatchEnabled ? (language === "zh" ? "全部禁用" : "Disable all") : (language === "zh" ? "全部启用" : "Enable all")}</button></div>
+      <div class="td-batch-table"><div class="td-batch-row td-batch-table-head"><span>#</span><span>{language === "zh" ? "镜头名" : "Shot name"}</span><span>{language === "zh" ? "启用" : "Enabled"}</span><span>{language === "zh" ? "具体时长" : "Duration"}</span><span>latent {language === "zh" ? "接力" : "relay"}</span></div>{batchShots.map((item, index) => <div class="td-batch-row" key={item.id}><span>{index + 1}</span><input value={item.title} aria-label={`${language === "zh" ? "镜头名" : "Shot name"} ${index + 1}`} onInput={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, title: event.currentTarget.value } : shotItem))}/><label class="td-batch-enabled"><input type="checkbox" checked={item.enabled} onChange={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, enabled: event.currentTarget.checked } : shotItem))}/><span>{item.enabled ? (language === "zh" ? "开" : "ON") : (language === "zh" ? "关" : "OFF")}</span></label><label class="td-batch-duration"><input type="number" min="0.1" step="0.1" value={item.durationSeconds} onInput={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, durationSeconds: Number(event.currentTarget.value) } : shotItem))}/><span>{language === "zh" ? "秒" : "sec"}</span></label><label class="td-batch-relay"><input type="checkbox" checked={item.latentRelay} onChange={(event) => setBatchShots((current) => current.map((shotItem, shotIndex) => shotIndex === index ? { ...shotItem, latentRelay: event.currentTarget.checked } : shotItem))}/><span>{item.latentRelay ? (language === "zh" ? "开" : "ON") : (language === "zh" ? "关" : "OFF")}</span></label></div>)}</div>
       <footer><button onClick={() => setBatchOpen(false)}>{language === "zh" ? "取消" : "Cancel"}</button><button class="primary" onClick={applyBatchChanges}>{language === "zh" ? "应用更改" : "Apply changes"}</button></footer>
     </section></div>}
   </div>;

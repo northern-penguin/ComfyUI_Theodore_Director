@@ -60,7 +60,8 @@ def register_routes() -> None:
         query = request.rel_url.query
         try:
             active_index = int(query.get("activeIndex", "0"))
-            if active_index < 0 or active_index > 999_999:
+            # -1 表示当前镜头已禁用；结果按稳定 shot ID 查询，不依赖执行索引。
+            if active_index < -1 or active_index > 999_999:
                 raise ValueError("activeIndex 超出范围")
             root = Path(folder_paths.get_output_directory()).resolve()
             videos = find_generated_videos(
