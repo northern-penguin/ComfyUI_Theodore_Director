@@ -3,7 +3,7 @@ import type { Language } from "./i18n";
 import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoItem, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl } from "./media";
-import { buildMergeSelections, postprocessShotEntries } from "./postprocess-selection";
+import { buildMergeSelections, postprocessShotEntries, selectShotRange } from "./postprocess-selection";
 import type { DirectorPlan } from "./types";
 
 interface PostprocessProps {
@@ -55,6 +55,8 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
   const [mergedLoading, setMergedLoading] = useState(false);
   const [selectedMergedPath, setSelectedMergedPath] = useState("");
   const [revision, setRevision] = useState(0);
+  const [rangeStart, setRangeStart] = useState("1");
+  const [rangeEnd, setRangeEnd] = useState(String(entries.length || 1));
 
   const enabledEntries = entries.filter((entry) => entry.shot.enabled);
   const allSelected = enabledEntries.length > 0 && enabledEntries.every((entry) => selectedShots[entry.key]);
@@ -135,6 +137,19 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
     });
   };
 
+  const confirmRange = () => {
+    const start = Number(rangeStart);
+    const end = Number(rangeEnd);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start || end > entries.length) {
+      window.alert(language === "zh"
+        ? `请输入有效范围：1 ≤ m ≤ n ≤ ${entries.length}`
+        : `Enter a valid range: 1 ≤ m ≤ n ≤ ${entries.length}`);
+      return;
+    }
+    // 确认范围会替换当前勾选状态，避免范围外镜头意外进入合并列表。
+    setSelectedShots(selectShotRange(entries, start, end));
+  };
+
   const merge = async () => {
     if (!selections.length) {
       window.alert(language === "zh" ? "请至少选择一个镜头" : "Select at least one shot.");
@@ -174,6 +189,13 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
     <div class="td-post-summary">
       <span>{language === "zh" ? `已选择 ${selections.length}/${enabledEntries.length} 个启用镜头` : `${selections.length}/${enabledEntries.length} enabled shots selected`}</span>
       <span>{language === "zh" ? `预计时长 ${totalDuration.toFixed(1)} 秒` : `Estimated duration ${totalDuration.toFixed(1)} sec`}</span>
+      <div class="td-post-range" role="group" aria-label={language === "zh" ? "合并视频范围" : "Merge video range"}>
+        <span>{language === "zh" ? "范围" : "Range"}</span>
+        <input type="number" min="1" max={entries.length} step="1" value={rangeStart} aria-label={language === "zh" ? "起始镜头 m" : "Start shot m"} onInput={(event) => setRangeStart(event.currentTarget.value)}/>
+        <span>—</span>
+        <input type="number" min="1" max={entries.length} step="1" value={rangeEnd} aria-label={language === "zh" ? "结束镜头 n" : "End shot n"} onInput={(event) => setRangeEnd(event.currentTarget.value)}/>
+        <button disabled={!entries.length} onClick={confirmRange}>{language === "zh" ? "确认范围" : "Apply range"}</button>
+      </div>
       <button class="primary" disabled={merging || selectedResultsLoading || !selections.length || Boolean(missingSelections.length)} onClick={merge}>{merging ? (language === "zh" ? "正在合并…" : "Merging…") : (language === "zh" ? "合并所选视频" : "Merge selected videos")}</button>
     </div>
     {mergeError && <div class="td-post-error">{language === "zh" ? "合并失败：" : "Merge failed: "}{mergeError}</div>}

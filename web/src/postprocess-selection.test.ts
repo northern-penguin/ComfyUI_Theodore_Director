@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMergeSelections, postprocessShotEntries } from "./postprocess-selection";
+import { buildMergeSelections, postprocessShotEntries, selectShotRange } from "./postprocess-selection";
 import type { DirectorPlan } from "./types";
 
 const plan = {
@@ -23,5 +23,14 @@ describe("postprocess selections", () => {
     expect(buildMergeSelections(entries, selected, paths)).toEqual([
       { shotId: "one", activeIndex: 0, path: "one.mp4" },
     ]);
+  });
+
+  it("selects an inclusive storyboard range while leaving disabled shots unchecked", () => {
+    const entries = postprocessShotEntries(plan);
+    expect(selectShotRange(entries, 2, 3)).toEqual({
+      [entries[0].key]: false,
+      [entries[1].key]: false,
+      [entries[2].key]: true,
+    });
   });
 });

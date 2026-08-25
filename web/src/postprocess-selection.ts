@@ -41,3 +41,17 @@ export function buildMergeSelections(
       path: selectedPaths[entry.key] ?? "",
     }));
 }
+
+export function selectShotRange(
+  entries: PostprocessShotEntry[],
+  start: number,
+  end: number,
+): Record<string, boolean> {
+  const selected: Record<string, boolean> = {};
+  entries.forEach((entry) => {
+    // 范围按用户在导播台看到的分镜顺序（从 1 开始）计算，禁用镜头始终不能被选中。
+    const position = entry.sourceIndex + 1;
+    selected[entry.key] = entry.shot.enabled && position >= start && position <= end;
+  });
+  return selected;
+}
