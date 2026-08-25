@@ -50,7 +50,7 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 ## 快速使用
 
 1. 双击绿色区域内的 `Theodore Director Project`，点击“打开 Theodore 导播台”。
-2. 在“素材库”添加参考图、参考视频或音频。可以直接上传，文件会复制到 `ComfyUI/input/theodore_director/<project-id>/`；也可以填写 input 目录相对路径。
+2. 在“素材库”添加参考图、参考视频或音频。可以单独上传，也可以使用“批量导入素材”混合选择或拖入多个文件；文件会复制到 `ComfyUI/input/theodore_director/<Project name>/`，也可以填写 input 目录相对路径。
 3. 给素材设置唯一别名，例如 `hero_front`、`location_night`、`walk_cycle`。
 4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
 5. 设置每个分镜的时长和启用状态，保存到工作流，然后正常 Queue。
