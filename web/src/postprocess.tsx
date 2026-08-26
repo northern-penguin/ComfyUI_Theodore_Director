@@ -51,8 +51,10 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
   const [merging, setMerging] = useState(false);
   const [mergeError, setMergeError] = useState("");
+  const [folderError, setFolderError] = useState("");
   const [mergedResults, setMergedResults] = useState<GeneratedVideoResponse>({ found: false, results: [] });
   const [mergedLoading, setMergedLoading] = useState(false);
+  const [openingFolder, setOpeningFolder] = useState(false);
   const [selectedMergedPath, setSelectedMergedPath] = useState("");
   const [revision, setRevision] = useState(0);
   const [rangeStart, setRangeStart] = useState("1");
@@ -180,13 +182,32 @@ export function PostprocessPanel({ plan, language }: PostprocessProps) {
     }
   };
 
+  const openResultFolder = async () => {
+    setOpeningFolder(true);
+    setFolderError("");
+    try {
+      const response = await fetch("/theodore-director/v1/postprocess/open-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectName: plan.project.name, runId: plan.project.runId }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+    } catch (error) {
+      setFolderError(String(error instanceof Error ? error.message : error));
+    } finally {
+      setOpeningFolder(false);
+    }
+  };
+
   const mergedUrl = selectedMerged?.path ? comfyViewUrl(selectedMerged.path, "output") : null;
 
   return <section class="td-postprocess">
     <div class="td-post-header">
       <div><h2>{language === "zh" ? "合并视频" : "Merge videos"}</h2><p>{language === "zh" ? "从每个镜头选择一个结果，按当前分镜顺序进行无损合并。" : "Choose one result per shot and merge them losslessly in storyboard order."}</p></div>
-      <div class="td-post-actions"><button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button><button onClick={toggleAll}>{allSelected ? (language === "zh" ? "全部取消" : "Clear all") : (language === "zh" ? "一键全选" : "Select all")}</button></div>
+      <div class="td-post-actions"><button disabled={openingFolder} onClick={openResultFolder}>📁 {openingFolder ? (language === "zh" ? "正在打开…" : "Opening…") : (language === "zh" ? "打开结果文件夹" : "Open results folder")}</button><button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button><button onClick={toggleAll}>{allSelected ? (language === "zh" ? "全部取消" : "Clear all") : (language === "zh" ? "一键全选" : "Select all")}</button></div>
     </div>
+    {folderError && <div class="td-post-error">{language === "zh" ? "打开结果文件夹失败：" : "Unable to open results folder: "}{folderError}</div>}
     <div class="td-post-summary">
       <span>{language === "zh" ? `已选择 ${selections.length}/${enabledEntries.length} 个启用镜头` : `${selections.length}/${enabledEntries.length} enabled shots selected`}</span>
       <span>{language === "zh" ? `预计时长 ${totalDuration.toFixed(1)} 秒` : `Estimated duration ${totalDuration.toFixed(1)} sec`}</span>

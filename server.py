@@ -14,6 +14,7 @@ from .theodore_director.postprocess import (
     ffmpeg_concat_line,
     find_ffmpeg_executable,
     find_merged_videos,
+    open_run_directory,
     validate_merge_selections,
 )
 from .theodore_director.uploads import allocate_upload_path
@@ -84,6 +85,25 @@ def register_routes() -> None:
             videos = find_merged_videos(root, query.get("projectName", ""), query.get("runId", ""))
             return web.json_response(_video_response(root, videos))
         except (OSError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.post("/theodore-director/v1/postprocess/open-folder")
+    async def open_result_folder(request):
+        """打开当前 Project name 与 Run ID 对应的生成结果文件夹。"""
+        try:
+            payload = await request.json()
+            root = Path(folder_paths.get_output_directory()).resolve()
+            directory = await asyncio.to_thread(
+                open_run_directory,
+                root,
+                str(payload.get("projectName", "")),
+                str(payload.get("runId", "")),
+            )
+            return web.json_response({
+                "ok": True,
+                "path": directory.relative_to(root).as_posix(),
+            })
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
             return web.json_response({"error": str(exc)}, status=400)
 
     @routes.post("/theodore-director/v1/postprocess/merge")

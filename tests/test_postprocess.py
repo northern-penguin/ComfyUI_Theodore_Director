@@ -8,6 +8,7 @@ from theodore_director.postprocess import (
     build_ffmpeg_concat_args,
     ffmpeg_concat_line,
     find_merged_videos,
+    open_run_directory,
     validate_merge_selections,
 )
 
@@ -65,6 +66,20 @@ def test_merged_outputs_increment_without_overwriting(tmp_path):
 
     assert second.name == "merged_video_00002_.mp4"
     assert find_merged_videos(tmp_path, "Demo", "run_001") == [second.resolve(), first.resolve()]
+
+
+def test_open_run_directory_creates_and_opens_only_expected_folder(tmp_path, monkeypatch):
+    opened: list[str] = []
+    # 测试中替换系统 Shell 调用，避免真的弹出文件管理器。
+    monkeypatch.setattr(os, "startfile", opened.append, raising=False)
+    monkeypatch.setattr(os, "name", "nt")
+
+    directory = open_run_directory(tmp_path, "Demo Project", "run_001")
+
+    expected = (tmp_path / "TheodoreDirector" / "Demo_Project_run_001").resolve()
+    assert directory == expected
+    assert directory.is_dir()
+    assert opened == [str(expected)]
 
 
 def test_ffmpeg_concat_arguments_do_not_use_a_shell(tmp_path):

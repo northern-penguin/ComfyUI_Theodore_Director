@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import re
 import shutil
+import subprocess
+import sys
 from typing import Any
 
 from .paths import VIDEO_EXTENSIONS, build_output_paths_from_values, find_generated_videos
@@ -22,6 +24,39 @@ def run_directory(root: Path, project_name: str, run_id: str) -> Path:
         directory.relative_to(output_root)
     except ValueError as error:
         raise ValueError(f"拒绝访问 ComfyUI output 目录之外的文件: {directory}") from error
+    return directory
+
+
+def open_run_directory(root: Path, project_name: str, run_id: str) -> Path:
+    """创建并使用当前操作系统的文件管理器打开受约束的运行目录。"""
+    directory = run_directory(root, project_name, run_id)
+    directory.mkdir(parents=True, exist_ok=True)
+
+    if os.name == "nt":
+        # startfile 直接交给 Windows Shell，不拼接命令字符串，路径中的空格也不会改变参数。
+        startfile = getattr(os, "startfile", None)
+        if startfile is None:
+            raise RuntimeError("当前 Python 环境不支持打开 Windows 文件夹")
+        startfile(str(directory))
+    elif sys.platform == "darwin":
+        subprocess.Popen(
+            ["open", str(directory)],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+    else:
+        opener = shutil.which("xdg-open")
+        if not opener:
+            raise RuntimeError("找不到 xdg-open，无法打开结果文件夹")
+        subprocess.Popen(
+            [opener, str(directory)],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
     return directory
 
 

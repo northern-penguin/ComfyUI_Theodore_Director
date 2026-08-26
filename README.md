@@ -54,6 +54,7 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
 5. 设置每个分镜的时长和启用状态，保存到工作流，然后正常 Queue。
 6. 全部分镜生成后进入“后处理”，逐镜头选择一个结果并点击“合并所选视频”。
+   也可以点击“打开结果文件夹”，直接在系统文件管理器中查看当前 Project name 与 Run ID 的全部分镜和合并结果。
 
 固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
 
