@@ -1,8 +1,8 @@
 # ComfyUI Theodore Director
 
-一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带已经融合好的 Impact V6 单采、双采工作流。
+一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带已经融合好的 V7 导播台二采工作流。
 
-Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. Ready-to-import Impact V6 single- and dual-sampling workflows are included.
+Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7 dual-sampling Director workflow is included.
 
 ## 版权说明
 
@@ -31,21 +31,20 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 “后处理 → 合并视频”需要 FFmpeg。程序依次查找 `THEODORE_DIRECTOR_FFMPEG` 环境变量、系统 `PATH` 和可选的 `imageio-ffmpeg` 内置程序；整合包若未提供 FFmpeg，请自行安装并加入 `PATH`。合并使用无损流复制，不重新编码，也不占用 ComfyUI 生成队列或 GPU。
 
-然后任选一个成品工作流导入：
+然后导入仓库内的成品工作流：
 
-- [Impact V6 单采 Theodore Director](workflows/Impact_V6_Single_Theodore_Director.json)
-- [Impact V6 双采 Theodore Director](workflows/Impact_V6_Dual_Theodore_Director.json)
+- [V7 导播台](workflows/V7导播台.json)
 
-工作流本身还需要下表中的第三方节点。模型文件名和放置位置沿用原 V6 工作流。
+仓库不再附带旧版 V6 单采、双采示例；`V7导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
 
-| 依赖 | 单采 | 双采 | 用途 |
-|---|---:|---:|---|
-| ComfyUI Impact Pack | ✓ | ✓ | 队列触发与控件写回 |
-| ComfyUI MiniMax H3 Turbo | ✓ | ✓ | H3 Turbo 采样/LoRA |
-| ComfyUI H3 Motion Context | ✓ | ✓ | 跨分镜 AV latent 连续性 |
-| ComfyUI-KJNodes | ✓ | ✓ | 加速与尾帧保存 |
-| ComfyUI-Easy-Use | ✓ | ✓ | 尾帧索引 |
-| NVIDIA RTX Video Nodes | — | ✓ | 双采工作流的中间增强 |
+| 依赖 | V7 | 用途 |
+|---|---:|---|
+| ComfyUI Impact Pack | ✓ | 队列触发、条件分支与控件写回 |
+| ComfyUI MiniMax H3 Turbo | ✓ | H3 Turbo 采样/LoRA |
+| ComfyUI H3 Motion Context | ✓ | 跨分镜 AV latent 连续性 |
+| ComfyUI-KJNodes | ✓ | 加速、图像处理与尾帧保存 |
+| ComfyUI-Easy-Use | ✓ | 尾帧索引 |
+| NVIDIA RTX Video Nodes | ✓ | 二采前的 1.5× 视频超分 |
 
 ## 快速使用
 
@@ -81,9 +80,9 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
   → Impact 当前索引
   → SelectShot：跳过禁用分镜、续跑检查、计算 seed，输出当前 latentRelay / secondSampling BOOL
   → H3Adapter：解析别名、校验上限、只加载当前素材、编译标签与时长
-  → 原 V6 H3 条件编码与单采/双采核心
+  → V7 H3 条件编码与第一采样
   → Motion Context 分支：latentRelay=true 载入并裁切上一段 AV latent，false 直通
-  → 双采画面分支：secondSampling=true 选二采画面，false 选一采画面
+  → 二采画面分支：secondSampling=true 执行 RTX 超分、重编码和第二次 H3 采样，false 惰性跳过整条分支
   → SaveVideo + SaveLatent + SaveTail
   → CommitResult：原子写入结果和总清单
   → ImpactSetWidgetValue + ImpactQueueTrigger（有下一段时）
@@ -135,7 +134,7 @@ npm test
 npm run build
 ```
 
-成品工作流由 [build_v6_workflows.py](tools/build_v6_workflows.py) 从原始 V6 机械转换，并接受链接完整性、关键来源、节点 Schema 及单/双采拓扑测试。项目当前只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
+当前分发的 `V7导播台.json` 接受 JSON 结构、链接端点、Theodore 核心节点、计划 Schema、二采拓扑与版权说明测试。[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具，不再生成仓库当前分发的示例。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
 
 ## License
 
