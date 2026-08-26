@@ -60,3 +60,31 @@ def select_shot(plan: Plan, queue_index: int, base_seed: int | None = None) -> S
         seed=shot.seed if shot.seed is not None else seed_base + queue_index,
         shot_hash=shot_hash(plan, shot),
     )
+
+
+def select_shot_for_postprocess(plan: Plan, shot_id: str) -> ShotSelection:
+    """按稳定 ID 选择后处理镜头，并强制按独立片段处理。"""
+    try:
+        source_index, shot = next(
+            (index, item) for index, item in enumerate(plan.shots) if item.id == shot_id
+        )
+    except StopIteration as error:
+        raise ValueError(f"计划中不存在镜头: {shot_id}") from error
+
+    active_ids = [item.id for item in plan.active_shots]
+    active_index = active_ids.index(shot.id) if shot.id in active_ids else source_index
+    # 已保存的一采视频已经裁掉接力上下文；后处理不得再次增加或裁掉上下文帧。
+    return ShotSelection(
+        shot=shot,
+        active_index=active_index,
+        source_index=source_index,
+        active_count=len(active_ids),
+        is_first=True,
+        is_last=True,
+        latent_relay=False,
+        second_sampling=True,
+        next_index=0,
+        has_next=False,
+        seed=shot.seed if shot.seed is not None else plan.base_seed + source_index,
+        shot_hash=shot_hash(plan, shot),
+    )

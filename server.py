@@ -8,6 +8,7 @@ from pathlib import Path
 import tempfile
 
 from .theodore_director.paths import find_generated_videos
+from .theodore_director.video_results import video_result_payload
 from .theodore_director.postprocess import (
     allocate_merged_video,
     build_ffmpeg_concat_args,
@@ -33,6 +34,7 @@ def _video_response(root: Path, videos: list[Path]) -> dict:
             "path": video.relative_to(root).as_posix(),
             "bytes": stat.st_size,
             "modifiedAt": stat.st_mtime,
+            **video_result_payload(root, video),
         })
     response = {"found": bool(results), "count": len(results), "results": results}
     if results:

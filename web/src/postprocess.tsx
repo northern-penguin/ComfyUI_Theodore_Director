@@ -4,11 +4,13 @@ import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoIt
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl } from "./media";
 import { buildMergeSelections, postprocessShotEntries, selectShotRange } from "./postprocess-selection";
-import type { DirectorPlan } from "./types";
+import { StandaloneSecondPassPanel } from "./standalone-second-pass";
+import type { DirectorPlan, QueueSecondPass } from "./types";
 
 interface PostprocessProps {
   plan: DirectorPlan;
   language: Language;
+  queueSecondPass?: QueueSecondPass;
 }
 
 interface ShotResultState {
@@ -43,7 +45,18 @@ function mergedResultUrl(plan: DirectorPlan): string {
   return `/theodore-director/v1/postprocess/merged-videos?${query.toString()}`;
 }
 
-export function PostprocessPanel({ plan, language }: PostprocessProps) {
+export function PostprocessPanel({ plan, language, queueSecondPass }: PostprocessProps) {
+  const [mode, setMode] = useState<"merge" | "second-pass">("merge");
+  return <section class="td-postprocess-shell">
+    <div class="td-post-mode-tabs" role="tablist">
+      <button class={mode === "merge" ? "active" : ""} role="tab" aria-selected={mode === "merge"} onClick={() => setMode("merge")}>{language === "zh" ? "合并视频" : "Merge videos"}</button>
+      <button class={mode === "second-pass" ? "active" : ""} role="tab" aria-selected={mode === "second-pass"} onClick={() => setMode("second-pass")}>{language === "zh" ? "单独二采" : "Standalone second pass"}</button>
+    </div>
+    {mode === "merge" ? <MergePanel plan={plan} language={language}/> : <StandaloneSecondPassPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
+  </section>;
+}
+
+function MergePanel({ plan, language }: PostprocessProps) {
   const entries = useMemo(() => postprocessShotEntries(plan), [plan]);
   const [shotResults, setShotResults] = useState<Record<string, ShotResultState>>({});
   const [selectedShots, setSelectedShots] = useState<Record<string, boolean>>({});

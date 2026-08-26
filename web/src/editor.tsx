@@ -9,7 +9,7 @@ import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
-import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot } from "./types";
+import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass } from "./types";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -84,9 +84,9 @@ async function writeClipboardText(value: string): Promise<void> {
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
 }
 
-interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean }
+interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean; queueSecondPass?: QueueSecondPass }
 
-function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProps) {
+function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondPass }: EditorProps) {
   const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
   const [tab, setTab] = useState<"shots" | "assets" | "settings" | "postprocess">("shots");
   const [selected, setSelected] = useState(0);
@@ -242,7 +242,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
       {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
-      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language}/>}
+      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
       <header class="td-batch-header"><div><h2>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</h2><p>{language === "zh" ? `当前共 ${batchShots.length} 个镜头` : `${batchShots.length} shots`}</p></div><button aria-label={language === "zh" ? "关闭" : "Close"} onClick={() => setBatchOpen(false)}>×</button></header>
@@ -258,7 +258,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling }: EditorProp
   </div>;
 }
 
-export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false): void {
+export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false, queueSecondPass?: QueueSecondPass): void {
   const existing = document.getElementById("theodore-director-modal");
   if (existing) {
     // 防止快速重复点击在画布上叠加多个编辑器实例。
@@ -277,6 +277,6 @@ export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) =
     host.remove();
   };
   document.addEventListener("keydown", onKeyDown);
-  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling}/>, host);
+  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling} queueSecondPass={queueSecondPass}/>, host);
   host.focus();
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generatedResultNumber, normalizeGeneratedResults } from "./generated-results";
+import { canRunStandaloneSecondPass, generatedResultNumber, normalizeGeneratedResults } from "./generated-results";
 
 describe("generated video results", () => {
   it("sorts the new result list from newest to oldest", () => {
@@ -22,5 +22,14 @@ describe("generated video results", () => {
   it("extracts the saved video sequence number", () => {
     expect(generatedResultNumber("001_shot_video_00012_.mp4", 1)).toBe(12);
     expect(generatedResultNumber("custom.mp4", 7)).toBe(7);
+  });
+});
+
+describe("standalone second-pass eligibility", () => {
+  it("accepts first-pass and legacy results but blocks known second-pass results", () => {
+    expect(canRunStandaloneSecondPass({ path: "first.mp4", stage: "first_pass" })).toBe(true);
+    expect(canRunStandaloneSecondPass({ path: "legacy.mp4", stage: "legacy_unknown" })).toBe(true);
+    expect(canRunStandaloneSecondPass({ path: "old.mp4" })).toBe(true);
+    expect(canRunStandaloneSecondPass({ path: "second.mp4", stage: "second_pass" })).toBe(false);
   });
 });

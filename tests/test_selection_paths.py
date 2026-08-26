@@ -11,7 +11,7 @@ from theodore_director.paths import (
     shot_result_candidates,
 )
 from theodore_director.schema import DEFAULT_PLAN, load_plan
-from theodore_director.selection import select_shot
+from theodore_director.selection import select_shot, select_shot_for_postprocess
 
 
 def test_disabled_shots_do_not_consume_queue_index():
@@ -67,6 +67,22 @@ def test_second_sampling_uses_current_active_shot_switch():
     assert select_shot(plan, 0).second_sampling is False
     # Impact 索引 1 直接对应第二个启用分镜，不会被禁用分镜错位。
     assert select_shot(plan, 1).second_sampling is True
+
+
+def test_postprocess_selection_accepts_disabled_shot_and_disables_relay():
+    data = copy.deepcopy(DEFAULT_PLAN)
+    data["shots"] = [
+        {"id": "active", "prompt": "x", "durationSeconds": 5, "enabled": True},
+        {"id": "disabled", "prompt": "y", "durationSeconds": 5, "enabled": False, "latentRelay": True},
+    ]
+    plan = load_plan(data)
+
+    selected = select_shot_for_postprocess(plan, "disabled")
+
+    assert selected.shot.id == "disabled"
+    assert selected.latent_relay is False
+    assert selected.second_sampling is True
+    assert selected.seed == plan.base_seed + 1
 
 
 def test_output_paths_are_relative_and_sanitized():

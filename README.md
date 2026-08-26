@@ -1,8 +1,8 @@
 # ComfyUI Theodore Director
 
-一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带已经融合好的 V7 导播台二采工作流。
+一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带已经融合好的 V7.2 导播台二采工作流。
 
-Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7 dual-sampling Director workflow is included.
+Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7.2 dual-sampling Director workflow is included.
 
 ## 版权说明
 
@@ -33,9 +33,9 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 然后导入仓库内的成品工作流：
 
-- [V7 导播台](workflows/V7导播台.json)
+- [V7.2 导播台](workflows/V7.2导播台.json)
 
-仓库不再附带旧版 V6 单采、双采示例；`V7导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
+仓库不再附带旧版 V6 单采、双采示例；`V7.2导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
 
 | 依赖 | V7 | 用途 |
 |---|---:|---|
@@ -53,7 +53,8 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 3. 给素材设置唯一别名，例如 `hero_front`、`location_night`、`walk_cycle`。
 4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
 5. 设置每个分镜的时长和启用状态，保存到工作流，然后正常 Queue。
-6. 全部分镜生成后进入“后处理”，逐镜头选择一个结果并点击“合并所选视频”。
+6. 抽卡后可进入“后处理 → 单独二采”，对满意的一采结果直接精修；该任务不会重跑一采或启动 Impact 循环。
+7. 全部分镜完成后进入“后处理 → 合并视频”，逐镜头选择一个结果并点击“合并所选视频”。
    也可以点击“打开结果文件夹”，直接在系统文件管理器中查看当前 Project name 与 Run ID 的全部分镜和合并结果。
 
 固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
@@ -108,6 +109,8 @@ ComfyUI/output/TheodoreDirector/<project>_<run>/
 
 项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，分镜视频、合并视频和项目级 `manifest.json` 位于项目目录。视频、尾帧和结果清单使用稳定 `shot ID` 命名，不受镜头禁用、启用或排序导致的 Impact 索引变化影响；旧版带数字执行序号前缀的文件仍可查询和用于续跑。升级前平铺在项目目录的旧结果清单也继续兼容，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
 
+每个新视频旁会写入一个小型 `.theodore.json` 伴随文件，用于标记一采、二采及二采来源。旧视频没有该文件时按“旧结果”兼容，并允许进行一次单独二采；已明确标记为二采的结果不会再次开放二采按钮。
+
 ## 节点分层
 
 - `TheodoreDirector_Project`：通用计划入口及可视化编辑器。
@@ -135,7 +138,7 @@ npm test
 npm run build
 ```
 
-当前分发的 `V7导播台.json` 接受 JSON 结构、链接端点、Theodore 核心节点、计划 Schema、二采拓扑与版权说明测试。[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具，不再生成仓库当前分发的示例。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
+当前分发的 `V7.2导播台.json` 接受 JSON 结构、链接端点、Theodore 核心节点、主流程二采、后处理独立二采与版权说明测试。[add_v7_postprocess_second_pass.py](tools/add_v7_postprocess_second_pass.py) 可幂等重建 V7.2 的局部二采支流；[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
 
 ## License
 

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from comfy_api.v0_0_2 import ComfyExtension, io
+from comfy_api.v0_0_2 import ComfyExtension, InputImpl, Types, io, ui
 
 from .theodore_director.duration import calculate_h3_frames
 from .theodore_director.legacy import import_legacy_script
@@ -17,10 +17,16 @@ from .theodore_director.paths import OutputPaths, build_output_paths, resolve_ou
 from .theodore_director.references import resolve_references
 from .theodore_director.schema import DEFAULT_PLAN_JSON, Plan, load_plan
 from .theodore_director.selection import ShotSelection, select_shot
+from .theodore_director.video_results import (
+    SecondPassRequest,
+    parse_second_pass_request,
+    write_video_result_metadata,
+)
 
 PlanType = io.Custom("THEODORE_DIRECTOR_PLAN")
 ShotType = io.Custom("THEODORE_DIRECTOR_SHOT")
 PathsType = io.Custom("THEODORE_DIRECTOR_PATHS")
+SecondPassRequestType = io.Custom("THEODORE_DIRECTOR_SECOND_PASS_REQUEST")
 
 CATEGORY = "Theodore Director"
 
@@ -299,6 +305,13 @@ class TheodoreDirectorCommitResult(io.ComfyNode):
             if latent_required
             else None
         )
+        # 为每个新结果记录一采/二采阶段；没有该伴随文件的旧视频仍按 legacy_unknown 兼容。
+        write_video_result_metadata(
+            video,
+            stage="second_pass" if shot.second_sampling else "first_pass",
+            shot_id=shot.shot.id,
+            plan_hash=plan.plan_hash,
+        )
         result = commit_shot_result(
             result_path=root / paths.shot_result_path,
             manifest_path=root / paths.manifest_path,
@@ -311,6 +324,113 @@ class TheodoreDirectorCommitResult(io.ComfyNode):
             latent_required=latent_required,
         )
         return io.NodeOutput(completion_signal, shot.next_index, shot.has_next, json.dumps(result.__dict__, ensure_ascii=False))
+
+
+class TheodoreDirectorPostprocessSecondPassSource(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="TheodoreDirector_PostprocessSecondPassSource",
+            display_name="Theodore Director - Postprocess Second Pass Source",
+            category=f"{CATEGORY}/Postprocess",
+            description="Validate and load one saved first-pass result for the standalone second-pass branch.",
+            inputs=[
+                io.String.Input(
+                    "request_json",
+                    display_name="Second-pass request",
+                    multiline=True,
+                    default="{}",
+                    extra_dict={"theodoreDirectorSecondPassRequest": True},
+                )
+            ],
+            outputs=[
+                PlanType.Output("plan", display_name="PLAN"),
+                ShotType.Output("shot", display_name="SHOT"),
+                SecondPassRequestType.Output("request", display_name="REQUEST"),
+                io.Image.Output("images"),
+                io.Audio.Output("audio"),
+                io.Float.Output("fps"),
+                io.Int.Output("seed"),
+            ],
+        )
+
+    @classmethod
+    def execute(cls, request_json: str):
+        import folder_paths
+
+        root = Path(folder_paths.get_output_directory()).resolve()
+        request = parse_second_pass_request(root, request_json)
+        components = InputImpl.VideoFromFile(str(request.source_path)).get_components()
+        if components.audio is None:
+            raise ValueError("单独二采要求源视频包含音轨，当前结果没有可用音频")
+        return io.NodeOutput(
+            request.plan,
+            request.shot,
+            request,
+            components.images,
+            components.audio,
+            float(components.frame_rate),
+            request.shot.seed,
+        )
+
+    @classmethod
+    def fingerprint_inputs(cls, request_json: str):
+        # requestId 每次点击都会变化，确保相同源视频也能按用户请求重新排队。
+        return hashlib.sha256(request_json.encode("utf-8")).hexdigest()
+
+
+class TheodoreDirectorSaveSecondPass(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="TheodoreDirector_SaveSecondPass",
+            display_name="Theodore Director - Save Standalone Second Pass",
+            category=f"{CATEGORY}/Postprocess",
+            description="Save a standalone second-pass video without overwriting the selected first pass.",
+            inputs=[
+                io.Video.Input("video"),
+                SecondPassRequestType.Input("request"),
+            ],
+            outputs=[
+                io.Video.Output("video"),
+                io.String.Output("path"),
+            ],
+            is_output_node=True,
+        )
+
+    @classmethod
+    def execute(cls, video, request: SecondPassRequest):
+        import folder_paths
+
+        root = Path(folder_paths.get_output_directory()).resolve()
+        width, height = video.get_dimensions()
+        full_folder, filename, counter, subfolder, _prefix = folder_paths.get_save_image_path(
+            request.output_prefix,
+            str(root),
+            width,
+            height,
+        )
+        file_name = f"{filename}_{counter:05}_.mp4"
+        output_path = (Path(full_folder) / file_name).resolve(strict=False)
+        try:
+            output_path.relative_to(root)
+        except ValueError as error:
+            raise ValueError(f"拒绝把二采结果写入 ComfyUI output 之外: {output_path}") from error
+
+        video.save_to(str(output_path), format=Types.VideoContainer("mp4"), codec="auto")
+        write_video_result_metadata(
+            output_path,
+            stage="second_pass",
+            shot_id=request.shot.shot.id,
+            plan_hash=request.plan.plan_hash,
+            source_path=request.source_relative,
+        )
+        relative = output_path.relative_to(root).as_posix()
+        return io.NodeOutput(
+            video,
+            relative,
+            ui=ui.PreviewVideo([ui.SavedResult(file_name, subfolder, io.FolderType.output)]),
+        )
 
 
 class TheodoreDirectorLegacyImport(io.ComfyNode):
@@ -351,5 +471,7 @@ class TheodoreDirectorExtension(ComfyExtension):
             TheodoreDirectorH3Adapter,
             TheodoreDirectorOutputPaths,
             TheodoreDirectorCommitResult,
+            TheodoreDirectorPostprocessSecondPassSource,
+            TheodoreDirectorSaveSecondPass,
             TheodoreDirectorLegacyImport,
         ]

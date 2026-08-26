@@ -51,3 +51,12 @@ export interface ResolvedPreview {
   mixedFiles: number;
   audioCount: number;
 }
+
+export interface SecondPassQueueRequest {
+  plan: DirectorPlan;
+  shotId: string;
+  sourcePath: string;
+  requestId: string;
+}
+
+export type QueueSecondPass = (request: SecondPassQueueRequest) => Promise<void>;

@@ -5,13 +5,15 @@ from theodore_director.schema import load_plan
 
 
 COPYRIGHT_NOTICE = "### 本工作流由抖音博主Theodore（抖音号:q1503623946）以及 b站up主 南极来の企鹅制作。"
-WORKFLOW_NAME = "V7导播台.json"
+WORKFLOW_NAME = "V7.2导播台.json"
 REQUIRED_DIRECTOR_NODES = {
     "TheodoreDirector_Project",
     "TheodoreDirector_SelectShot",
     "TheodoreDirector_H3Adapter",
     "TheodoreDirector_OutputPaths",
     "TheodoreDirector_CommitResult",
+    "TheodoreDirector_PostprocessSecondPassSource",
+    "TheodoreDirector_SaveSecondPass",
 }
 
 
@@ -37,9 +39,42 @@ def test_distributed_workflow_is_structurally_valid():
 def test_v7_dual_sampling_topology_is_preserved():
     data = load_distributed_workflow()
     types = [item["type"] for item in data["nodes"]]
-    assert types.count("SamplerCustomAdvanced") == 2
-    assert types.count("RTXVideoSuperResolution") == 1
+    # 主流程的一采、内联二采，以及后处理独立二采各有一个采样器。
+    assert types.count("SamplerCustomAdvanced") == 3
+    assert types.count("RTXVideoSuperResolution") == 2
     assert types.count("ImpactConditionalBranch") >= 1
+
+
+def test_v7_contains_isolated_postprocess_second_pass_branch():
+    data = load_distributed_workflow()
+    nodes = {item["id"]: item for item in data["nodes"]}
+    source = next(item for item in data["nodes"] if item["type"] == "TheodoreDirector_PostprocessSecondPassSource")
+    target = next(item for item in data["nodes"] if item["type"] == "TheodoreDirector_SaveSecondPass")
+    assert source["mode"] == 4
+    assert target["mode"] == 4
+
+    incoming = {}
+    for _link_id, origin, _origin_slot, destination, _destination_slot, _kind in data["links"]:
+        incoming.setdefault(destination, set()).add(origin)
+    ancestors = set()
+    pending = [target["id"]]
+    while pending:
+        current = pending.pop()
+        for origin in incoming.get(current, set()):
+            if origin not in ancestors:
+                ancestors.add(origin)
+                pending.append(origin)
+
+    ancestor_types = {nodes[node_id]["type"] for node_id in ancestors}
+    assert source["id"] in ancestors
+    assert "RTXVideoSuperResolution" in ancestor_types
+    assert "VAEEncodeAudio" in ancestor_types
+    assert "SamplerCustomAdvanced" in ancestor_types
+    # 局部二采只读取落盘成片，不得重新进入一采、Impact 或连续性支流。
+    assert "TheodoreDirector_CommitResult" not in ancestor_types
+    assert "ImpactQueueTrigger" not in ancestor_types
+    assert "MiniMaxH3MotionContext" not in ancestor_types
+    assert "MiniMaxH3MotionContextTrim" not in ancestor_types
 
 
 def test_distributed_workflow_contains_copyright_notice():
