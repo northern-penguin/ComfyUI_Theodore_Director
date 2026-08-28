@@ -59,12 +59,13 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 ### RunningHub
 
-`running-hub` 分支同时保留本地 ComfyUI 与 RunningHub 两套运行时。RunningHub 域名会自动选择云端适配器，也可在“项目设置 → 运行环境”中手动切换。API Key 和任务映射只保存在当前导播台页面内存，不写入工作流或导出的 Director JSON。
+`running-hub` 分支同时保留本地 ComfyUI 与 RunningHub 两套运行时。RunningHub 域名会自动选择云端适配器，也可在“项目设置 → 运行环境”中手动切换。任务映射保存在导播台项目数据中，会随工作流和 Director JSON 导入、导出；它不参与生成哈希。API Key 默认只保存在当前页面内存，也可由用户主动勾选“在此设备记住 API Key”写入当前浏览器的站点存储，永远不会进入工作流或导出文件。
 
 - 素材上传使用 RunningHub `POST /openapi/v2/media/upload/binary`，计划中保存响应的 `fileName`，不保存一天后可能失效的 `download_url`。
 - 生成结果使用 `POST /openapi/v2/query`。任务映射每行可填写完整工作流 `taskId`、`shot_003=taskId` 或 `merged=taskId`；完整任务按启用镜头顺序归属视频。
 - 视频合并与单独二采都通过 V7.2 的局部工作流支流执行，不依赖 RunningHub 会屏蔽的 Theodore 自定义 HTTP 路由。
 - 云端没有可打开的服务器文件夹，因此 RunningHub 模式隐藏“打开结果文件夹”。本地模式保持原行为。
+- “清除已保存 Key”会删除浏览器中的密钥并清空当前页面输入。记住功能默认关闭，不建议在公共电脑启用；换浏览器、清理站点数据或更换设备后需要重新填写。
 
 固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
 

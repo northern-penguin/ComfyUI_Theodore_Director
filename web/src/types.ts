@@ -30,7 +30,13 @@ export interface DirectorShot {
 
 export interface DirectorPlan {
   schemaVersion: 4;
-  project: { id: string; name: string; runId: string };
+  project: {
+    id: string;
+    name: string;
+    runId: string;
+    /** RunningHub 查询任务映射；属于项目数据，但不包含 API Key。 */
+    runningHubTaskMappings?: string;
+  };
   defaults: { fps: number; baseSeed: number };
   promptPrefix: string;
   promptSuffix: string;

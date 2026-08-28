@@ -10,6 +10,7 @@ import { PostprocessPanel } from "./postprocess";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
 import { fetchShotResultsForRuntime, resolveRuntimeMode, uploadAssetForRuntime, type RuntimeSettings } from "./runtime";
+import { clearSavedRunningHubApiKey, readSavedRunningHubApiKey, saveRunningHubApiKey } from "./runtime-storage";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueMerge, QueueSecondPass } from "./types";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
@@ -21,6 +22,8 @@ function normalizePlan(value: DirectorPlan): DirectorPlan {
   plan.schemaVersion = 4;
   // 内部 ID 只用于兼容协议，不展示给用户，也不参与生成 hash。
   if (!plan.project.id?.trim()) plan.project.id = uid("project");
+  // RunningHub 任务映射是可导出的项目数据；旧工作流缺少字段时补为空串。
+  plan.project.runningHubTaskMappings ??= "";
   // v1/v2 工作流没有逐镜头开关，默认保持原有接力流程。
   plan.shots = plan.shots.map((shot) => ({
     ...shot,
@@ -65,6 +68,7 @@ interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => v
 
 function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondPass, queueMerge }: EditorProps) {
   const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
+  const [savedApiKeyAtOpen] = useState(() => readSavedRunningHubApiKey());
   const [tab, setTab] = useState<"shots" | "assets" | "settings" | "postprocess">("shots");
   const [selected, setSelected] = useState(0);
   const [language, setLanguage] = useState<Language>(() => navigator.language.startsWith("zh") ? "zh" : "en");
@@ -82,8 +86,9 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const [uniformDuration, setUniformDuration] = useState("5");
   const [appendCount, setAppendCount] = useState("1");
   const [appendDuration, setAppendDuration] = useState("5");
-  const [runtime, setRuntime] = useState<RuntimeSettings>({ mode: "auto", apiKey: "", taskMappings: "" });
-  const [runtimeDraft, setRuntimeDraft] = useState<RuntimeSettings>({ mode: "auto", apiKey: "", taskMappings: "" });
+  const [runtime, setRuntime] = useState<RuntimeSettings>(() => ({ mode: "auto", apiKey: savedApiKeyAtOpen ?? "", taskMappings: initial.project.runningHubTaskMappings ?? "" }));
+  const [runtimeDraft, setRuntimeDraft] = useState<RuntimeSettings>(() => ({ mode: "auto", apiKey: savedApiKeyAtOpen ?? "", taskMappings: initial.project.runningHubTaskMappings ?? "" }));
+  const [rememberApiKey, setRememberApiKey] = useState(savedApiKeyAtOpen !== null);
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
@@ -157,6 +162,35 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
     if (errors.length) { window.alert(`计划未通过校验：\n\n${errors.join("\n")}`); return; }
     onSave(plan);
   };
+  const applyRuntimeSettings = () => {
+    const next = { ...runtimeDraft };
+    // 映射跟随项目保存；API Key 刻意不写入 plan。
+    mutate((draft) => { draft.project.runningHubTaskMappings = next.taskMappings; });
+    setRuntime(next);
+    if (rememberApiKey) {
+      if (!next.apiKey.trim()) {
+        // 用户主动清空输入后应用设置，应同步移除旧密钥，避免下次又自动恢复。
+        clearSavedRunningHubApiKey();
+      } else if (!saveRunningHubApiKey(next.apiKey)) {
+        window.alert(language === "zh" ? "浏览器拒绝本地保存 API Key；本次会话仍可继续使用。" : "The browser blocked local API Key storage; it remains available for this session.");
+      }
+    } else {
+      clearSavedRunningHubApiKey();
+    }
+  };
+  const clearRememberedApiKey = () => {
+    clearSavedRunningHubApiKey();
+    setRememberApiKey(false);
+    setRuntime((current) => ({ ...current, apiKey: "" }));
+    setRuntimeDraft((current) => ({ ...current, apiKey: "" }));
+  };
+  const importPlan = (imported: DirectorPlan) => {
+    const normalized = normalizePlan(imported);
+    setPlan(normalized);
+    setRuntime((current) => ({ ...current, taskMappings: normalized.project.runningHubTaskMappings ?? "" }));
+    setRuntimeDraft((current) => ({ ...current, taskMappings: normalized.project.runningHubTaskMappings ?? "" }));
+    setSelected(0);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -181,7 +215,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
 
   return <div class="td-shell">
-    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(normalizePlan(imported as DirectorPlan)); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
+    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); importPlan(imported as DirectorPlan); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
     <nav>{(["shots", "assets", "settings", "postprocess"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
@@ -223,7 +257,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
           <div class="td-flags"><label><input type="checkbox" checked={asset.enabled} onChange={(event) => mutate((draft) => { draft.assets[index].enabled = event.currentTarget.checked; })}/>启用</label><label><input type="checkbox" checked={asset.fixed} onChange={(event) => mutate((draft) => { draft.assets[index].fixed = event.currentTarget.checked; })}/>固定引用</label>{asset.kind === "video" && <label><input type="checkbox" checked={asset.includeVideoAudio} onChange={(event) => mutate((draft) => { draft.assets[index].includeVideoAudio = event.currentTarget.checked; })}/>启用视频伴音</label>}<button class="danger" onClick={() => mutate((draft) => { draft.assets.splice(index, 1); })}>删除</button></div>
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
-      {tab === "settings" && <section class="td-form settings"><fieldset class="td-runtime-settings"><legend>{language === "zh" ? "运行环境" : "Runtime"}</legend><label>{language === "zh" ? "适配器" : "Adapter"}<select value={runtimeDraft.mode} onChange={(event) => setRuntimeDraft((current) => ({ ...current, mode: event.currentTarget.value as RuntimeSettings["mode"] }))}><option value="auto">{language === "zh" ? "自动检测" : "Auto detect"}</option><option value="local">{language === "zh" ? "本地 ComfyUI" : "Local ComfyUI"}</option><option value="runninghub">RunningHub</option></select></label><div class="td-runtime-status">{language === "zh" ? "当前：" : "Active: "}<strong>{resolvedRuntime === "runninghub" ? "RunningHub" : "Local ComfyUI"}</strong></div>{resolveRuntimeMode(runtimeDraft) === "runninghub" && <><label>RunningHub API Key<input type="password" autocomplete="off" value={runtimeDraft.apiKey} placeholder={language === "zh" ? "仅保存在当前页面内存" : "Kept only in this page memory"} onInput={(event) => setRuntimeDraft((current) => ({ ...current, apiKey: event.currentTarget.value }))}/></label><label>{language === "zh" ? "任务映射（每行一项）" : "Task mappings (one per line)"}<textarea rows={5} value={runtimeDraft.taskMappings} placeholder={"完整工作流 taskId\nshot_003=taskId\nmerged=taskId"} onInput={(event) => setRuntimeDraft((current) => ({ ...current, taskMappings: event.currentTarget.value }))}/><small>{language === "zh" ? "单独 taskId 按启用镜头顺序归属；也可显式指定镜头或合并任务。API Key 和任务映射不会写入工作流。" : "A bare taskId follows enabled-shot order; shot and merged tasks can be explicit. Credentials and mappings are not written to the workflow."}</small></label></>}<div class="td-runtime-apply"><button class="primary" onClick={() => setRuntime({ ...runtimeDraft })}>{language === "zh" ? "应用运行环境设置" : "Apply runtime settings"}</button></div></fieldset><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
+      {tab === "settings" && <section class="td-form settings"><fieldset class="td-runtime-settings"><legend>{language === "zh" ? "运行环境" : "Runtime"}</legend><label>{language === "zh" ? "适配器" : "Adapter"}<select value={runtimeDraft.mode} onChange={(event) => setRuntimeDraft((current) => ({ ...current, mode: event.currentTarget.value as RuntimeSettings["mode"] }))}><option value="auto">{language === "zh" ? "自动检测" : "Auto detect"}</option><option value="local">{language === "zh" ? "本地 ComfyUI" : "Local ComfyUI"}</option><option value="runninghub">RunningHub</option></select></label><div class="td-runtime-status">{language === "zh" ? "当前：" : "Active: "}<strong>{resolvedRuntime === "runninghub" ? "RunningHub" : "Local ComfyUI"}</strong></div>{resolveRuntimeMode(runtimeDraft) === "runninghub" && <><label>RunningHub API Key<input type="password" autocomplete="off" value={runtimeDraft.apiKey} placeholder={language === "zh" ? "默认仅保存在当前页面内存" : "Kept only in page memory by default"} onInput={(event) => setRuntimeDraft((current) => ({ ...current, apiKey: event.currentTarget.value }))}/></label><div class="td-runtime-key-controls"><label><input type="checkbox" checked={rememberApiKey} onChange={(event) => setRememberApiKey(event.currentTarget.checked)}/><span>{language === "zh" ? "在此设备记住 API Key" : "Remember API Key on this device"}</span></label><button type="button" onClick={clearRememberedApiKey}>{language === "zh" ? "清除已保存 Key" : "Clear saved Key"}</button><small>{language === "zh" ? "默认不保存；公共电脑不建议启用。Key 仅写入当前浏览器站点存储，不进入工作流或导出文件。" : "Off by default; avoid on shared computers. The key is stored only in this browser and never enters the workflow or exports."}</small></div><label>{language === "zh" ? "任务映射（每行一项）" : "Task mappings (one per line)"}<textarea rows={5} value={runtimeDraft.taskMappings} placeholder={"完整工作流 taskId\nshot_003=taskId\nmerged=taskId"} onInput={(event) => { const taskMappings = event.currentTarget.value; setRuntimeDraft((current) => ({ ...current, taskMappings })); mutate((draft) => { draft.project.runningHubTaskMappings = taskMappings; }); }}/><small>{language === "zh" ? "单独 taskId 按启用镜头顺序归属；也可显式指定镜头或合并任务。任务映射属于项目数据，会随工作流保存、导入和导出。" : "A bare taskId follows enabled-shot order; shot and merged tasks can be explicit. Task mappings are project data and follow workflow save, import, and export."}</small></label></>}<div class="td-runtime-apply"><button class="primary" onClick={applyRuntimeSettings}>{language === "zh" ? "应用运行环境设置" : "Apply runtime settings"}</button></div></fieldset><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
       {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} runtime={runtime} queueSecondPass={queueSecondPass} queueMerge={queueMerge}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
