@@ -5,11 +5,12 @@ import { HighlightedTextarea } from "./highlighted-textarea";
 import { t, type Language } from "./i18n";
 import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
-import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
+import { assetFileName, generatedVideoUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
-import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass } from "./types";
+import { fetchShotResultsForRuntime, resolveRuntimeMode, uploadAssetForRuntime, type RuntimeSettings } from "./runtime";
+import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueMerge, QueueSecondPass } from "./types";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -39,30 +40,6 @@ function newAsset(kind: AssetKind): DirectorAsset {
   return { id, alias: id, kind, path: "", enabled: true, fixed: false, fixedOrder: 0, shotIds: [], includeVideoAudio: false, durationSeconds: kind === "image" ? null : 2, audioDurationSeconds: null, fingerprint: "" };
 }
 
-async function uploadAsset(projectName: string, kind: AssetKind, file: File): Promise<string> {
-  const body = new FormData();
-  body.append("projectName", projectName);
-  body.append("kind", kind);
-  body.append("file", file);
-  const response = await fetch("/theodore-director/v1/assets", { method: "POST", body });
-  const result = await response.json() as { path?: string; error?: string };
-  if (!response.ok || !result.path) throw new Error(result.error || `HTTP ${response.status}`);
-  return result.path;
-}
-
-async function fetchGeneratedVideo(plan: DirectorPlan, shot: DirectorShot, activeIndex: number): Promise<GeneratedVideoResponse> {
-  const query = new URLSearchParams({
-    projectName: plan.project.name,
-    runId: plan.project.runId,
-    shotId: shot.id,
-    activeIndex: String(activeIndex),
-  });
-  const response = await fetch(`/theodore-director/v1/generated-video?${query.toString()}`);
-  const result = await response.json() as GeneratedVideoResponse;
-  if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
-  return result;
-}
-
 async function writeClipboardText(value: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -84,9 +61,9 @@ async function writeClipboardText(value: string): Promise<void> {
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
 }
 
-interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean; queueSecondPass?: QueueSecondPass }
+interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean; queueSecondPass?: QueueSecondPass; queueMerge?: QueueMerge }
 
-function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondPass }: EditorProps) {
+function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondPass, queueMerge }: EditorProps) {
   const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
   const [tab, setTab] = useState<"shots" | "assets" | "settings" | "postprocess">("shots");
   const [selected, setSelected] = useState(0);
@@ -105,6 +82,8 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const [uniformDuration, setUniformDuration] = useState("5");
   const [appendCount, setAppendCount] = useState("1");
   const [appendDuration, setAppendDuration] = useState("5");
+  const [runtime, setRuntime] = useState<RuntimeSettings>({ mode: "auto", apiKey: "", taskMappings: "" });
+  const [runtimeDraft, setRuntimeDraft] = useState<RuntimeSettings>({ mode: "auto", apiKey: "", taskMappings: "" });
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
@@ -112,7 +91,9 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const allBatchEnabled = batchShots.length > 0 && batchShots.every((item) => item.enabled);
   const generatedResults = useMemo(() => normalizeGeneratedResults(generatedVideo), [generatedVideo]);
   const selectedGenerated = generatedResults.find((item) => item.path === selectedGeneratedPath) ?? generatedResults[0];
-  const generatedVideoUrl = selectedGenerated?.path ? comfyViewUrl(selectedGenerated.path, "output") : null;
+  const selectedGeneratedUrl = generatedVideoUrl(selectedGenerated);
+  const resolvedRuntime = resolveRuntimeMode(runtime);
+  const uploadAsset = (projectName: string, kind: AssetKind, file: File) => uploadAssetForRuntime(runtime, projectName, kind, file);
   const mutate = (fn: (draft: DirectorPlan) => void) => setPlan((current) => { const draft = clone(current); fn(draft); return draft; });
   const moveShot = (from: number, direction: number) => mutate((draft) => { const to = from + direction; if (to < 0 || to >= draft.shots.length) return; [draft.shots[from], draft.shots[to]] = [draft.shots[to], draft.shots[from]]; setSelected(to); });
   const deleteShot = (index: number) => mutate((draft) => {
@@ -187,7 +168,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
     }
     setGeneratedLoading(true);
     // 禁用镜头也按稳定 shot ID 查询历史结果；activeIndex=-1 只表达当前不参加执行。
-    void fetchGeneratedVideo(plan, shot, activeIndex)
+    void fetchShotResultsForRuntime(runtime, plan, shot, activeIndex)
       .then((result) => {
         if (cancelled) return;
         const results = normalizeGeneratedResults(result);
@@ -197,7 +178,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
       .catch((error) => { if (!cancelled) { setGeneratedVideo({ found: false, results: [], error: String(error) }); setSelectedGeneratedPath(""); } })
       .finally(() => { if (!cancelled) setGeneratedLoading(false); });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision]);
+  }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
 
   return <div class="td-shell">
     <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); setPlan(normalizePlan(imported as DirectorPlan)); setSelected(0); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
@@ -229,20 +210,21 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
             <summary><strong>{language === "zh" ? "生成结果" : "Generated result"}</strong><span class={`td-result-state ${generatedResults.length ? "found" : ""}`}>{generatedLoading ? (language === "zh" ? "查询中" : "Checking") : generatedResults.length ? (language === "zh" ? `${generatedResults.length} 个结果` : `${generatedResults.length} results`) : (language === "zh" ? "空" : "Empty")}</span></summary>
             <div class="td-preview-body td-result-body">
               <div class="td-result-actions"><button onClick={() => setResultRevision((value) => value + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
-              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{language === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again."}</div> : selectedGenerated && generatedVideoUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedGenerated.path} src={generatedVideoUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedGenerated.path}>{selectedGenerated.path}{selectedGenerated.bytes ? ` · ${(selectedGenerated.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div><div class="td-result-list" aria-label={language === "zh" ? "全部生成结果" : "All generated results"}>{generatedResults.map((item, index) => { const url = comfyViewUrl(item.path, "output"); const number = generatedResultNumber(item.path, generatedResults.length - index); const time = item.modifiedAt ? new Date(item.modifiedAt * 1000).toLocaleString(language === "zh" ? "zh-CN" : "en-US") : ""; return <button class={`td-result-item ${item.path === selectedGenerated.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedGeneratedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "结果" : "Result"} ${number}`}/> : <div class="td-result-thumb"><span>×</span></div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `结果 ${number}` : `Result ${number}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{[item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : "", time].filter(Boolean).join(" · ")}</small></span></button>; })}</div></div> : <div class="td-result-empty">{language === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path"}</div>}
+              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{generatedVideo.error}</div> : selectedGenerated && selectedGeneratedUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedGenerated.path} src={selectedGeneratedUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedGenerated.path}>{selectedGenerated.path}{selectedGenerated.bytes ? ` · ${(selectedGenerated.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div><div class="td-result-list" aria-label={language === "zh" ? "全部生成结果" : "All generated results"}>{generatedResults.map((item, index) => { const url = generatedVideoUrl(item); const number = generatedResultNumber(item.path, generatedResults.length - index); const time = item.modifiedAt ? new Date(item.modifiedAt * 1000).toLocaleString(language === "zh" ? "zh-CN" : "en-US") : ""; return <button class={`td-result-item ${item.path === selectedGenerated.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedGeneratedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "结果" : "Result"} ${number}`}/> : <div class="td-result-thumb"><span>×</span></div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `结果 ${number}` : `Result ${number}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{[item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : "", time, item.taskId ? `task ${item.taskId}` : ""].filter(Boolean).join(" · ")}</small></span></button>; })}</div></div> : <div class="td-result-empty">{language === "zh" ? "未找到本段视频" : "No video found for this shot"}</div>}
             </div>
           </details>
         </aside>
       </div>}
       {tab === "assets" && <div class="td-assets">
+        {resolvedRuntime === "runninghub" && <div class={`td-runtime-banner ${runtime.apiKey.trim() ? "ready" : ""}`}>{runtime.apiKey.trim() ? (language === "zh" ? "RunningHub 上传已启用；素材路径将保存官方 fileName。" : "RunningHub upload is ready; the official fileName will be stored.") : (language === "zh" ? "RunningHub 模式：请先在项目设置填写 API Key，再上传素材。" : "RunningHub mode: enter an API Key in Project settings before uploading.")}</div>}
         <div class="td-toolbar">{(["image", "video", "audio"] as AssetKind[]).map((kind) => <button onClick={() => mutate((draft) => draft.assets.push(newAsset(kind)))}>＋ {kind}</button>)}<button class="td-asset-batch-entry" onClick={() => setAssetBatchOpen(true)}>⇧ {language === "zh" ? "批量导入素材" : "Batch import assets"}</button></div>
         {plan.assets.map((asset, index) => <article key={asset.id}><div class="td-asset-layout"><div>
           <div class="td-grid"><label>别名 / Alias<input value={asset.alias} onInput={(event) => mutate((draft) => { draft.assets[index].alias = event.currentTarget.value; })}/></label><label>类型 / Kind<select value={asset.kind} onChange={(event) => mutate((draft) => { draft.assets[index].kind = event.currentTarget.value as AssetKind; })}><option>image</option><option>video</option><option>audio</option></select></label><label>输入目录相对路径 / Path<input value={asset.path} onInput={(event) => mutate((draft) => { draft.assets[index].path = event.currentTarget.value; })}/><span class="td-file-picker"><label class="td-file-button">选择文件 / Choose file<input type="file" accept={asset.kind === "image" ? "image/*" : asset.kind === "video" ? "video/*" : "audio/*"} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; setUploadNames((current) => ({ ...current, [asset.id]: file.name })); try { const path = await uploadAsset(plan.project.name, asset.kind, file); mutate((draft) => { const target = draft.assets.find((item) => item.id === asset.id); if (target) target.path = path; }); } catch (error) { window.alert(String(error)); } finally { setUploadNames((current) => { const next = { ...current }; delete next[asset.id]; return next; }); input.value = ""; } }}/></label><span class="td-file-name" title={uploadNames[asset.id] || asset.path}>{uploadNames[asset.id] ? `${language === "zh" ? "上传中" : "Uploading"}: ${uploadNames[asset.id]}` : assetFileName(asset.path) || (language === "zh" ? "未选择文件" : "No file selected")}</span></span></label><label>时长 / Duration<input type="number" min="0" step="0.1" value={asset.durationSeconds ?? ""} onInput={(event) => mutate((draft) => { draft.assets[index].durationSeconds = event.currentTarget.value ? Number(event.currentTarget.value) : null; })}/></label><label>固定顺序 / Fixed order<input type="number" value={asset.fixedOrder} onInput={(event) => mutate((draft) => { draft.assets[index].fixedOrder = Number(event.currentTarget.value); })}/></label><label>限定分镜 ID（逗号分隔）<input value={asset.shotIds.join(", ")} onInput={(event) => mutate((draft) => { draft.assets[index].shotIds = event.currentTarget.value.split(",").map((value) => value.trim()).filter(Boolean); })}/></label></div>
           <div class="td-flags"><label><input type="checkbox" checked={asset.enabled} onChange={(event) => mutate((draft) => { draft.assets[index].enabled = event.currentTarget.checked; })}/>启用</label><label><input type="checkbox" checked={asset.fixed} onChange={(event) => mutate((draft) => { draft.assets[index].fixed = event.currentTarget.checked; })}/>固定引用</label>{asset.kind === "video" && <label><input type="checkbox" checked={asset.includeVideoAudio} onChange={(event) => mutate((draft) => { draft.assets[index].includeVideoAudio = event.currentTarget.checked; })}/>启用视频伴音</label>}<button class="danger" onClick={() => mutate((draft) => { draft.assets.splice(index, 1); })}>删除</button></div>
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
-      {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
-      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
+      {tab === "settings" && <section class="td-form settings"><fieldset class="td-runtime-settings"><legend>{language === "zh" ? "运行环境" : "Runtime"}</legend><label>{language === "zh" ? "适配器" : "Adapter"}<select value={runtimeDraft.mode} onChange={(event) => setRuntimeDraft((current) => ({ ...current, mode: event.currentTarget.value as RuntimeSettings["mode"] }))}><option value="auto">{language === "zh" ? "自动检测" : "Auto detect"}</option><option value="local">{language === "zh" ? "本地 ComfyUI" : "Local ComfyUI"}</option><option value="runninghub">RunningHub</option></select></label><div class="td-runtime-status">{language === "zh" ? "当前：" : "Active: "}<strong>{resolvedRuntime === "runninghub" ? "RunningHub" : "Local ComfyUI"}</strong></div>{resolveRuntimeMode(runtimeDraft) === "runninghub" && <><label>RunningHub API Key<input type="password" autocomplete="off" value={runtimeDraft.apiKey} placeholder={language === "zh" ? "仅保存在当前页面内存" : "Kept only in this page memory"} onInput={(event) => setRuntimeDraft((current) => ({ ...current, apiKey: event.currentTarget.value }))}/></label><label>{language === "zh" ? "任务映射（每行一项）" : "Task mappings (one per line)"}<textarea rows={5} value={runtimeDraft.taskMappings} placeholder={"完整工作流 taskId\nshot_003=taskId\nmerged=taskId"} onInput={(event) => setRuntimeDraft((current) => ({ ...current, taskMappings: event.currentTarget.value }))}/><small>{language === "zh" ? "单独 taskId 按启用镜头顺序归属；也可显式指定镜头或合并任务。API Key 和任务映射不会写入工作流。" : "A bare taskId follows enabled-shot order; shot and merged tasks can be explicit. Credentials and mappings are not written to the workflow."}</small></label></>}<div class="td-runtime-apply"><button class="primary" onClick={() => setRuntime({ ...runtimeDraft })}>{language === "zh" ? "应用运行环境设置" : "Apply runtime settings"}</button></div></fieldset><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
+      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} runtime={runtime} queueSecondPass={queueSecondPass} queueMerge={queueMerge}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
       <header class="td-batch-header"><div><h2>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</h2><p>{language === "zh" ? `当前共 ${batchShots.length} 个镜头` : `${batchShots.length} shots`}</p></div><button aria-label={language === "zh" ? "关闭" : "Close"} onClick={() => setBatchOpen(false)}>×</button></header>
@@ -258,7 +240,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   </div>;
 }
 
-export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false, queueSecondPass?: QueueSecondPass): void {
+export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false, queueSecondPass?: QueueSecondPass, queueMerge?: QueueMerge): void {
   const existing = document.getElementById("theodore-director-modal");
   if (existing) {
     // 防止快速重复点击在画布上叠加多个编辑器实例。
@@ -277,6 +259,6 @@ export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) =
     host.remove();
   };
   document.addEventListener("keydown", onKeyDown);
-  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling} queueSecondPass={queueSecondPass}/>, host);
+  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling} queueSecondPass={queueSecondPass} queueMerge={queueMerge}/>, host);
   host.focus();
 }

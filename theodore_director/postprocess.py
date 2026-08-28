@@ -3,16 +3,119 @@
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from typing import Any
 
 from .paths import VIDEO_EXTENSIONS, build_output_paths_from_values, find_generated_videos
+from .remote_media import download_runninghub_video
 
 _MERGED_VIDEO = re.compile(r"^merged_video_(\d+)_?\.mp4$", re.IGNORECASE)
+
+
+def parse_merge_request(value: str | dict[str, Any]) -> dict[str, Any]:
+    """解析导播台局部合并请求，保持分镜顺序并拒绝重复执行索引。"""
+    try:
+        data = json.loads(value) if isinstance(value, str) else dict(value)
+    except (json.JSONDecodeError, TypeError, ValueError) as error:
+        raise ValueError(f"合并请求 JSON 无法解析: {error}") from error
+    project_name = str(data.get("projectName", "")).strip()
+    run_id = str(data.get("runId", "")).strip()
+    request_id = str(data.get("requestId", "")).strip()
+    selections = data.get("selections")
+    if not project_name or not run_id or not request_id:
+        raise ValueError("合并请求缺少 projectName、runId 或 requestId")
+    if not isinstance(selections, list) or not selections:
+        raise ValueError("合并请求至少需要一个视频")
+    if len(selections) > 1_000:
+        raise ValueError("单次最多合并 1000 个镜头")
+    normalized = []
+    seen_indexes: set[int] = set()
+    for position, item in enumerate(selections, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"第 {position} 项必须是对象")
+        shot_id = str(item.get("shotId", "")).strip()
+        path = str(item.get("path", "")).strip()
+        try:
+            active_index = int(item.get("activeIndex", -1))
+        except (TypeError, ValueError) as error:
+            raise ValueError(f"第 {position} 项的 activeIndex 无效") from error
+        if not shot_id or not path or active_index < 0 or active_index > 999_999:
+            raise ValueError(f"第 {position} 项缺少有效的镜头或结果信息")
+        if active_index in seen_indexes:
+            raise ValueError(f"启用镜头序号 {active_index + 1} 被重复选择")
+        seen_indexes.add(active_index)
+        normalized.append({"shotId": shot_id, "activeIndex": active_index, "path": path})
+    return {
+        "projectName": project_name,
+        "runId": run_id,
+        "requestId": request_id,
+        "selections": normalized,
+    }
+
+
+def execute_merge_request(root: Path, value: str | dict[str, Any]) -> Path:
+    """在输出节点内完成本地或 RunningHub 远程视频合并。"""
+    request = parse_merge_request(value)
+    output_root = root.resolve()
+    output_path = allocate_merged_video(output_root, request["projectName"], request["runId"])
+    list_path: Path | None = None
+    try:
+        with tempfile.TemporaryDirectory(prefix="theodore_rh_merge_") as temporary:
+            temp_root = Path(temporary)
+            sources: list[Path] = []
+            remote_bytes = 0
+            for item in request["selections"]:
+                selected = item["path"]
+                if selected.lower().startswith("https://"):
+                    downloaded = download_runninghub_video(selected, temp_root)
+                    remote_bytes += downloaded.stat().st_size
+                    if remote_bytes > 16 * 1024 * 1024 * 1024:
+                        raise ValueError("RunningHub 合并任务的远程视频总量不得超过 16 GiB")
+                    sources.append(downloaded)
+                else:
+                    sources.extend(validate_merge_selections(
+                        output_root,
+                        request["projectName"],
+                        request["runId"],
+                        [item],
+                    ))
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                newline="\n",
+                prefix=".theodore_concat_",
+                suffix=".txt",
+                dir=output_path.parent,
+                delete=False,
+            ) as stream:
+                list_path = Path(stream.name)
+                for source in sources:
+                    stream.write(ffmpeg_concat_line(source))
+            process = subprocess.run(
+                build_ffmpeg_concat_args(find_ffmpeg_executable(), list_path, output_path),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            if process.returncode != 0:
+                message = process.stderr.decode("utf-8", errors="replace").strip()
+                raise RuntimeError(message or f"FFmpeg 退出码为 {process.returncode}")
+            if not output_path.is_file() or output_path.stat().st_size <= 0:
+                raise RuntimeError("FFmpeg 未生成有效的合并视频")
+            return output_path
+    except Exception:
+        output_path.unlink(missing_ok=True)
+        raise
+    finally:
+        if list_path is not None:
+            list_path.unlink(missing_ok=True)
 
 
 def run_directory(root: Path, project_name: str, run_id: str) -> Path:

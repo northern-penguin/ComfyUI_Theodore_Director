@@ -1,4 +1,5 @@
 import type { DirectorAsset } from "./types";
+import type { GeneratedVideoItem } from "./generated-results";
 
 /**
  * 将 ComfyUI input 目录相对路径转换成内置 /view 地址。
@@ -19,9 +20,17 @@ export function assetViewUrl(path: string): string | null {
   return comfyViewUrl(path, "input");
 }
 
+/** 远程 RunningHub 结果直接使用签名 URL，本地结果继续走 ComfyUI /view。 */
+export function generatedVideoUrl(item: GeneratedVideoItem | undefined): string | null {
+  if (!item) return null;
+  if (item.url && /^https:\/\//i.test(item.url)) return item.url;
+  return comfyViewUrl(item.path, "output");
+}
+
 /** 返回适合显示在文件选择器旁的短文件名。 */
 export function assetFileName(path: string): string {
-  return path.trim().replace(/\\/g, "/").split("/").filter(Boolean).pop() ?? "";
+  const name = path.trim().replace(/\\/g, "/").split("/").filter(Boolean).pop() ?? "";
+  return name.split(/[?#]/, 1)[0];
 }
 
 interface MediaPreviewProps {

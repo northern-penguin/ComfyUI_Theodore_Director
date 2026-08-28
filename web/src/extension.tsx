@@ -1,6 +1,7 @@
 import { openEditor } from "./editor";
 import type { DirectorPlan } from "./types";
-import type { QueueSecondPass, SecondPassQueueRequest } from "./types";
+import type { MergeQueueRequest, QueueMerge, QueueSecondPass, SecondPassQueueRequest } from "./types";
+import type { GeneratedVideoItem } from "./generated-results";
 import directorStyles from "./style.css?inline";
 
 const STYLE_ID = "theodore-director-styles";
@@ -25,6 +26,21 @@ interface ComfyApi {
   queuePrompt: (number: number, prompt: GraphPrompt, options?: { partialExecutionTargets?: string[] }) => Promise<{ prompt_id?: string }>;
   addEventListener: (name: string, listener: EventListener) => void;
   removeEventListener: (name: string, listener: EventListener) => void;
+}
+
+function savedResultFromExecuted(detail: Record<string, unknown>): GeneratedVideoItem | undefined {
+  const output = (detail.output ?? {}) as Record<string, unknown>;
+  const candidates = [output.gifs, output.videos, output.images]
+    .find((value) => Array.isArray(value)) as Array<Record<string, unknown>> | undefined;
+  const saved = candidates?.[0];
+  const filename = String(saved?.filename ?? "").trim();
+  if (!filename) return undefined;
+  const subfolder = String(saved?.subfolder ?? "").trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  return {
+    path: [subfolder, filename].filter(Boolean).join("/"),
+    provider: "local",
+    stage: "legacy_unknown",
+  };
 }
 
 // ComfyUI 在浏览器运行时提供此模块，使用动态导入可让前端独立构建与测试。
@@ -85,10 +101,66 @@ void Promise.all([
     });
   };
 
+  const queueMerge: QueueMerge = async (request: MergeQueueRequest) => {
+    const nodes = app.graph?._nodes ?? [];
+    const target = nodes.find((node) => node.type === "TheodoreDirector_MergeVideos");
+    const requestWidget = target?.widgets?.find((widget) => widget.name === "request_json");
+    if (!target || !requestWidget || target.id === undefined) {
+      throw new Error("当前工作流缺少 Theodore 合并支流，请重新载入仓库中的 V7.2 示例工作流");
+    }
+    const previousValue = requestWidget.value;
+    const previousMode = target.mode;
+    let prompt: GraphPrompt;
+    try {
+      requestWidget.value = JSON.stringify(request);
+      target.mode = 0;
+      prompt = await app.graphToPrompt(app.rootGraph);
+    } finally {
+      requestWidget.value = previousValue;
+      target.mode = previousMode;
+    }
+    const queued = await api.queuePrompt(0, prompt, { partialExecutionTargets: [String(target.id)] });
+    const promptId = queued.prompt_id;
+    if (!promptId) throw new Error("ComfyUI 没有返回合并任务 ID");
+
+    return new Promise<GeneratedVideoItem | undefined>((resolve, reject) => {
+      let saved: GeneratedVideoItem | undefined;
+      const cleanup = () => {
+        api.removeEventListener("executed", onExecuted);
+        api.removeEventListener("execution_success", onSuccess);
+        api.removeEventListener("execution_error", onFailure);
+        api.removeEventListener("execution_interrupted", onFailure);
+      };
+      const detailOf = (event: Event) => (event as CustomEvent<Record<string, unknown>>).detail ?? {};
+      const samePrompt = (detail: Record<string, unknown>) => String(detail.prompt_id ?? "") === promptId;
+      const onExecuted = (event: Event) => {
+        const detail = detailOf(event);
+        if (!samePrompt(detail) || String(detail.node ?? "") !== String(target.id)) return;
+        saved = savedResultFromExecuted(detail) ?? saved;
+      };
+      const onSuccess = (event: Event) => {
+        const detail = detailOf(event);
+        if (!samePrompt(detail)) return;
+        cleanup();
+        resolve(saved);
+      };
+      const onFailure = (event: Event) => {
+        const detail = detailOf(event);
+        if (!samePrompt(detail)) return;
+        cleanup();
+        reject(new Error(String(detail.exception_message ?? detail.error ?? "合并任务执行失败")));
+      };
+      api.addEventListener("executed", onExecuted);
+      api.addEventListener("execution_success", onSuccess);
+      api.addEventListener("execution_error", onFailure);
+      api.addEventListener("execution_interrupted", onFailure);
+    });
+  };
+
   app.registerExtension({
     name: "Theodore.Director.UI",
     beforeRegisterNodeDef(nodeType: NodeType, nodeData: { name: string }) {
-      if (nodeData.name === "TheodoreDirector_PostprocessSecondPassSource") {
+      if (nodeData.name === "TheodoreDirector_PostprocessSecondPassSource" || nodeData.name === "TheodoreDirector_MergeVideos") {
         const originalSourceCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function (this: ComfyNode) {
           originalSourceCreated?.apply(this);
@@ -117,11 +189,12 @@ void Promise.all([
             const workflowNodes = app.graph?._nodes ?? [];
             const supportsStandaloneSecondPass = workflowNodes.some((node) => node.type === "TheodoreDirector_PostprocessSecondPassSource")
               && workflowNodes.some((node) => node.type === "TheodoreDirector_SaveSecondPass");
+            const supportsMerge = workflowNodes.some((node) => node.type === "TheodoreDirector_MergeVideos");
             openEditor(initial, (plan) => {
               dataWidget.value = JSON.stringify(plan, null, 2);
               this.setDirtyCanvas(true, true);
               app.graph?.setDirtyCanvas?.(true, true);
-            }, true, supportsStandaloneSecondPass ? queueStandaloneSecondPass : undefined);
+            }, true, supportsStandaloneSecondPass ? queueStandaloneSecondPass : undefined, supportsMerge ? queueMerge : undefined);
           } catch (error) {
             window.alert(`Theodore Director: ${error instanceof Error ? error.message : String(error)}`);
           }

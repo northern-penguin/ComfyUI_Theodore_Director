@@ -9,6 +9,7 @@ from theodore_director.postprocess import (
     ffmpeg_concat_line,
     find_merged_videos,
     open_run_directory,
+    parse_merge_request,
     validate_merge_selections,
 )
 
@@ -92,3 +93,29 @@ def test_ffmpeg_concat_arguments_do_not_use_a_shell(tmp_path):
     assert args[0] == "ffmpeg"
     assert args[-3:] == ["-movflags", "+faststart", str(tmp_path / "merged.mp4")]
     assert "-c" in args and "copy" in args
+
+
+def test_parse_merge_request_accepts_remote_results_and_keeps_order():
+    parsed = parse_merge_request({
+        "projectName": "Demo",
+        "runId": "run_001",
+        "requestId": "merge-1",
+        "selections": [
+            {"shotId": "shot_001", "activeIndex": 0, "path": "https://rh-images.xiaoyaoyou.com/a.mp4"},
+            {"shotId": "shot_002", "activeIndex": 1, "path": "local/b.mp4"},
+        ],
+    })
+    assert [item["shotId"] for item in parsed["selections"]] == ["shot_001", "shot_002"]
+
+
+def test_parse_merge_request_rejects_duplicate_active_indexes():
+    with pytest.raises(ValueError, match="重复"):
+        parse_merge_request({
+            "projectName": "Demo",
+            "runId": "run_001",
+            "requestId": "merge-1",
+            "selections": [
+                {"shotId": "shot_001", "activeIndex": 0, "path": "a.mp4"},
+                {"shotId": "shot_002", "activeIndex": 0, "path": "b.mp4"},
+            ],
+        })

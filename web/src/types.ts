@@ -60,3 +60,12 @@ export interface SecondPassQueueRequest {
 }
 
 export type QueueSecondPass = (request: SecondPassQueueRequest) => Promise<void>;
+
+export interface MergeQueueRequest {
+  projectName: string;
+  runId: string;
+  selections: Array<{ shotId: string; activeIndex: number; path: string }>;
+  requestId: string;
+}
+
+export type QueueMerge = (request: MergeQueueRequest) => Promise<import("./generated-results").GeneratedVideoItem | undefined>;

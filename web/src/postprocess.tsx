@@ -2,15 +2,18 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import type { Language } from "./i18n";
 import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoItem, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
-import { assetFileName, comfyViewUrl } from "./media";
+import { assetFileName, generatedVideoUrl } from "./media";
 import { buildMergeSelections, postprocessShotEntries, selectShotRange } from "./postprocess-selection";
+import { fetchMergedResultsForRuntime, fetchShotResultsForRuntime, resolveRuntimeMode, type RuntimeSettings } from "./runtime";
 import { StandaloneSecondPassPanel } from "./standalone-second-pass";
-import type { DirectorPlan, QueueSecondPass } from "./types";
+import type { DirectorPlan, QueueMerge, QueueSecondPass } from "./types";
 
 interface PostprocessProps {
   plan: DirectorPlan;
   language: Language;
+  runtime: RuntimeSettings;
   queueSecondPass?: QueueSecondPass;
+  queueMerge?: QueueMerge;
 }
 
 interface ShotResultState {
@@ -23,40 +26,18 @@ interface PreviewTarget {
   title: string;
 }
 
-async function fetchVideoResults(url: string): Promise<GeneratedVideoResponse> {
-  const response = await fetch(url);
-  const result = await response.json() as GeneratedVideoResponse;
-  if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
-  return result;
-}
-
-function shotResultUrl(plan: DirectorPlan, shotId: string, activeIndex: number): string {
-  const query = new URLSearchParams({
-    projectName: plan.project.name,
-    runId: plan.project.runId,
-    shotId,
-    activeIndex: String(activeIndex),
-  });
-  return `/theodore-director/v1/generated-video?${query.toString()}`;
-}
-
-function mergedResultUrl(plan: DirectorPlan): string {
-  const query = new URLSearchParams({ projectName: plan.project.name, runId: plan.project.runId });
-  return `/theodore-director/v1/postprocess/merged-videos?${query.toString()}`;
-}
-
-export function PostprocessPanel({ plan, language, queueSecondPass }: PostprocessProps) {
+export function PostprocessPanel({ plan, language, runtime, queueSecondPass, queueMerge }: PostprocessProps) {
   const [mode, setMode] = useState<"merge" | "second-pass">("merge");
   return <section class="td-postprocess-shell">
     <div class="td-post-mode-tabs" role="tablist">
       <button class={mode === "merge" ? "active" : ""} role="tab" aria-selected={mode === "merge"} onClick={() => setMode("merge")}>{language === "zh" ? "合并视频" : "Merge videos"}</button>
       <button class={mode === "second-pass" ? "active" : ""} role="tab" aria-selected={mode === "second-pass"} onClick={() => setMode("second-pass")}>{language === "zh" ? "单独二采" : "Standalone second pass"}</button>
     </div>
-    {mode === "merge" ? <MergePanel plan={plan} language={language}/> : <StandaloneSecondPassPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
+    {mode === "merge" ? <MergePanel plan={plan} language={language} runtime={runtime} queueMerge={queueMerge}/> : <StandaloneSecondPassPanel plan={plan} language={language} runtime={runtime} queueSecondPass={queueSecondPass}/>}
   </section>;
 }
 
-function MergePanel({ plan, language }: PostprocessProps) {
+function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
   const entries = useMemo(() => postprocessShotEntries(plan), [plan]);
   const [shotResults, setShotResults] = useState<Record<string, ShotResultState>>({});
   const [selectedShots, setSelectedShots] = useState<Record<string, boolean>>({});
@@ -106,7 +87,7 @@ function MergePanel({ plan, language }: PostprocessProps) {
 
     // 禁用镜头也查询历史结果供预览，但仍保持不可勾选、不可参与合并。
     entries.forEach((entry) => {
-      void fetchVideoResults(shotResultUrl(plan, entry.shot.id, entry.activeIndex))
+      void fetchShotResultsForRuntime(runtime, plan, entry.shot, entry.activeIndex)
         .then((response) => {
           if (cancelled) return;
           const results = normalizeGeneratedResults(response);
@@ -125,12 +106,12 @@ function MergePanel({ plan, language }: PostprocessProps) {
         });
     });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => `${shot.id}:${shot.enabled}`).join("|") , revision]);
+  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => `${shot.id}:${shot.enabled}`).join("|") , revision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
 
   useEffect(() => {
     let cancelled = false;
     setMergedLoading(true);
-    void fetchVideoResults(mergedResultUrl(plan))
+    void fetchMergedResultsForRuntime(runtime, plan)
       .then((response) => {
         if (cancelled) return;
         const results = normalizeGeneratedResults(response);
@@ -142,7 +123,7 @@ function MergePanel({ plan, language }: PostprocessProps) {
       })
       .finally(() => { if (!cancelled) setMergedLoading(false); });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, revision]);
+  }, [plan.project.name, plan.project.runId, revision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
 
   const toggleAll = () => {
     const next = !allSelected;
@@ -180,14 +161,34 @@ function MergePanel({ plan, language }: PostprocessProps) {
     setMerging(true);
     setMergeError("");
     try {
-      const response = await fetch("/theodore-director/v1/postprocess/merge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectName: plan.project.name, runId: plan.project.runId, selections }),
-      });
-      const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
-      setRevision((current) => current + 1);
+      if (queueMerge) {
+        const result = await queueMerge({
+          projectName: plan.project.name,
+          runId: plan.project.runId,
+          selections,
+          requestId: `tdm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`,
+        });
+        if (result) {
+          setMergedResults((current) => ({
+            found: true,
+            results: [result, ...normalizeGeneratedResults(current).filter((item) => item.path !== result.path)],
+          }));
+          setSelectedMergedPath(result.path);
+        } else {
+          setRevision((current) => current + 1);
+        }
+      } else if (resolveRuntimeMode(runtime) === "local") {
+        const response = await fetch("/theodore-director/v1/postprocess/merge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectName: plan.project.name, runId: plan.project.runId, selections }),
+        });
+        const result = await response.json() as { error?: string };
+        if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+        setRevision((current) => current + 1);
+      } else {
+        throw new Error(language === "zh" ? "当前工作流缺少 RunningHub 合并支流" : "This workflow is missing the RunningHub merge branch");
+      }
     } catch (error) {
       setMergeError(String(error instanceof Error ? error.message : error));
     } finally {
@@ -196,6 +197,7 @@ function MergePanel({ plan, language }: PostprocessProps) {
   };
 
   const openResultFolder = async () => {
+    if (resolveRuntimeMode(runtime) === "runninghub") return;
     setOpeningFolder(true);
     setFolderError("");
     try {
@@ -213,12 +215,12 @@ function MergePanel({ plan, language }: PostprocessProps) {
     }
   };
 
-  const mergedUrl = selectedMerged?.path ? comfyViewUrl(selectedMerged.path, "output") : null;
+  const mergedUrl = generatedVideoUrl(selectedMerged);
 
   return <section class="td-postprocess">
     <div class="td-post-header">
       <div><h2>{language === "zh" ? "合并视频" : "Merge videos"}</h2><p>{language === "zh" ? "从每个镜头选择一个结果，按当前分镜顺序进行无损合并。" : "Choose one result per shot and merge them losslessly in storyboard order."}</p></div>
-      <div class="td-post-actions"><button disabled={openingFolder} onClick={openResultFolder}>📁 {openingFolder ? (language === "zh" ? "正在打开…" : "Opening…") : (language === "zh" ? "打开结果文件夹" : "Open results folder")}</button><button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button><button onClick={toggleAll}>{allSelected ? (language === "zh" ? "全部取消" : "Clear all") : (language === "zh" ? "一键全选" : "Select all")}</button></div>
+      <div class="td-post-actions">{resolveRuntimeMode(runtime) === "local" && <button disabled={openingFolder} onClick={openResultFolder}>📁 {openingFolder ? (language === "zh" ? "正在打开…" : "Opening…") : (language === "zh" ? "打开结果文件夹" : "Open results folder")}</button>}<button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button><button onClick={toggleAll}>{allSelected ? (language === "zh" ? "全部取消" : "Clear all") : (language === "zh" ? "一键全选" : "Select all")}</button></div>
     </div>
     {folderError && <div class="td-post-error">{language === "zh" ? "打开结果文件夹失败：" : "Unable to open results folder: "}{folderError}</div>}
     <div class="td-post-summary">
@@ -250,7 +252,7 @@ function MergePanel({ plan, language }: PostprocessProps) {
             : state?.response.error ? <div class="td-post-shot-empty errors">{language === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry."}</div>
             : !results.length ? <div class="td-post-shot-empty">{language === "zh" ? "未找到这个镜头的生成结果" : "No generated result found for this shot"}</div>
             : <div class="td-post-result-list">{results.map((item, index) => {
-              const url = comfyViewUrl(item.path, "output");
+              const url = generatedVideoUrl(item);
               const selectedResult = selectedPaths[entry.key] === item.path;
               const number = generatedResultNumber(item.path, results.length - index);
               return <div class={`td-post-result ${selectedResult ? "selected" : ""}`} key={item.path}>
@@ -258,7 +260,7 @@ function MergePanel({ plan, language }: PostprocessProps) {
                   {url ? <LazyVideoThumbnail src={url} alt={`${entry.shot.title} ${language === "zh" ? "结果" : "result"} ${number}`}/> : <div class="td-result-thumb">×</div>}
                   <span><strong>{language === "zh" ? `结果 ${number}` : `Result ${number}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</small></span>
                 </button>
-                <button class="td-post-result-play" disabled={!url} title={language === "zh" ? "播放预览" : "Play preview"} onClick={() => url && setPreviewTarget({ path: item.path, title: `${entry.shot.id} · ${entry.shot.title}` })}>▶</button>
+                <button class="td-post-result-play" disabled={!url} title={language === "zh" ? "播放预览" : "Play preview"} onClick={() => url && setPreviewTarget({ path: url, title: `${entry.shot.id} · ${entry.shot.title}` })}>▶</button>
               </div>;
             })}</div>}
         </article>;
@@ -268,9 +270,9 @@ function MergePanel({ plan, language }: PostprocessProps) {
       <header><div><h2>{language === "zh" ? "合并结果" : "Merged results"}</h2><span class={`td-result-state ${normalizedMergedResults.length ? "found" : ""}`}>{mergedLoading ? (language === "zh" ? "查询中" : "Checking") : language === "zh" ? `${normalizedMergedResults.length} 个结果` : `${normalizedMergedResults.length} results`}</span></div></header>
       {mergedLoading ? <div class="td-result-empty">{language === "zh" ? "正在查询合并结果…" : "Loading merged results…"}</div>
         : mergedResults.error ? <div class="td-result-empty errors">{language === "zh" ? "无法查询合并结果" : "Unable to query merged results"}</div>
-        : selectedMerged && mergedUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedMerged.path} src={mergedUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedMerged.path}>{selectedMerged.path}</div></div><div class="td-result-list">{normalizedMergedResults.map((item, index) => { const url = comfyViewUrl(item.path, "output"); return <button class={`td-result-item ${item.path === selectedMerged.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedMergedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "合并结果" : "Merged result"} ${normalizedMergedResults.length - index}`}/> : <div class="td-result-thumb">×</div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `合并结果 ${normalizedMergedResults.length - index}` : `Merged result ${normalizedMergedResults.length - index}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span>{assetFileName(item.path)}</span><small>{item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</small></span></button>; })}</div></div>
+        : selectedMerged && mergedUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedMerged.path} src={mergedUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedMerged.path}>{selectedMerged.path}</div></div><div class="td-result-list">{normalizedMergedResults.map((item, index) => { const url = generatedVideoUrl(item); return <button class={`td-result-item ${item.path === selectedMerged.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedMergedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "合并结果" : "Merged result"} ${normalizedMergedResults.length - index}`}/> : <div class="td-result-thumb">×</div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `合并结果 ${normalizedMergedResults.length - index}` : `Merged result ${normalizedMergedResults.length - index}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span>{assetFileName(item.path)}</span><small>{item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : item.taskId ? `task ${item.taskId}` : ""}</small></span></button>; })}</div></div>
         : <div class="td-result-empty">{language === "zh" ? "还没有合并结果" : "No merged result yet"}</div>}
     </section>
-    {previewTarget && comfyViewUrl(previewTarget.path, "output") && <div class="td-post-preview-overlay" role="presentation" onClick={() => setPreviewTarget(null)}><section role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><header><strong>{previewTarget.title}</strong><button aria-label={language === "zh" ? "关闭预览" : "Close preview"} onClick={() => setPreviewTarget(null)}>×</button></header><video src={comfyViewUrl(previewTarget.path, "output") ?? ""} controls autoPlay preload="metadata" playsInline/><p title={previewTarget.path}>{assetFileName(previewTarget.path)}</p></section></div>}
+    {previewTarget && <div class="td-post-preview-overlay" role="presentation" onClick={() => setPreviewTarget(null)}><section role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><header><strong>{previewTarget.title}</strong><button aria-label={language === "zh" ? "关闭预览" : "Close preview"} onClick={() => setPreviewTarget(null)}>×</button></header><video src={previewTarget.path} controls autoPlay preload="metadata" playsInline/><p title={previewTarget.path}>{assetFileName(previewTarget.path)}</p></section></div>}
   </section>;
 }

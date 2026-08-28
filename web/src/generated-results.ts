@@ -1,5 +1,8 @@
 export interface GeneratedVideoItem {
   path: string;
+  url?: string;
+  provider?: "local" | "runninghub";
+  taskId?: string;
   bytes?: number;
   modifiedAt?: number;
   stage?: "first_pass" | "second_pass" | "legacy_unknown";

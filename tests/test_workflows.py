@@ -14,6 +14,7 @@ REQUIRED_DIRECTOR_NODES = {
     "TheodoreDirector_CommitResult",
     "TheodoreDirector_PostprocessSecondPassSource",
     "TheodoreDirector_SaveSecondPass",
+    "TheodoreDirector_MergeVideos",
 }
 
 
@@ -82,3 +83,12 @@ def test_distributed_workflow_contains_copyright_notice():
     data = load_distributed_workflow()
     notes = [item for item in data["nodes"] if item.get("type") == "MarkdownNote"]
     assert any(COPYRIGHT_NOTICE in item["widgets_values"][0] for item in notes)
+
+
+def test_v72_contains_runninghub_compatible_merge_target():
+    data = load_distributed_workflow()
+    merge = next(item for item in data["nodes"] if item["type"] == "TheodoreDirector_MergeVideos")
+    assert merge["mode"] == 4
+    assert merge["widgets_values"] == ["{}"]
+    assert merge["properties"]["theodoreDirectorPostprocessRole"] == "merge-target"
+    assert data["extra"]["theodoreDirector"]["runningHubMerge"] is True

@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 WORKFLOW = ROOT / "workflows" / "V7.2导播台.json"
-BRANCH_IDS = set(range(402, 417))
+BRANCH_IDS = set(range(402, 418))
 
 
 def input_slot(name: str, kind: str, *, widget: bool = False):
@@ -103,7 +103,14 @@ def transform(data: dict) -> dict:
     random_noise = copy.deepcopy(by_id[129])
     random_noise.update({"id": 416, "pos": [660, 2580], "title": "后处理二采 Seed", "order": 0, "mode": 0})
 
-    new_nodes = [source, adapter, h3, random_noise, rtx, vae_encode, audio_encode, concat, guider, scheduler, sampler_select, sampler, decode, create_video, save]
+    merge = base_node(417, "TheodoreDirector_MergeVideos", "后处理：合并本地或 RunningHub 视频（局部执行目标）", [2010, 3160], [430, 90])
+    merge["mode"] = 4
+    merge["inputs"] = [input_slot("request_json", "STRING", widget=True)]
+    merge["outputs"] = [output_slot("path", "STRING")]
+    merge["widgets_values"] = ["{}"]
+    merge["properties"]["theodoreDirectorPostprocessRole"] = "merge-target"
+
+    new_nodes = [source, adapter, h3, random_noise, rtx, vae_encode, audio_encode, concat, guider, scheduler, sampler_select, sampler, decode, create_video, save, merge]
     for node in new_nodes:
         for item in node.get("inputs", []):
             item["link"] = None
@@ -180,11 +187,12 @@ def transform(data: dict) -> dict:
     data.setdefault("groups", []).append({
         "id": max([group.get("id", 0) for group in data.get("groups", [])] + [0]) + 1,
         "title": group_title,
-        "bounding": [-1330, 2390, 3860, 850],
+        "bounding": [-1330, 2390, 3860, 950],
         "color": "#8c5b2f",
         "flags": {},
     })
     data.setdefault("extra", {}).setdefault("theodoreDirector", {})["postprocessSecondPass"] = True
+    data["extra"]["theodoreDirector"]["runningHubMerge"] = True
     return data
 
 

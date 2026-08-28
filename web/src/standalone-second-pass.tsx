@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import type { Language } from "./i18n";
 import { canRunStandaloneSecondPass, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
-import { assetFileName, comfyViewUrl } from "./media";
+import { assetFileName, generatedVideoUrl } from "./media";
 import { postprocessShotEntries } from "./postprocess-selection";
+import { fetchShotResultsForRuntime, type RuntimeSettings } from "./runtime";
 import type { DirectorPlan, QueueSecondPass } from "./types";
 
 interface Props {
   plan: DirectorPlan;
   language: Language;
+  runtime: RuntimeSettings;
   queueSecondPass?: QueueSecondPass;
 }
 
@@ -16,18 +18,13 @@ interface ShotState { loading: boolean; response: GeneratedVideoResponse }
 interface JobState { state: "queued" | "done" | "error"; message?: string }
 interface PreviewTarget { path: string; title: string }
 
-function resultUrl(plan: DirectorPlan, shotId: string, activeIndex: number): string {
-  const query = new URLSearchParams({ projectName: plan.project.name, runId: plan.project.runId, shotId, activeIndex: String(activeIndex) });
-  return `/theodore-director/v1/generated-video?${query.toString()}`;
-}
-
 function stageLabel(stage: string | undefined, language: Language): string {
   if (stage === "second_pass") return language === "zh" ? "二采" : "2nd pass";
   if (stage === "first_pass") return language === "zh" ? "一采" : "1st pass";
   return language === "zh" ? "旧结果" : "Legacy";
 }
 
-export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: Props) {
+export function StandaloneSecondPassPanel({ plan, language, runtime, queueSecondPass }: Props) {
   const entries = useMemo(() => postprocessShotEntries(plan), [plan]);
   const [states, setStates] = useState<Record<string, ShotState>>({});
   const [jobs, setJobs] = useState<Record<string, JobState>>({});
@@ -40,10 +37,8 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
     entries.forEach((entry) => { initial[entry.key] = { loading: true, response: { found: false, results: [] } }; });
     setStates(initial);
     entries.forEach((entry) => {
-      void fetch(resultUrl(plan, entry.shot.id, entry.activeIndex))
-        .then(async (response) => {
-          const result = await response.json() as GeneratedVideoResponse;
-          if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+      void fetchShotResultsForRuntime(runtime, plan, entry.shot, entry.activeIndex)
+        .then((result) => {
           if (!cancelled) setStates((current) => ({ ...current, [entry.key]: { loading: false, response: result } }));
         })
         .catch((error) => {
@@ -51,7 +46,7 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
         });
     });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => shot.id).join("|"), revision]);
+  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => shot.id).join("|"), revision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
 
   const startSecondPass = async (shotId: string, path: string) => {
     if (!queueSecondPass) return;
@@ -87,11 +82,11 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
             : state?.response.error ? <div class="td-post-shot-empty errors">{language === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry."}</div>
             : !results.length ? <div class="td-post-shot-empty">{language === "zh" ? "没有可用的一采结果" : "No first-pass result available"}</div>
             : <div class="td-post-result-list">{results.map((item) => {
-              const url = comfyViewUrl(item.path, "output");
+              const url = generatedVideoUrl(item);
               const job = jobs[item.path];
               const eligible = canRunStandaloneSecondPass(item);
               return <div class="td-second-pass-result" key={item.path}>
-                <button class="td-post-result-choice" onClick={() => url && setPreview({ path: item.path, title: `${entry.shot.id} · ${entry.shot.title}` })}>
+                <button class="td-post-result-choice" onClick={() => url && setPreview({ path: url, title: `${entry.shot.id} · ${entry.shot.title}` })}>
                   {url ? <LazyVideoThumbnail src={url} alt={assetFileName(item.path)}/> : <div class="td-result-thumb">×</div>}
                   <span><strong>{stageLabel(item.stage, language)}{(item.stage === "legacy_unknown" || !item.stage) && <em>{language === "zh" ? "兼容" : "Compatible"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</small></span>
                 </button>
@@ -102,6 +97,6 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
         </article>;
       })}
     </div>
-    {preview && comfyViewUrl(preview.path, "output") && <div class="td-post-preview-overlay" role="presentation" onClick={() => setPreview(null)}><section role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><header><strong>{preview.title}</strong><button onClick={() => setPreview(null)}>×</button></header><video src={comfyViewUrl(preview.path, "output") ?? ""} controls autoPlay preload="metadata" playsInline/><p>{assetFileName(preview.path)}</p></section></div>}
+    {preview && <div class="td-post-preview-overlay" role="presentation" onClick={() => setPreview(null)}><section role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><header><strong>{preview.title}</strong><button onClick={() => setPreview(null)}>×</button></header><video src={preview.path} controls autoPlay preload="metadata" playsInline/><p>{assetFileName(preview.path)}</p></section></div>}
   </section>;
 }

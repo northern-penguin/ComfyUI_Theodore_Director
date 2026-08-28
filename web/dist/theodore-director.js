@@ -1,374 +1,374 @@
-var Ee, M, xt, de, Ye, vt, yt, Me, ke, ge, wt, qe, Be, He, Te = {}, Ie = [], Jt = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, Ne = Array.isArray;
-function ie(e, t) {
-  for (var o in t) e[o] = t[o];
+var De, F, zt, le, it, St, $t, Be, Ie, ye, Ct, Qe, We, Je, Pe = {}, je = [], dr = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, Fe = Array.isArray;
+function ne(e, t) {
+  for (var n in t) e[n] = t[n];
   return e;
 }
-function We(e) {
+function Ye(e) {
   e && e.parentNode && e.parentNode.removeChild(e);
 }
-function Kt(e, t, o) {
-  var n, d, i, a = {};
-  for (i in t) i == "key" ? n = t[i] : i == "ref" ? d = t[i] : a[i] = t[i];
-  if (arguments.length > 2 && (a.children = arguments.length > 3 ? Ee.call(arguments, 2) : o), typeof e == "function" && e.defaultProps != null) for (i in e.defaultProps) a[i] === void 0 && (a[i] = e.defaultProps[i]);
-  return ze(e, a, n, d, null);
+function ar(e, t, n) {
+  var o, a, l, i = {};
+  for (l in t) l == "key" ? o = t[l] : l == "ref" ? a = t[l] : i[l] = t[l];
+  if (arguments.length > 2 && (i.children = arguments.length > 3 ? De.call(arguments, 2) : n), typeof e == "function" && e.defaultProps != null) for (l in e.defaultProps) i[l] === void 0 && (i[l] = e.defaultProps[l]);
+  return Te(e, i, o, a, null);
 }
-function ze(e, t, o, n, d) {
-  var i = { type: e, props: t, key: o, ref: n, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: d ?? ++xt, __i: -1, __u: 0 };
-  return d == null && M.vnode != null && M.vnode(i), i;
+function Te(e, t, n, o, a) {
+  var l = { type: e, props: t, key: n, ref: o, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: a ?? ++zt, __i: -1, __u: 0 };
+  return a == null && F.vnode != null && F.vnode(l), l;
 }
-function Re(e) {
+function Se(e) {
   return e.children;
 }
-function Se(e, t) {
+function Ae(e, t) {
   this.props = e, this.context = t;
 }
-function ue(e, t) {
-  if (t == null) return e.__ ? ue(e.__, e.__i + 1) : null;
-  for (var o; t < e.__k.length; t++) if ((o = e.__k[t]) != null && o.__e != null) return o.__e;
-  return typeof e.type == "function" ? ue(e) : null;
+function fe(e, t) {
+  if (t == null) return e.__ ? fe(e.__, e.__i + 1) : null;
+  for (var n; t < e.__k.length; t++) if ((n = e.__k[t]) != null && n.__e != null) return n.__e;
+  return typeof e.type == "function" ? fe(e) : null;
 }
-function Gt(e) {
+function lr(e) {
   if (e.__P && e.__d) {
-    var t = e.__v, o = t.__e, n = [], d = [], i = ie({}, t);
-    i.__v = t.__v + 1, M.vnode && M.vnode(i), Je(e.__P, i, t, e.__n, e.__P.namespaceURI, 32 & t.__u ? [o] : null, n, o ?? ue(t), !!(32 & t.__u), d), i.__v = t.__v, i.__.__k[i.__i] = i, Ct(n, i, d), t.__e = t.__ = null, i.__e != o && kt(i);
+    var t = e.__v, n = t.__e, o = [], a = [], l = ne({}, t);
+    l.__v = t.__v + 1, F.vnode && F.vnode(l), Xe(e.__P, l, t, e.__n, e.__P.namespaceURI, 32 & t.__u ? [n] : null, o, n ?? fe(t), !!(32 & t.__u), a), l.__v = t.__v, l.__.__k[l.__i] = l, Rt(o, l, a), t.__e = t.__ = null, l.__e != n && It(l);
   }
 }
-function kt(e) {
+function It(e) {
   if ((e = e.__) != null && e.__c != null) return e.__e = e.__c.base = null, e.__k.some(function(t) {
     if (t != null && t.__e != null) return e.__e = e.__c.base = t.__e;
-  }), kt(e);
+  }), It(e);
 }
-function Ze(e) {
-  (!e.__d && (e.__d = !0) && de.push(e) && !je.__r++ || Ye != M.debounceRendering) && ((Ye = M.debounceRendering) || vt)(je);
+function st(e) {
+  (!e.__d && (e.__d = !0) && le.push(e) && !Ne.__r++ || it != F.debounceRendering) && ((it = F.debounceRendering) || St)(Ne);
 }
-function je() {
+function Ne() {
   try {
-    for (var e, t = 1; de.length; ) de.length > t && de.sort(yt), e = de.shift(), t = de.length, Gt(e);
+    for (var e, t = 1; le.length; ) le.length > t && le.sort($t), e = le.shift(), t = le.length, lr(e);
   } finally {
-    de.length = je.__r = 0;
+    le.length = Ne.__r = 0;
   }
 }
-function zt(e, t, o, n, d, i, a, p, b, c, m) {
-  var h, l, f, w, $, y, C = n && n.__k || Ie, k = t.length;
-  for (b = Qt(o, t, C, b, k), h = 0; h < k; h++) (f = o.__k[h]) != null && (l = f.__i != -1 && C[f.__i] || Te, f.__i = h, y = Je(e, f, l, d, i, a, p, b, c, m), w = f.__e, f.ref && l.ref != f.ref && (l.ref && Ke(l.ref, null, f), m.push(f.ref, f.__c || w, f)), $ == null && w != null && ($ = w), 4 & f.__u ? (b = St(f, b, e), l.__e && (l.__e = null)) : typeof f.type == "function" && y !== void 0 ? b = y : w && (b = w.nextSibling), f.__u &= -7);
-  return o.__e = $, b;
+function Tt(e, t, n, o, a, l, i, c, m, p, u) {
+  var _, s, v, y, S, z, w = o && o.__k || je, C = t.length;
+  for (m = cr(n, t, w, m, C), _ = 0; _ < C; _++) (v = n.__k[_]) != null && (s = v.__i != -1 && w[v.__i] || Pe, v.__i = _, z = Xe(e, v, s, a, l, i, c, m, p, u), y = v.__e, v.ref && s.ref != v.ref && (s.ref && Ze(s.ref, null, v), u.push(v.ref, v.__c || y, v)), S == null && y != null && (S = y), 4 & v.__u ? (m = At(v, m, e), s.__e && (s.__e = null)) : typeof v.type == "function" && z !== void 0 ? m = z : y && (m = y.nextSibling), v.__u &= -7);
+  return n.__e = S, m;
 }
-function Qt(e, t, o, n, d) {
-  var i, a, p, b, c, m = o.length, h = m, l = 0;
-  for (e.__k = new Array(d), i = 0; i < d; i++) (a = t[i]) != null && typeof a != "boolean" && typeof a != "function" ? (typeof a == "string" || typeof a == "number" || typeof a == "bigint" || a.constructor == String ? a = e.__k[i] = ze(null, a, null, null, null) : Ne(a) ? a = e.__k[i] = ze(Re, { children: a }, null, null, null) : a.constructor === void 0 && a.__b > 0 ? a = e.__k[i] = ze(a.type, a.props, a.key, a.ref ? a.ref : null, a.__v) : e.__k[i] = a, b = i + l, a.__ = e, a.__b = e.__b + 1, p = null, (c = a.__i = Xt(a, o, b, h)) != -1 && (h--, (p = o[c]) && (p.__u |= 2)), p == null || p.__v == null ? (c == -1 && (d > m ? l-- : d < m && l++), typeof a.type != "function" && (a.__u |= 4)) : c != b && (c == b - 1 ? l-- : c == b + 1 ? l++ : (c > b ? l-- : l++, a.__u |= 4))) : e.__k[i] = null;
-  if (h) for (i = 0; i < m; i++) (p = o[i]) != null && (2 & p.__u) == 0 && (p.__e == n && (n = ue(p)), It(p, p));
-  return n;
+function cr(e, t, n, o, a) {
+  var l, i, c, m, p, u = n.length, _ = u, s = 0;
+  for (e.__k = new Array(a), l = 0; l < a; l++) (i = t[l]) != null && typeof i != "boolean" && typeof i != "function" ? (typeof i == "string" || typeof i == "number" || typeof i == "bigint" || i.constructor == String ? i = e.__k[l] = Te(null, i, null, null, null) : Fe(i) ? i = e.__k[l] = Te(Se, { children: i }, null, null, null) : i.constructor === void 0 && i.__b > 0 ? i = e.__k[l] = Te(i.type, i.props, i.key, i.ref ? i.ref : null, i.__v) : e.__k[l] = i, m = l + s, i.__ = e, i.__b = e.__b + 1, c = null, (p = i.__i = pr(i, n, m, _)) != -1 && (_--, (c = n[p]) && (c.__u |= 2)), c == null || c.__v == null ? (p == -1 && (a > u ? s-- : a < u && s++), typeof i.type != "function" && (i.__u |= 4)) : p != m && (p == m - 1 ? s-- : p == m + 1 ? s++ : (p > m ? s-- : s++, i.__u |= 4))) : e.__k[l] = null;
+  if (_) for (l = 0; l < u; l++) (c = n[l]) != null && (2 & c.__u) == 0 && (c.__e == o && (o = fe(c)), jt(c, c));
+  return o;
 }
-function St(e, t, o) {
-  var n, d;
+function At(e, t, n) {
+  var o, a;
   if (typeof e.type == "function") {
-    for (n = e.__k, d = 0; n && d < n.length; d++) n[d] && (n[d].__ = e, t = St(n[d], t, o));
+    for (o = e.__k, a = 0; o && a < o.length; a++) o[a] && (o[a].__ = e, t = At(o[a], t, n));
     return t;
   }
-  e.__e != t && (t && e.type && !t.parentNode && (t = ue(e)), t = o.insertBefore(e.__e, t || null));
+  e.__e != t && (t && e.type && !t.parentNode && (t = fe(e)), t = n.insertBefore(e.__e, t || null));
   do
     t = t && t.nextSibling;
   while (t != null && t.nodeType == 8);
   return t;
 }
-function Xt(e, t, o, n) {
-  var d, i, a, p = e.key, b = e.type, c = t[o], m = c != null && (2 & c.__u) == 0;
-  if (c === null && p == null || m && p == c.key && b == c.type) return o;
-  if (n > (m ? 1 : 0)) {
-    for (d = o - 1, i = o + 1; d >= 0 || i < t.length; ) if ((c = t[a = d >= 0 ? d-- : i++]) != null && (2 & c.__u) == 0 && p == c.key && b == c.type) return a;
+function pr(e, t, n, o) {
+  var a, l, i, c = e.key, m = e.type, p = t[n], u = p != null && (2 & p.__u) == 0;
+  if (p === null && c == null || u && c == p.key && m == p.type) return n;
+  if (o > (u ? 1 : 0)) {
+    for (a = n - 1, l = n + 1; a >= 0 || l < t.length; ) if ((p = t[i = a >= 0 ? a-- : l++]) != null && (2 & p.__u) == 0 && c == p.key && m == p.type) return i;
   }
   return -1;
 }
-function et(e, t, o) {
-  t[0] == "-" ? e.setProperty(t, o ?? "") : e[t] = o == null ? "" : typeof o != "number" || Jt.test(t) ? o : o + "px";
+function dt(e, t, n) {
+  t[0] == "-" ? e.setProperty(t, n ?? "") : e[t] = n == null ? "" : typeof n != "number" || dr.test(t) ? n : n + "px";
 }
-function we(e, t, o, n, d) {
-  var i, a;
-  e: if (t == "style") if (typeof o == "string") e.style.cssText = o;
+function Ce(e, t, n, o, a) {
+  var l, i;
+  e: if (t == "style") if (typeof n == "string") e.style.cssText = n;
   else {
-    if (typeof n == "string" && (e.style.cssText = n = ""), n) for (t in n) o && t in o || et(e.style, t, "");
-    if (o) for (t in o) n && o[t] == n[t] || et(e.style, t, o[t]);
+    if (typeof o == "string" && (e.style.cssText = o = ""), o) for (t in o) n && t in n || dt(e.style, t, "");
+    if (n) for (t in n) o && n[t] == o[t] || dt(e.style, t, n[t]);
   }
-  else if (t[0] == "o" && t[1] == "n") i = t != (t = t.replace(wt, "$1")), a = t.toLowerCase(), t = a in e || t == "onFocusOut" || t == "onFocusIn" ? a.slice(2) : t.slice(2), e.l || (e.l = {}), e.l[t + i] = o, o ? n ? o[ge] = n[ge] : (o[ge] = qe, e.addEventListener(t, i ? He : Be, i)) : e.removeEventListener(t, i ? He : Be, i);
+  else if (t[0] == "o" && t[1] == "n") l = t != (t = t.replace(Ct, "$1")), i = t.toLowerCase(), t = i in e || t == "onFocusOut" || t == "onFocusIn" ? i.slice(2) : t.slice(2), e.l || (e.l = {}), e.l[t + l] = n, n ? o ? n[ye] = o[ye] : (n[ye] = Qe, e.addEventListener(t, l ? Je : We, l)) : e.removeEventListener(t, l ? Je : We, l);
   else {
-    if (d == "http://www.w3.org/2000/svg") t = t.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
+    if (a == "http://www.w3.org/2000/svg") t = t.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s");
     else if (t != "width" && t != "height" && t != "href" && t != "list" && t != "form" && t != "tabIndex" && t != "download" && t != "rowSpan" && t != "colSpan" && t != "role" && t != "popover" && t in e) try {
-      e[t] = o ?? "";
+      e[t] = n ?? "";
       break e;
     } catch {
     }
-    typeof o == "function" || (o == null || o === !1 && t[4] != "-" ? e.removeAttribute(t) : e.setAttribute(t, t == "popover" && o == 1 ? "" : o));
+    typeof n == "function" || (n == null || n === !1 && t[4] != "-" ? e.removeAttribute(t) : e.setAttribute(t, t == "popover" && n == 1 ? "" : n));
   }
 }
-function tt(e) {
+function at(e) {
   return function(t) {
     if (this.l) {
-      var o = this.l[t.type + e];
-      if (t[ke] == null) t[ke] = qe++;
-      else if (t[ke] < o[ge]) return;
-      return o(M.event ? M.event(t) : t);
+      var n = this.l[t.type + e];
+      if (t[Ie] == null) t[Ie] = Qe++;
+      else if (t[Ie] < n[ye]) return;
+      return n(F.event ? F.event(t) : t);
     }
   };
 }
-function Je(e, t, o, n, d, i, a, p, b, c) {
-  var m, h, l, f, w, $, y, C, k, U, x, I, R, J, G, _, A = t.type;
+function Xe(e, t, n, o, a, l, i, c, m, p) {
+  var u, _, s, v, y, S, z, w, C, A, b, T, j, D, M, g, E = t.type;
   if (t.constructor !== void 0) return null;
-  128 & o.__u && (b = !!(32 & o.__u), i = [p = t.__e = o.__e]), (m = M.__b) && m(t);
-  e: if (typeof A == "function") {
-    h = a.length;
+  128 & n.__u && (m = !!(32 & n.__u), l = [c = t.__e = n.__e]), (u = F.__b) && u(t);
+  e: if (typeof E == "function") {
+    _ = i.length;
     try {
-      if (k = t.props, U = A.prototype && A.prototype.render, x = (m = A.contextType) && n[m.__c], I = m ? x ? x.props.value : m.__ : n, o.__c ? C = (l = t.__c = o.__c).__ = l.__E : (U ? t.__c = l = new A(k, I) : (t.__c = l = new Se(k, I), l.constructor = A, l.render = Zt), x && x.sub(l), l.state || (l.state = {}), l.__n = n, f = l.__d = !0, l.__h = [], l._sb = []), U && l.__s == null && (l.__s = l.state), U && A.getDerivedStateFromProps != null && (l.__s == l.state && (l.__s = ie({}, l.__s)), ie(l.__s, A.getDerivedStateFromProps(k, l.__s))), w = l.props, $ = l.state, l.__v = t, f) U && A.getDerivedStateFromProps == null && l.componentWillMount != null && l.componentWillMount(), U && l.componentDidMount != null && l.__h.push(l.componentDidMount);
+      if (C = t.props, A = E.prototype && E.prototype.render, b = (u = E.contextType) && o[u.__c], T = u ? b ? b.props.value : u.__ : o, n.__c ? w = (s = t.__c = n.__c).__ = s.__E : (A ? t.__c = s = new E(C, T) : (t.__c = s = new Ae(C, T), s.constructor = E, s.render = ur), b && b.sub(s), s.state || (s.state = {}), s.__n = o, v = s.__d = !0, s.__h = [], s._sb = []), A && s.__s == null && (s.__s = s.state), A && E.getDerivedStateFromProps != null && (s.__s == s.state && (s.__s = ne({}, s.__s)), ne(s.__s, E.getDerivedStateFromProps(C, s.__s))), y = s.props, S = s.state, s.__v = t, v) A && E.getDerivedStateFromProps == null && s.componentWillMount != null && s.componentWillMount(), A && s.componentDidMount != null && s.__h.push(s.componentDidMount);
       else {
-        if (U && A.getDerivedStateFromProps == null && k !== w && l.componentWillReceiveProps != null && l.componentWillReceiveProps(k, I), t.__v == o.__v || !l.__e && l.shouldComponentUpdate != null && l.shouldComponentUpdate(k, l.__s, I) === !1) {
-          t.__v != o.__v && (l.props = k, l.state = l.__s, l.__d = !1), t.__e = o.__e, t.__k = o.__k, t.__k.some(function(D) {
-            D && (D.__ = t);
-          }), Ie.push.apply(l.__h, l._sb), l._sb = [], l.__h.length && a.push(l), p = ue(o);
+        if (A && E.getDerivedStateFromProps == null && C !== y && s.componentWillReceiveProps != null && s.componentWillReceiveProps(C, T), t.__v == n.__v || !s.__e && s.shouldComponentUpdate != null && s.shouldComponentUpdate(C, s.__s, T) === !1) {
+          t.__v != n.__v && (s.props = C, s.state = s.__s, s.__d = !1), t.__e = n.__e, t.__k = n.__k, t.__k.some(function(N) {
+            N && (N.__ = t);
+          }), je.push.apply(s.__h, s._sb), s._sb = [], s.__h.length && i.push(s), c = fe(n);
           break e;
         }
-        l.componentWillUpdate != null && l.componentWillUpdate(k, l.__s, I), U && l.componentDidUpdate != null && l.__h.push(function() {
-          l.componentDidUpdate(w, $, y);
+        s.componentWillUpdate != null && s.componentWillUpdate(C, s.__s, T), A && s.componentDidUpdate != null && s.__h.push(function() {
+          s.componentDidUpdate(y, S, z);
         });
       }
-      if (l.context = I, l.props = k, l.__P = e, l.__e = !1, R = M.__r, J = 0, U) l.state = l.__s, l.__d = !1, R && R(t), m = l.render(l.props, l.state, l.context), Ie.push.apply(l.__h, l._sb), l._sb = [];
+      if (s.context = T, s.props = C, s.__P = e, s.__e = !1, j = F.__r, D = 0, A) s.state = s.__s, s.__d = !1, j && j(t), u = s.render(s.props, s.state, s.context), je.push.apply(s.__h, s._sb), s._sb = [];
       else do
-        l.__d = !1, R && R(t), m = l.render(l.props, l.state, l.context), l.state = l.__s;
-      while (l.__d && ++J < 25);
-      l.state = l.__s, l.getChildContext != null && (n = ie(ie({}, n), l.getChildContext())), U && !f && l.getSnapshotBeforeUpdate != null && (y = l.getSnapshotBeforeUpdate(w, $)), G = m != null && m.type === Re && m.key == null ? Tt(m.props.children) : m, p = zt(e, Ne(G) ? G : [G], t, o, n, d, i, a, p, b, c), l.base = t.__e, t.__u &= -161, l.__h.length && a.push(l), C && (l.__E = l.__ = null);
-    } catch (D) {
-      if (a.length = h, t.__v = null, b || i != null) {
-        if (D.then) {
-          for (t.__u |= b ? 160 : 128; p && p.nodeType == 8 && p.nextSibling; ) p = p.nextSibling;
-          i != null && (i[i.indexOf(p)] = null), t.__e = p;
-        } else if (i != null) for (_ = i.length; _--; ) We(i[_]);
-      } else t.__e = o.__e;
-      t.__k == null && (t.__k = o.__k || []), D.then || $t(t), M.__e(D, t, o);
+        s.__d = !1, j && j(t), u = s.render(s.props, s.state, s.context), s.state = s.__s;
+      while (s.__d && ++D < 25);
+      s.state = s.__s, s.getChildContext != null && (o = ne(ne({}, o), s.getChildContext())), A && !v && s.getSnapshotBeforeUpdate != null && (z = s.getSnapshotBeforeUpdate(y, S)), M = u != null && u.type === Se && u.key == null ? Pt(u.props.children) : u, c = Tt(e, Fe(M) ? M : [M], t, n, o, a, l, i, c, m, p), s.base = t.__e, t.__u &= -161, s.__h.length && i.push(s), w && (s.__E = s.__ = null);
+    } catch (N) {
+      if (i.length = _, t.__v = null, m || l != null) {
+        if (N.then) {
+          for (t.__u |= m ? 160 : 128; c && c.nodeType == 8 && c.nextSibling; ) c = c.nextSibling;
+          l != null && (l[l.indexOf(c)] = null), t.__e = c;
+        } else if (l != null) for (g = l.length; g--; ) Ye(l[g]);
+      } else t.__e = n.__e;
+      t.__k == null && (t.__k = n.__k || []), N.then || Et(t), F.__e(N, t, n);
     }
-  } else i == null && t.__v == o.__v ? (t.__k = o.__k, t.__e = o.__e) : p = t.__e = Yt(o.__e, t, o, n, d, i, a, b, c);
-  return (m = M.diffed) && m(t), 128 & t.__u ? void 0 : p;
+  } else l == null && t.__v == n.__v ? (t.__k = n.__k, t.__e = n.__e) : c = t.__e = hr(n.__e, t, n, o, a, l, i, m, p);
+  return (u = F.diffed) && u(t), 128 & t.__u ? void 0 : c;
 }
-function $t(e) {
-  e && (e.__c && (e.__c.__e = !0), e.__k && e.__k.some($t));
+function Et(e) {
+  e && (e.__c && (e.__c.__e = !0), e.__k && e.__k.some(Et));
 }
-function Ct(e, t, o) {
-  for (var n = 0; n < o.length; n++) Ke(o[n], o[++n], o[++n]);
-  M.__c && M.__c(t, e), e.some(function(d) {
+function Rt(e, t, n) {
+  for (var o = 0; o < n.length; o++) Ze(n[o], n[++o], n[++o]);
+  F.__c && F.__c(t, e), e.some(function(a) {
     try {
-      e = d.__h, d.__h = [], e.some(function(i) {
-        i.call(d);
+      e = a.__h, a.__h = [], e.some(function(l) {
+        l.call(a);
       });
-    } catch (i) {
-      M.__e(i, d.__v);
+    } catch (l) {
+      F.__e(l, a.__v);
     }
   });
 }
-function Tt(e) {
-  return typeof e != "object" || e == null || e.__b > 0 ? e : Ne(e) ? e.map(Tt) : e.constructor !== void 0 ? null : ie({}, e);
+function Pt(e) {
+  return typeof e != "object" || e == null || e.__b > 0 ? e : Fe(e) ? e.map(Pt) : e.constructor !== void 0 ? null : ne({}, e);
 }
-function Yt(e, t, o, n, d, i, a, p, b) {
-  var c, m, h, l, f, w, $, y = o.props || Te, C = t.props, k = t.type;
-  if (k == "svg" ? d = "http://www.w3.org/2000/svg" : k == "math" ? d = "http://www.w3.org/1998/Math/MathML" : d || (d = "http://www.w3.org/1999/xhtml"), i != null) {
-    for (c = 0; c < i.length; c++) if ((f = i[c]) && "setAttribute" in f == !!k && (k ? f.localName == k : f.nodeType == 3)) {
-      e = f, i[c] = null;
+function hr(e, t, n, o, a, l, i, c, m) {
+  var p, u, _, s, v, y, S, z = n.props || Pe, w = t.props, C = t.type;
+  if (C == "svg" ? a = "http://www.w3.org/2000/svg" : C == "math" ? a = "http://www.w3.org/1998/Math/MathML" : a || (a = "http://www.w3.org/1999/xhtml"), l != null) {
+    for (p = 0; p < l.length; p++) if ((v = l[p]) && "setAttribute" in v == !!C && (C ? v.localName == C : v.nodeType == 3)) {
+      e = v, l[p] = null;
       break;
     }
   }
   if (e == null) {
-    if (k == null) return document.createTextNode(C);
-    e = document.createElementNS(d, k, C.is && C), p && (M.__m && M.__m(t, i), p = !1), i = null;
+    if (C == null) return document.createTextNode(w);
+    e = document.createElementNS(a, C, w.is && w), c && (F.__m && F.__m(t, l), c = !1), l = null;
   }
-  if (k == null) y === C || p && e.data == C || (e.data = C);
+  if (C == null) z === w || c && e.data == w || (e.data = w);
   else {
-    if (i = k == "textarea" && C.defaultValue != null ? null : i && Ee.call(e.childNodes), !p && i != null) for (y = {}, c = 0; c < e.attributes.length; c++) y[(f = e.attributes[c]).name] = f.value;
-    for (c in y) f = y[c], c == "dangerouslySetInnerHTML" ? h = f : c == "children" || c in C || c == "value" && "defaultValue" in C || c == "checked" && "defaultChecked" in C || we(e, c, null, f, d);
-    for (c in C) f = C[c], c == "children" ? l = f : c == "dangerouslySetInnerHTML" ? m = f : c == "value" ? w = f : c == "checked" ? $ = f : p && typeof f != "function" || y[c] === f || we(e, c, f, y[c], d);
-    if (m) p || h && (m.__html == h.__html || m.__html == e.innerHTML) || (e.innerHTML = m.__html), t.__k = [];
-    else if (h && (e.innerHTML = ""), zt(t.type == "template" ? e.content : e, Ne(l) ? l : [l], t, o, n, k == "foreignObject" ? "http://www.w3.org/1999/xhtml" : d, i, a, i ? i[0] : o.__k && ue(o, 0), p, b), i != null) for (c = i.length; c--; ) We(i[c]);
-    p && k != "textarea" || (c = "value", k == "progress" && w == null ? e.removeAttribute("value") : w != null && (w !== e[c] || k == "progress" && !w || k == "option" && w != y[c]) && we(e, c, w, y[c], d), c = "checked", $ != null && $ != e[c] && we(e, c, $, y[c], d));
+    if (l = C == "textarea" && w.defaultValue != null ? null : l && De.call(e.childNodes), !c && l != null) for (z = {}, p = 0; p < e.attributes.length; p++) z[(v = e.attributes[p]).name] = v.value;
+    for (p in z) v = z[p], p == "dangerouslySetInnerHTML" ? _ = v : p == "children" || p in w || p == "value" && "defaultValue" in w || p == "checked" && "defaultChecked" in w || Ce(e, p, null, v, a);
+    for (p in w) v = w[p], p == "children" ? s = v : p == "dangerouslySetInnerHTML" ? u = v : p == "value" ? y = v : p == "checked" ? S = v : c && typeof v != "function" || z[p] === v || Ce(e, p, v, z[p], a);
+    if (u) c || _ && (u.__html == _.__html || u.__html == e.innerHTML) || (e.innerHTML = u.__html), t.__k = [];
+    else if (_ && (e.innerHTML = ""), Tt(t.type == "template" ? e.content : e, Fe(s) ? s : [s], t, n, o, C == "foreignObject" ? "http://www.w3.org/1999/xhtml" : a, l, i, l ? l[0] : n.__k && fe(n, 0), c, m), l != null) for (p = l.length; p--; ) Ye(l[p]);
+    c && C != "textarea" || (p = "value", C == "progress" && y == null ? e.removeAttribute("value") : y != null && (y !== e[p] || C == "progress" && !y || C == "option" && y != z[p]) && Ce(e, p, y, z[p], a), p = "checked", S != null && S != e[p] && Ce(e, p, S, z[p], a));
   }
   return e;
 }
-function Ke(e, t, o) {
+function Ze(e, t, n) {
   try {
     if (typeof e == "function") {
-      var n = typeof e.__u == "function";
-      n && e.__u(), n && t == null || (e.__u = e(t));
+      var o = typeof e.__u == "function";
+      o && e.__u(), o && t == null || (e.__u = e(t));
     } else e.current = t;
-  } catch (d) {
-    M.__e(d, o);
+  } catch (a) {
+    F.__e(a, n);
   }
 }
-function It(e, t, o) {
-  var n, d;
-  if (M.unmount && M.unmount(e), (n = e.ref) && (n.current && n.current != e.__e || Ke(n, null, t)), (n = e.__c) != null) {
-    if (n.componentWillUnmount) try {
-      n.componentWillUnmount();
-    } catch (i) {
-      M.__e(i, t);
+function jt(e, t, n) {
+  var o, a;
+  if (F.unmount && F.unmount(e), (o = e.ref) && (o.current && o.current != e.__e || Ze(o, null, t)), (o = e.__c) != null) {
+    if (o.componentWillUnmount) try {
+      o.componentWillUnmount();
+    } catch (l) {
+      F.__e(l, t);
     }
-    n.base = n.__P = n.__n = null;
+    o.base = o.__P = o.__n = null;
   }
-  if (n = e.__k) for (d = 0; d < n.length; d++) n[d] && It(n[d], t, o || typeof e.type != "function");
-  o || We(e.__e), e.__c = e.__ = e.__e = void 0;
+  if (o = e.__k) for (a = 0; a < o.length; a++) o[a] && jt(o[a], t, n || typeof e.type != "function");
+  n || Ye(e.__e), e.__c = e.__ = e.__e = void 0;
 }
-function Zt(e, t, o) {
-  return this.constructor(e, o);
+function ur(e, t, n) {
+  return this.constructor(e, n);
 }
-function rt(e, t, o) {
-  var n, d, i, a;
-  t == document && (t = document.documentElement), M.__ && M.__(e, t), d = (n = !1) ? null : t.__k, i = [], a = [], Je(t, e = t.__k = Kt(Re, null, [e]), d || Te, Te, t.namespaceURI, d ? null : t.firstChild ? Ee.call(t.childNodes) : null, i, d ? d.__e : t.firstChild, n, a), Ct(i, e, a), e.props.children = null;
+function lt(e, t, n) {
+  var o, a, l, i;
+  t == document && (t = document.documentElement), F.__ && F.__(e, t), a = (o = !1) ? null : t.__k, l = [], i = [], Xe(t, e = t.__k = ar(Se, null, [e]), a || Pe, Pe, t.namespaceURI, a ? null : t.firstChild ? De.call(t.childNodes) : null, l, a ? a.__e : t.firstChild, o, i), Rt(l, e, i), e.props.children = null;
 }
-Ee = Ie.slice, M = { __e: function(e, t, o, n) {
-  for (var d, i, a; t = t.__; ) if ((d = t.__c) && !d.__) try {
-    if ((i = d.constructor) && i.getDerivedStateFromError != null && (d.setState(i.getDerivedStateFromError(e)), a = d.__d), d.componentDidCatch != null && (d.componentDidCatch(e, n || {}), a = d.__d), a) return d.__E = d;
-  } catch (p) {
-    e = p;
+De = je.slice, F = { __e: function(e, t, n, o) {
+  for (var a, l, i; t = t.__; ) if ((a = t.__c) && !a.__) try {
+    if ((l = a.constructor) && l.getDerivedStateFromError != null && (a.setState(l.getDerivedStateFromError(e)), i = a.__d), a.componentDidCatch != null && (a.componentDidCatch(e, o || {}), i = a.__d), i) return a.__E = a;
+  } catch (c) {
+    e = c;
   }
   throw e;
-} }, xt = 0, Se.prototype.setState = function(e, t) {
-  var o;
-  o = this.__s != null && this.__s != this.state ? this.__s : this.__s = ie({}, this.state), typeof e == "function" && (e = e(ie({}, o), this.props)), e && ie(o, e), e != null && this.__v && (t && this._sb.push(t), Ze(this));
-}, Se.prototype.forceUpdate = function(e) {
-  this.__v && (this.__e = !0, e && this.__h.push(e), Ze(this));
-}, Se.prototype.render = Re, de = [], vt = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, yt = function(e, t) {
+} }, zt = 0, Ae.prototype.setState = function(e, t) {
+  var n;
+  n = this.__s != null && this.__s != this.state ? this.__s : this.__s = ne({}, this.state), typeof e == "function" && (e = e(ne({}, n), this.props)), e && ne(n, e), e != null && this.__v && (t && this._sb.push(t), st(this));
+}, Ae.prototype.forceUpdate = function(e) {
+  this.__v && (this.__e = !0, e && this.__h.push(e), st(this));
+}, Ae.prototype.render = Se, le = [], St = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, $t = function(e, t) {
   return e.__v.__b - t.__v.__b;
-}, je.__r = 0, Me = Math.random().toString(8), ke = "__d" + Me, ge = "__a" + Me, wt = /(PointerCapture)$|Capture$/i, qe = 0, Be = tt(!1), He = tt(!0);
-var er = 0;
-function r(e, t, o, n, d, i) {
+}, Ne.__r = 0, Be = Math.random().toString(8), Ie = "__d" + Be, ye = "__a" + Be, Ct = /(PointerCapture)$|Capture$/i, Qe = 0, We = at(!1), Je = at(!0);
+var mr = 0;
+function r(e, t, n, o, a, l) {
   t || (t = {});
-  var a, p, b = t;
-  if ("ref" in b) for (p in b = {}, t) p == "ref" ? a = t[p] : b[p] = t[p];
-  var c = { type: e, props: b, key: o, ref: a, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --er, __i: -1, __u: 0, __source: d, __self: i };
-  if (typeof e == "function" && (a = e.defaultProps)) for (p in a) b[p] === void 0 && (b[p] = a[p]);
-  return M.vnode && M.vnode(c), c;
+  var i, c, m = t;
+  if ("ref" in m) for (c in m = {}, t) c == "ref" ? i = t[c] : m[c] = t[c];
+  var p = { type: e, props: m, key: n, ref: i, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --mr, __i: -1, __u: 0, __source: a, __self: l };
+  if (typeof e == "function" && (i = e.defaultProps)) for (c in i) m[c] === void 0 && (m[c] = i[c]);
+  return F.vnode && F.vnode(p), p;
 }
-var be, H, Fe, ot, Ae = 0, jt = [], q = M, nt = q.__b, it = q.__r, st = q.diffed, dt = q.__c, at = q.unmount, lt = q.__;
-function Ge(e, t) {
-  q.__h && q.__h(H, e, Ae || t), Ae = 0;
-  var o = H.__H || (H.__H = { __: [], __h: [] });
-  return e >= o.__.length && o.__.push({}), o.__[e];
+var we, V, Ve, ct, Le = 0, Nt = [], W = F, pt = W.__b, ht = W.__r, ut = W.diffed, mt = W.__c, ft = W.unmount, gt = W.__;
+function et(e, t) {
+  W.__h && W.__h(V, e, Le || t), Le = 0;
+  var n = V.__H || (V.__H = { __: [], __h: [] });
+  return e >= n.__.length && n.__.push({}), n.__[e];
 }
-function j(e) {
-  return Ae = 1, tr(Pt, e);
+function I(e) {
+  return Le = 1, fr(Mt, e);
 }
-function tr(e, t, o) {
-  var n = Ge(be++, 2);
-  if (n.t = e, !n.__c && (n.__ = [Pt(void 0, t), function(p) {
-    var b = n.__N ? n.__N[0] : n.__[0], c = n.t(b, p);
-    b !== c && (n.__N = [c, n.__[1]], n.__c.setState({}));
-  }], n.__c = H, !H.__f)) {
-    var d = function(p, b, c) {
-      if (!n.__c.__H) return !0;
-      var m = !1, h = n.__c.props !== p;
-      if (n.__c.__H.__.some(function(f) {
-        if (f.__N) {
-          m = !0;
-          var w = f.__[0];
-          f.__ = f.__N, f.__N = void 0, w !== f.__[0] && (h = !0);
+function fr(e, t, n) {
+  var o = et(we++, 2);
+  if (o.t = e, !o.__c && (o.__ = [Mt(void 0, t), function(c) {
+    var m = o.__N ? o.__N[0] : o.__[0], p = o.t(m, c);
+    m !== p && (o.__N = [p, o.__[1]], o.__c.setState({}));
+  }], o.__c = V, !V.__f)) {
+    var a = function(c, m, p) {
+      if (!o.__c.__H) return !0;
+      var u = !1, _ = o.__c.props !== c;
+      if (o.__c.__H.__.some(function(v) {
+        if (v.__N) {
+          u = !0;
+          var y = v.__[0];
+          v.__ = v.__N, v.__N = void 0, y !== v.__[0] && (_ = !0);
         }
-      }), i) {
-        var l = i.call(this, p, b, c);
-        return m ? l || h : l;
+      }), l) {
+        var s = l.call(this, c, m, p);
+        return u ? s || _ : s;
       }
-      return !m || h;
+      return !u || _;
     };
-    H.__f = !0;
-    var i = H.shouldComponentUpdate, a = H.componentWillUpdate;
-    H.componentWillUpdate = function(p, b, c) {
+    V.__f = !0;
+    var l = V.shouldComponentUpdate, i = V.componentWillUpdate;
+    V.componentWillUpdate = function(c, m, p) {
       if (this.__e) {
-        var m = i;
-        i = void 0, d(p, b, c), i = m;
+        var u = l;
+        l = void 0, a(c, m, p), l = u;
       }
-      a && a.call(this, p, b, c);
-    }, H.shouldComponentUpdate = d;
+      i && i.call(this, c, m, p);
+    }, V.shouldComponentUpdate = a;
   }
-  return n.__N || n.__;
+  return o.__N || o.__;
 }
-function _e(e, t) {
-  var o = Ge(be++, 3);
-  !q.__s && At(o.__H, t) && (o.__ = e, o.u = t, H.__H.__h.push(o));
+function ke(e, t) {
+  var n = et(we++, 3);
+  !W.__s && Lt(n.__H, t) && (n.__ = e, n.u = t, V.__H.__h.push(n));
 }
-function Qe(e) {
-  return Ae = 5, fe(function() {
+function tt(e) {
+  return Le = 5, _e(function() {
     return { current: e };
   }, []);
 }
-function fe(e, t) {
-  var o = Ge(be++, 7);
-  return At(o.__H, t) && (o.__ = e(), o.__H = t, o.__h = e), o.__;
+function _e(e, t) {
+  var n = et(we++, 7);
+  return Lt(n.__H, t) && (n.__ = e(), n.__H = t, n.__h = e), n.__;
 }
-function rr() {
-  for (var e; e = jt.shift(); ) {
+function gr() {
+  for (var e; e = Nt.shift(); ) {
     var t = e.__H;
     if (e.__P && t) try {
-      t.__h.some($e), t.__h.some(Ve), t.__h = [];
-    } catch (o) {
-      t.__h = [], q.__e(o, e.__v);
+      t.__h.some(Ee), t.__h.some(Ge), t.__h = [];
+    } catch (n) {
+      t.__h = [], W.__e(n, e.__v);
     }
   }
 }
-q.__b = function(e) {
-  H = null, nt && nt(e);
-}, q.__ = function(e, t) {
-  e && t.__k && t.__k.__m && (e.__m = t.__k.__m), lt && lt(e, t);
-}, q.__r = function(e) {
-  it && it(e), be = 0;
-  var t = (H = e.__c).__H;
-  t && (Fe === H ? (t.__h = [], H.__h = [], t.__.some(function(o) {
-    o.__N && (o.__ = o.__N), o.u = o.__N = void 0;
-  })) : (t.__h.some($e), t.__h.some(Ve), t.__h = [], be = 0)), Fe = H;
-}, q.diffed = function(e) {
-  st && st(e);
+W.__b = function(e) {
+  V = null, pt && pt(e);
+}, W.__ = function(e, t) {
+  e && t.__k && t.__k.__m && (e.__m = t.__k.__m), gt && gt(e, t);
+}, W.__r = function(e) {
+  ht && ht(e), we = 0;
+  var t = (V = e.__c).__H;
+  t && (Ve === V ? (t.__h = [], V.__h = [], t.__.some(function(n) {
+    n.__N && (n.__ = n.__N), n.u = n.__N = void 0;
+  })) : (t.__h.some(Ee), t.__h.some(Ge), t.__h = [], we = 0)), Ve = V;
+}, W.diffed = function(e) {
+  ut && ut(e);
   var t = e.__c;
-  t && t.__H && (t.__H.__h.length && (jt.push(t) !== 1 && ot === q.requestAnimationFrame || ((ot = q.requestAnimationFrame) || or)(rr)), t.__H.__.some(function(o) {
-    o.u && (o.__H = o.u, o.u = void 0);
-  })), Fe = H = null;
-}, q.__c = function(e, t) {
-  t.some(function(o) {
+  t && t.__H && (t.__H.__h.length && (Nt.push(t) !== 1 && ct === W.requestAnimationFrame || ((ct = W.requestAnimationFrame) || br)(gr)), t.__H.__.some(function(n) {
+    n.u && (n.__H = n.u, n.u = void 0);
+  })), Ve = V = null;
+}, W.__c = function(e, t) {
+  t.some(function(n) {
     try {
-      o.__h.some($e), o.__h = o.__h.filter(function(n) {
-        return !n.__ || Ve(n);
+      n.__h.some(Ee), n.__h = n.__h.filter(function(o) {
+        return !o.__ || Ge(o);
       });
-    } catch (n) {
-      t.some(function(d) {
-        d.__h && (d.__h = []);
-      }), t = [], q.__e(n, o.__v);
+    } catch (o) {
+      t.some(function(a) {
+        a.__h && (a.__h = []);
+      }), t = [], W.__e(o, n.__v);
     }
-  }), dt && dt(e, t);
-}, q.unmount = function(e) {
-  at && at(e);
-  var t, o = e.__c;
-  o && o.__H && (o.__H.__.some(function(n) {
+  }), mt && mt(e, t);
+}, W.unmount = function(e) {
+  ft && ft(e);
+  var t, n = e.__c;
+  n && n.__H && (n.__H.__.some(function(o) {
     try {
-      $e(n);
-    } catch (d) {
-      t = d;
+      Ee(o);
+    } catch (a) {
+      t = a;
     }
-  }), o.__H = void 0, t && q.__e(t, o.__v));
+  }), n.__H = void 0, t && W.__e(t, n.__v));
 };
-var ct = typeof requestAnimationFrame == "function";
-function or(e) {
-  var t, o = function() {
-    clearTimeout(n), ct && cancelAnimationFrame(t), setTimeout(e);
-  }, n = setTimeout(o, 35);
-  ct && (t = requestAnimationFrame(o));
+var bt = typeof requestAnimationFrame == "function";
+function br(e) {
+  var t, n = function() {
+    clearTimeout(o), bt && cancelAnimationFrame(t), setTimeout(e);
+  }, o = setTimeout(n, 35);
+  bt && (t = requestAnimationFrame(n));
 }
-function $e(e) {
-  var t = H, o = e.__c;
-  typeof o == "function" && (e.__c = void 0, o()), H = t;
+function Ee(e) {
+  var t = V, n = e.__c;
+  typeof n == "function" && (e.__c = void 0, n()), V = t;
 }
-function Ve(e) {
-  var t = H;
-  e.__c = e.__(), H = t;
+function Ge(e) {
+  var t = V;
+  e.__c = e.__(), V = t;
 }
-function At(e, t) {
-  return !e || e.length !== t.length || t.some(function(o, n) {
-    return o !== e[n];
+function Lt(e, t) {
+  return !e || e.length !== t.length || t.some(function(n, o) {
+    return n !== e[o];
   });
 }
-function Pt(e, t) {
+function Mt(e, t) {
   return typeof t == "function" ? t(e) : t;
 }
-const nr = {
+const xr = {
   png: "image",
   jpg: "image",
   jpeg: "image",
@@ -385,42 +385,42 @@ const nr = {
   m4a: "audio",
   aac: "audio"
 };
-function Et(e) {
-  var n;
-  const t = ((n = e.name.split(".").pop()) == null ? void 0 : n.toLocaleLowerCase()) ?? "";
-  if (e.name.includes(".")) return nr[t] ?? null;
-  const o = e.type.split("/", 1)[0];
-  return o === "image" || o === "video" || o === "audio" ? o : null;
+function Dt(e) {
+  var o;
+  const t = ((o = e.name.split(".").pop()) == null ? void 0 : o.toLocaleLowerCase()) ?? "";
+  if (e.name.includes(".")) return xr[t] ?? null;
+  const n = e.type.split("/", 1)[0];
+  return n === "image" || n === "video" || n === "audio" ? n : null;
 }
-function ir(e) {
-  const d = e.replace(/\.[^.]+$/, "").replace(/^\s*\d+\s*[-_. ]+/, "").normalize("NFKC").replace(/[\s-]+/g, "_").replace(/[{}]/g, "").replace(/_+/g, "_").replace(/^[_\.]+|[_\.]+$/g, "").slice(0, 96) || "asset";
-  return d.toLocaleLowerCase().endsWith(".audio") ? `${d}_asset` : d;
+function _r(e) {
+  const a = e.replace(/\.[^.]+$/, "").replace(/^\s*\d+\s*[-_. ]+/, "").normalize("NFKC").replace(/[\s-]+/g, "_").replace(/[{}]/g, "").replace(/_+/g, "_").replace(/^[_\.]+|[_\.]+$/g, "").slice(0, 96) || "asset";
+  return a.toLocaleLowerCase().endsWith(".audio") ? `${a}_asset` : a;
 }
-function sr(e, t) {
-  const o = new Set(Array.from(t, (d) => d.toLocaleLowerCase()));
-  if (!o.has(e.toLocaleLowerCase())) return e;
-  let n = 2;
-  for (; o.has(`${e}_${n}`.toLocaleLowerCase()); ) n += 1;
-  return `${e}_${n}`;
+function vr(e, t) {
+  const n = new Set(Array.from(t, (a) => a.toLocaleLowerCase()));
+  if (!n.has(e.toLocaleLowerCase())) return e;
+  let o = 2;
+  for (; n.has(`${e}_${o}`.toLocaleLowerCase()); ) o += 1;
+  return `${e}_${o}`;
 }
-function dr(e, t, o) {
-  const n = e.trim().toLocaleLowerCase();
-  return !e.trim() || /[\s{}]/.test(e) || n.endsWith(".audio") ? "invalid" : Array.from(t, (i) => i.toLocaleLowerCase()).includes(n) || Array.from(o, (i) => i.trim().toLocaleLowerCase()).filter((i) => i === n).length > 1 ? "duplicate" : null;
+function yr(e, t, n) {
+  const o = e.trim().toLocaleLowerCase();
+  return !e.trim() || /[\s{}]/.test(e) || o.endsWith(".audio") ? "invalid" : Array.from(t, (l) => l.toLocaleLowerCase()).includes(o) || Array.from(n, (l) => l.trim().toLocaleLowerCase()).filter((l) => l === o).length > 1 ? "duplicate" : null;
 }
-function ar(e, t, o) {
-  const n = new Set(Array.from(t)), d = [], i = [];
-  for (const a of e) {
-    const p = Et(a);
-    if (!p) {
-      i.push(a.name);
+function wr(e, t, n) {
+  const o = new Set(Array.from(t)), a = [], l = [];
+  for (const i of e) {
+    const c = Dt(i);
+    if (!c) {
+      l.push(i.name);
       continue;
     }
-    const b = sr(ir(a.name), n);
-    n.add(b), d.push({ id: o(), file: a, alias: b, kind: p, durationSeconds: p === "image" ? null : 2, includeVideoAudio: !1, status: "pending", error: "" });
+    const m = vr(_r(i.name), o);
+    o.add(m), a.push({ id: n(), file: i, alias: m, kind: c, durationSeconds: c === "image" ? null : 2, includeVideoAudio: !1, status: "pending", error: "" });
   }
-  return { drafts: d, rejected: i };
+  return { drafts: a, rejected: l };
 }
-function lr(e, t, o) {
+function kr(e, t, n) {
   return {
     id: e.id,
     alias: e.alias.trim(),
@@ -428,7 +428,7 @@ function lr(e, t, o) {
     path: t,
     enabled: !0,
     fixed: !1,
-    fixedOrder: o,
+    fixedOrder: n,
     shotIds: [],
     includeVideoAudio: e.kind === "video" && e.includeVideoAudio,
     durationSeconds: e.kind === "image" ? null : e.durationSeconds,
@@ -436,85 +436,85 @@ function lr(e, t, o) {
     fingerprint: ""
   };
 }
-function cr(e, t) {
-  return t === "image" ? Promise.resolve(null) : new Promise((o) => {
-    const n = document.createElement(t === "video" ? "video" : "audio"), d = URL.createObjectURL(e);
-    let i = !1;
-    const a = (p) => {
-      i || (i = !0, n.onloadedmetadata = null, n.onerror = null, n.removeAttribute("src"), n.load(), URL.revokeObjectURL(d), o(p));
+function zr(e, t) {
+  return t === "image" ? Promise.resolve(null) : new Promise((n) => {
+    const o = document.createElement(t === "video" ? "video" : "audio"), a = URL.createObjectURL(e);
+    let l = !1;
+    const i = (c) => {
+      l || (l = !0, o.onloadedmetadata = null, o.onerror = null, o.removeAttribute("src"), o.load(), URL.revokeObjectURL(a), n(c));
     };
-    n.preload = "metadata", n.onloadedmetadata = () => a(Number.isFinite(n.duration) && n.duration > 0 ? Math.round(n.duration * 10) / 10 : null), n.onerror = () => a(null), n.src = d;
+    o.preload = "metadata", o.onloadedmetadata = () => i(Number.isFinite(o.duration) && o.duration > 0 ? Math.round(o.duration * 10) / 10 : null), o.onerror = () => i(null), o.src = a;
   });
 }
-const pr = () => `asset_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, Oe = (e, t) => t === "zh" ? { image: "图片", video: "视频", audio: "音频" }[e] : e;
-function hr({ language: e, assets: t, projectName: o, onClose: n, onImported: d, uploadFile: i }) {
-  const [a, p] = j([]), [b, c] = j([]), [m, h] = j(!1), [l, f] = j(!1), w = Qe([]);
-  w.current = a;
-  const $ = t.map((_) => _.alias), y = (_, A) => p((D) => D.map((P) => P.id === _ ? { ...P, ...A } : P)), C = (_) => {
-    if (!_.length || l) return;
-    const A = [...$, ...w.current.map((P) => P.alias)], D = ar(_, A, pr);
-    D.rejected.length && c((P) => [...P, ...D.rejected]), D.drafts.length && (p((P) => [...P, ...D.drafts]), D.drafts.forEach((P) => {
-      cr(P.file, P.kind).then((Q) => {
-        Q != null && p((K) => K.map((V) => V.id === P.id && V.kind === P.kind && V.durationSeconds === 2 ? { ...V, durationSeconds: Q } : V));
+const Sr = () => `asset_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, Ke = (e, t) => t === "zh" ? { image: "图片", video: "视频", audio: "音频" }[e] : e;
+function $r({ language: e, assets: t, projectName: n, onClose: o, onImported: a, uploadFile: l }) {
+  const [i, c] = I([]), [m, p] = I([]), [u, _] = I(!1), [s, v] = I(!1), y = tt([]);
+  y.current = i;
+  const S = t.map((g) => g.alias), z = (g, E) => c((N) => N.map((R) => R.id === g ? { ...R, ...E } : R)), w = (g) => {
+    if (!g.length || s) return;
+    const E = [...S, ...y.current.map((R) => R.alias)], N = wr(g, E, Sr);
+    N.rejected.length && p((R) => [...R, ...N.rejected]), N.drafts.length && (c((R) => [...R, ...N.drafts]), N.drafts.forEach((R) => {
+      zr(R.file, R.kind).then((J) => {
+        J != null && c((X) => X.map((K) => K.id === R.id && K.kind === R.kind && K.durationSeconds === 2 ? { ...K, durationSeconds: J } : K));
       });
     }));
-  }, U = a.filter((_) => _.status !== "imported").map((_) => _.alias), x = (_) => {
-    if (_.status === "imported") return null;
-    const A = dr(_.alias, $, U);
-    return A === "invalid" ? e === "zh" ? "别名为空、包含空白/花括号，或使用了保留后缀 .audio" : "Alias is empty, contains whitespace/braces, or uses reserved .audio" : A === "duplicate" ? e === "zh" ? "别名与素材库或本批次其他素材重复" : "Alias duplicates an existing or staged asset" : Et(_.file) !== _.kind ? e === "zh" ? "文件扩展名与所选类型不匹配" : "The extension does not match the selected kind" : _.kind !== "image" && (_.durationSeconds == null || _.durationSeconds <= 0) ? e === "zh" ? "视频或音频时长必须大于 0" : "Video/audio duration must be greater than 0" : null;
-  }, I = async () => {
-    const A = w.current.filter((K) => K.status === "pending" || K.status === "error");
-    if (!A.length) return;
-    if (A.some(x)) {
+  }, A = i.filter((g) => g.status !== "imported").map((g) => g.alias), b = (g) => {
+    if (g.status === "imported") return null;
+    const E = yr(g.alias, S, A);
+    return E === "invalid" ? e === "zh" ? "别名为空、包含空白/花括号，或使用了保留后缀 .audio" : "Alias is empty, contains whitespace/braces, or uses reserved .audio" : E === "duplicate" ? e === "zh" ? "别名与素材库或本批次其他素材重复" : "Alias duplicates an existing or staged asset" : Dt(g.file) !== g.kind ? e === "zh" ? "文件扩展名与所选类型不匹配" : "The extension does not match the selected kind" : g.kind !== "image" && (g.durationSeconds == null || g.durationSeconds <= 0) ? e === "zh" ? "视频或音频时长必须大于 0" : "Video/audio duration must be greater than 0" : null;
+  }, T = async () => {
+    const E = y.current.filter((X) => X.status === "pending" || X.status === "error");
+    if (!E.length) return;
+    if (E.some(b)) {
       window.alert(e === "zh" ? "请先修正列表中标红的项目。" : "Fix the highlighted rows before importing.");
       return;
     }
-    f(!0);
-    const D = Math.max(0, ...t.map((K) => K.fixedOrder)) + 1;
-    let P = 0;
-    const Q = async () => {
-      for (; P < A.length; ) {
-        const K = P++, V = A[K];
-        y(V.id, { status: "uploading", error: "" });
+    v(!0);
+    const N = Math.max(0, ...t.map((X) => X.fixedOrder)) + 1;
+    let R = 0;
+    const J = async () => {
+      for (; R < E.length; ) {
+        const X = R++, K = E[X];
+        z(K.id, { status: "uploading", error: "" });
         try {
-          const ne = await i(o, V.kind, V.file);
-          d([lr(V, ne, D + K)]), y(V.id, { status: "imported", error: "" });
-        } catch (ne) {
-          y(V.id, { status: "error", error: String(ne) });
+          const he = await l(n, K.kind, K.file);
+          a([kr(K, he, N + X)]), z(K.id, { status: "imported", error: "" });
+        } catch (he) {
+          z(K.id, { status: "error", error: String(he) });
         }
       }
     };
-    await Promise.all(Array.from({ length: Math.min(2, A.length) }, Q)), f(!1);
-  }, R = a.filter((_) => _.status === "imported").length, J = a.filter((_) => _.status === "error").length, G = a.length - R;
+    await Promise.all(Array.from({ length: Math.min(2, E.length) }, J)), v(!1);
+  }, j = i.filter((g) => g.status === "imported").length, D = i.filter((g) => g.status === "error").length, M = i.length - j;
   return /* @__PURE__ */ r("div", { class: "td-batch-overlay", role: "presentation", children: /* @__PURE__ */ r("section", { class: "td-asset-batch-panel", role: "dialog", "aria-modal": "true", "aria-label": e === "zh" ? "批量导入素材" : "Batch import assets", children: [
     /* @__PURE__ */ r("header", { class: "td-batch-header", children: [
       /* @__PURE__ */ r("div", { children: [
         /* @__PURE__ */ r("h2", { children: e === "zh" ? "批量导入素材" : "Batch import assets" }),
         /* @__PURE__ */ r("p", { children: e === "zh" ? "可混合选择图片、视频和音频；确认列表后再写入素材库。" : "Select images, videos, and audio together; review before uploading." })
       ] }),
-      /* @__PURE__ */ r("button", { disabled: l, "aria-label": e === "zh" ? "关闭" : "Close", onClick: n, children: "×" })
+      /* @__PURE__ */ r("button", { disabled: s, "aria-label": e === "zh" ? "关闭" : "Close", onClick: o, children: "×" })
     ] }),
-    /* @__PURE__ */ r("label", { class: `td-asset-dropzone ${m ? "dragging" : ""}`, onDragEnter: (_) => {
-      _.preventDefault(), h(!0);
-    }, onDragOver: (_) => _.preventDefault(), onDragLeave: (_) => {
-      _.currentTarget === _.target && h(!1);
-    }, onDrop: (_) => {
-      var A;
-      _.preventDefault(), h(!1), C(Array.from(((A = _.dataTransfer) == null ? void 0 : A.files) ?? []));
+    /* @__PURE__ */ r("label", { class: `td-asset-dropzone ${u ? "dragging" : ""}`, onDragEnter: (g) => {
+      g.preventDefault(), _(!0);
+    }, onDragOver: (g) => g.preventDefault(), onDragLeave: (g) => {
+      g.currentTarget === g.target && _(!1);
+    }, onDrop: (g) => {
+      var E;
+      g.preventDefault(), _(!1), w(Array.from(((E = g.dataTransfer) == null ? void 0 : E.files) ?? []));
     }, children: [
       /* @__PURE__ */ r("strong", { children: e === "zh" ? "拖拽素材到这里，或点击选择多个文件" : "Drop media here, or click to select multiple files" }),
       /* @__PURE__ */ r("span", { children: e === "zh" ? "支持图片、视频、音频混合导入" : "Mixed image, video, and audio selection is supported" }),
-      /* @__PURE__ */ r("input", { type: "file", multiple: !0, accept: "image/*,video/*,audio/*", disabled: l, onChange: (_) => {
-        C(Array.from(_.currentTarget.files ?? [])), _.currentTarget.value = "";
+      /* @__PURE__ */ r("input", { type: "file", multiple: !0, accept: "image/*,video/*,audio/*", disabled: s, onChange: (g) => {
+        w(Array.from(g.currentTarget.files ?? [])), g.currentTarget.value = "";
       } })
     ] }),
-    b.length > 0 && /* @__PURE__ */ r("div", { class: "td-asset-batch-warning", children: [
-      /* @__PURE__ */ r("span", { children: e === "zh" ? `已跳过 ${b.length} 个不支持的文件：${b.join("、")}` : `Skipped ${b.length} unsupported files: ${b.join(", ")}` }),
-      /* @__PURE__ */ r("button", { onClick: () => c([]), children: "×" })
+    m.length > 0 && /* @__PURE__ */ r("div", { class: "td-asset-batch-warning", children: [
+      /* @__PURE__ */ r("span", { children: e === "zh" ? `已跳过 ${m.length} 个不支持的文件：${m.join("、")}` : `Skipped ${m.length} unsupported files: ${m.join(", ")}` }),
+      /* @__PURE__ */ r("button", { onClick: () => p([]), children: "×" })
     ] }),
     /* @__PURE__ */ r("div", { class: "td-asset-batch-summary", children: [
-      /* @__PURE__ */ r("span", { children: e === "zh" ? `共 ${a.length} 项 · 已导入 ${R} · 待处理 ${G}${J ? ` · 失败 ${J}` : ""}` : `${a.length} items · ${R} imported · ${G} pending${J ? ` · ${J} failed` : ""}` }),
-      /* @__PURE__ */ r("button", { disabled: l || !a.length, onClick: () => p([]), children: e === "zh" ? "清空列表" : "Clear list" })
+      /* @__PURE__ */ r("span", { children: e === "zh" ? `共 ${i.length} 项 · 已导入 ${j} · 待处理 ${M}${D ? ` · 失败 ${D}` : ""}` : `${i.length} items · ${j} imported · ${M} pending${D ? ` · ${D} failed` : ""}` }),
+      /* @__PURE__ */ r("button", { disabled: s || !i.length, onClick: () => c([]), children: e === "zh" ? "清空列表" : "Clear list" })
     ] }),
     /* @__PURE__ */ r("div", { class: "td-asset-batch-list", children: [
       /* @__PURE__ */ r("div", { class: "td-asset-batch-row td-asset-batch-head", children: [
@@ -525,243 +525,361 @@ function hr({ language: e, assets: t, projectName: o, onClose: n, onImported: d,
         /* @__PURE__ */ r("span", { children: e === "zh" ? "视频伴音" : "Video audio" }),
         /* @__PURE__ */ r("span", { children: e === "zh" ? "操作" : "Action" })
       ] }),
-      !a.length && /* @__PURE__ */ r("div", { class: "td-asset-batch-empty", children: e === "zh" ? "尚未选择素材" : "No media selected" }),
-      a.map((_) => {
-        const A = x(_), D = l || _.status === "imported" || _.status === "uploading";
-        return /* @__PURE__ */ r("div", { class: `td-asset-batch-row ${A || _.status === "error" ? "invalid" : ""} ${_.status === "imported" ? "imported" : ""}`, children: [
+      !i.length && /* @__PURE__ */ r("div", { class: "td-asset-batch-empty", children: e === "zh" ? "尚未选择素材" : "No media selected" }),
+      i.map((g) => {
+        const E = b(g), N = s || g.status === "imported" || g.status === "uploading";
+        return /* @__PURE__ */ r("div", { class: `td-asset-batch-row ${E || g.status === "error" ? "invalid" : ""} ${g.status === "imported" ? "imported" : ""}`, children: [
           /* @__PURE__ */ r("div", { class: "td-asset-batch-file", children: [
-            /* @__PURE__ */ r("strong", { title: _.file.name, children: _.file.name }),
+            /* @__PURE__ */ r("strong", { title: g.file.name, children: g.file.name }),
             /* @__PURE__ */ r("small", { children: [
-              (_.file.size / 1024 / 1024).toFixed(1),
+              (g.file.size / 1024 / 1024).toFixed(1),
               " MB · ",
-              _.status === "pending" ? e === "zh" ? "待导入" : "Pending" : _.status === "uploading" ? e === "zh" ? "上传中" : "Uploading" : _.status === "imported" ? e === "zh" ? "已完成" : "Imported" : e === "zh" ? "失败" : "Failed"
+              g.status === "pending" ? e === "zh" ? "待导入" : "Pending" : g.status === "uploading" ? e === "zh" ? "上传中" : "Uploading" : g.status === "imported" ? e === "zh" ? "已完成" : "Imported" : e === "zh" ? "失败" : "Failed"
             ] }),
-            (A || _.error) && /* @__PURE__ */ r("em", { title: A || _.error, children: A || _.error })
+            (E || g.error) && /* @__PURE__ */ r("em", { title: E || g.error, children: E || g.error })
           ] }),
-          /* @__PURE__ */ r("input", { disabled: D, value: _.alias, onInput: (P) => y(_.id, { alias: P.currentTarget.value, status: "pending", error: "" }) }),
-          /* @__PURE__ */ r("select", { disabled: D, value: _.kind, onChange: (P) => {
-            const Q = P.currentTarget.value;
-            y(_.id, { kind: Q, durationSeconds: Q === "image" ? null : _.durationSeconds ?? 2, includeVideoAudio: Q === "video" && _.includeVideoAudio, status: "pending", error: "" });
+          /* @__PURE__ */ r("input", { disabled: N, value: g.alias, onInput: (R) => z(g.id, { alias: R.currentTarget.value, status: "pending", error: "" }) }),
+          /* @__PURE__ */ r("select", { disabled: N, value: g.kind, onChange: (R) => {
+            const J = R.currentTarget.value;
+            z(g.id, { kind: J, durationSeconds: J === "image" ? null : g.durationSeconds ?? 2, includeVideoAudio: J === "video" && g.includeVideoAudio, status: "pending", error: "" });
           }, children: [
-            /* @__PURE__ */ r("option", { value: "image", children: Oe("image", e) }),
-            /* @__PURE__ */ r("option", { value: "video", children: Oe("video", e) }),
-            /* @__PURE__ */ r("option", { value: "audio", children: Oe("audio", e) })
+            /* @__PURE__ */ r("option", { value: "image", children: Ke("image", e) }),
+            /* @__PURE__ */ r("option", { value: "video", children: Ke("video", e) }),
+            /* @__PURE__ */ r("option", { value: "audio", children: Ke("audio", e) })
           ] }),
           /* @__PURE__ */ r("label", { class: "td-asset-batch-duration", children: [
-            /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", disabled: D || _.kind === "image", value: _.durationSeconds ?? "", onInput: (P) => y(_.id, { durationSeconds: P.currentTarget.value ? Number(P.currentTarget.value) : null, status: "pending", error: "" }) }),
-            /* @__PURE__ */ r("span", { children: _.kind === "image" ? "—" : e === "zh" ? "秒" : "sec" })
+            /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", disabled: N || g.kind === "image", value: g.durationSeconds ?? "", onInput: (R) => z(g.id, { durationSeconds: R.currentTarget.value ? Number(R.currentTarget.value) : null, status: "pending", error: "" }) }),
+            /* @__PURE__ */ r("span", { children: g.kind === "image" ? "—" : e === "zh" ? "秒" : "sec" })
           ] }),
           /* @__PURE__ */ r("label", { class: "td-asset-batch-audio", children: [
-            /* @__PURE__ */ r("input", { type: "checkbox", disabled: D || _.kind !== "video", checked: _.kind === "video" && _.includeVideoAudio, onChange: (P) => y(_.id, { includeVideoAudio: P.currentTarget.checked }) }),
-            /* @__PURE__ */ r("span", { children: _.kind === "video" ? _.includeVideoAudio ? e === "zh" ? "开" : "ON" : e === "zh" ? "关" : "OFF" : "—" })
+            /* @__PURE__ */ r("input", { type: "checkbox", disabled: N || g.kind !== "video", checked: g.kind === "video" && g.includeVideoAudio, onChange: (R) => z(g.id, { includeVideoAudio: R.currentTarget.checked }) }),
+            /* @__PURE__ */ r("span", { children: g.kind === "video" ? g.includeVideoAudio ? e === "zh" ? "开" : "ON" : e === "zh" ? "关" : "OFF" : "—" })
           ] }),
-          /* @__PURE__ */ r("button", { class: "danger", disabled: D, onClick: () => p((P) => P.filter((Q) => Q.id !== _.id)), children: e === "zh" ? "移除" : "Remove" })
-        ] }, _.id);
+          /* @__PURE__ */ r("button", { class: "danger", disabled: N, onClick: () => c((R) => R.filter((J) => J.id !== g.id)), children: e === "zh" ? "移除" : "Remove" })
+        ] }, g.id);
       })
     ] }),
     /* @__PURE__ */ r("footer", { children: [
-      /* @__PURE__ */ r("button", { disabled: l, onClick: n, children: e === "zh" ? "关闭" : "Close" }),
-      /* @__PURE__ */ r("button", { class: "primary", disabled: l || !a.some((_) => _.status === "pending" || _.status === "error"), onClick: () => void I(), children: l ? e === "zh" ? "正在导入…" : "Importing…" : J ? e === "zh" ? "重试失败项" : "Retry failed" : e === "zh" ? "开始导入" : "Start import" })
+      /* @__PURE__ */ r("button", { disabled: s, onClick: o, children: e === "zh" ? "关闭" : "Close" }),
+      /* @__PURE__ */ r("button", { class: "primary", disabled: s || !i.some((g) => g.status === "pending" || g.status === "error"), onClick: () => void T(), children: s ? e === "zh" ? "正在导入…" : "Importing…" : D ? e === "zh" ? "重试失败项" : "Retry failed" : e === "zh" ? "开始导入" : "Start import" })
     ] })
   ] }) });
 }
-const Nt = String.raw`\{\{ref:([^{}]+)}}`;
-function pt() {
-  return new RegExp(Nt, "g");
+const Ft = String.raw`\{\{ref:([^{}]+)}}`;
+function xt() {
+  return new RegExp(Ft, "g");
 }
-function Rt(e, t) {
-  const o = /* @__PURE__ */ new Map();
-  for (const n of e.assets)
-    n.enabled && n.path.trim() && (!n.shotIds.length || n.shotIds.includes(t.id)) && !t.disabledAssetIds.includes(n.id) && o.set(n.alias, n);
-  return o;
+function Ot(e, t) {
+  const n = /* @__PURE__ */ new Map();
+  for (const o of e.assets)
+    o.enabled && o.path.trim() && (!o.shotIds.length || o.shotIds.includes(t.id)) && !t.disabledAssetIds.includes(o.id) && n.set(o.alias, o);
+  return n;
 }
-function Dt(e, t, o) {
-  const n = o.trim(), d = n.endsWith(".audio"), i = d ? n.slice(0, -6) : n, a = Rt(e, t).get(i);
-  return a ? !d || a.kind === "video" && a.includeVideoAudio : !1;
+function Ut(e, t, n) {
+  const o = n.trim(), a = o.endsWith(".audio"), l = a ? o.slice(0, -6) : o, i = Ot(e, t).get(l);
+  return i ? !a || i.kind === "video" && i.includeVideoAudio : !1;
 }
-function ht(e, t) {
-  const o = e.shots.filter((n) => n.enabled);
-  return o.length > 0 && o.every((n) => Dt(e, n, t));
+function _t(e, t) {
+  const n = e.shots.filter((o) => o.enabled);
+  return n.length > 0 && n.every((o) => Ut(e, o, t));
 }
-function Lt(e, t) {
-  const o = [], n = Rt(e, t), d = [e.promptPrefix, t.prompt, e.promptSuffix].filter(Boolean).join(`
-`), i = [...d.matchAll(pt())].map((x) => x[1].trim()), a = [], p = /* @__PURE__ */ new Set(), b = (x) => {
-    p.has(x.id) || (p.add(x.id), a.push(x));
+function Ht(e, t) {
+  const n = [], o = Ot(e, t), a = [e.promptPrefix, t.prompt, e.promptSuffix].filter(Boolean).join(`
+`), l = [...a.matchAll(xt())].map((b) => b[1].trim()), i = [], c = /* @__PURE__ */ new Set(), m = (b) => {
+    c.has(b.id) || (c.add(b.id), i.push(b));
   };
-  [...n.values()].filter((x) => x.fixed).sort((x, I) => x.fixedOrder - I.fixedOrder || x.alias.localeCompare(I.alias)).forEach(b);
-  for (const x of i) {
-    const I = x.endsWith(".audio") ? x.slice(0, -6) : x, R = n.get(I);
-    if (!R) {
-      o.push(`未找到或已禁用素材：${x}`);
+  [...o.values()].filter((b) => b.fixed).sort((b, T) => b.fixedOrder - T.fixedOrder || b.alias.localeCompare(T.alias)).forEach(m);
+  for (const b of l) {
+    const T = b.endsWith(".audio") ? b.slice(0, -6) : b, j = o.get(T);
+    if (!j) {
+      n.push(`未找到或已禁用素材：${b}`);
       continue;
     }
-    x.endsWith(".audio") && (R.kind !== "video" || !R.includeVideoAudio) && o.push(`视频伴音未启用：${x}`), b(R);
+    b.endsWith(".audio") && (j.kind !== "video" || !j.includeVideoAudio) && n.push(`视频伴音未启用：${b}`), m(j);
   }
-  const c = a.filter((x) => x.kind === "image"), m = a.filter((x) => x.kind === "video"), h = m.filter((x) => x.includeVideoAudio), l = a.filter((x) => x.kind === "audio"), f = h.length + l.length, w = c.length + m.length + l.length;
-  c.length > 9 && o.push(`参考图 ${c.length}/9，超出 H3 上限`), m.length > 3 && o.push(`参考视频 ${m.length}/3，超出 H3 上限`), f > 3 && o.push(`有效音频 ${f}/3，超出 H3 总上限`), w > 12 && o.push(`混合文件 ${w}/12，超出 H3 上限`), f && !c.length && !m.length && o.push("音频参考不能单独使用");
-  const $ = m.filter((x) => typeof x.durationSeconds == "number");
-  for (const x of m) (x.durationSeconds == null || x.durationSeconds < 2 || x.durationSeconds > 15) && o.push(`视频 ${x.alias} 的时长必须为 2–15 秒`);
-  $.reduce((x, I) => x + (I.durationSeconds ?? 0), 0) > 15 && o.push("参考视频总时长超过 15 秒");
-  const y = [...h.map((x) => x.audioDurationSeconds ?? x.durationSeconds), ...l.map((x) => x.durationSeconds)];
-  y.some((x) => x == null || x < 2 || x > 15) && o.push("每路有效音频时长必须为 2–15 秒"), y.reduce((x, I) => x + (I ?? 0), 0) > 15 && o.push("有效音频总时长超过 15 秒");
-  const C = /* @__PURE__ */ new Map();
-  c.forEach((x, I) => C.set(x.alias, `<Picture ${I + 1}>`)), m.forEach((x, I) => C.set(x.alias, `<Video ${I + 1}>`)), h.forEach((x, I) => C.set(`${x.alias}.audio`, `<Audio ${I + 1}>`)), l.forEach((x, I) => C.set(x.alias, `<Audio ${h.length + I + 1}>`));
-  const k = d.replace(pt(), (x, I) => C.get(I.trim()) ?? x), U = [...C.entries()].map(([x, I]) => ({ label: I, alias: x, kind: I.slice(1).split(" ")[0].toLowerCase() }));
-  return { compiledPrompt: k, errors: o, slots: U, mixedFiles: w, audioCount: f };
+  const p = i.filter((b) => b.kind === "image"), u = i.filter((b) => b.kind === "video"), _ = u.filter((b) => b.includeVideoAudio), s = i.filter((b) => b.kind === "audio"), v = _.length + s.length, y = p.length + u.length + s.length;
+  p.length > 9 && n.push(`参考图 ${p.length}/9，超出 H3 上限`), u.length > 3 && n.push(`参考视频 ${u.length}/3，超出 H3 上限`), v > 3 && n.push(`有效音频 ${v}/3，超出 H3 总上限`), y > 12 && n.push(`混合文件 ${y}/12，超出 H3 上限`), v && !p.length && !u.length && n.push("音频参考不能单独使用");
+  const S = u.filter((b) => typeof b.durationSeconds == "number");
+  for (const b of u) (b.durationSeconds == null || b.durationSeconds < 2 || b.durationSeconds > 15) && n.push(`视频 ${b.alias} 的时长必须为 2–15 秒`);
+  S.reduce((b, T) => b + (T.durationSeconds ?? 0), 0) > 15 && n.push("参考视频总时长超过 15 秒");
+  const z = [..._.map((b) => b.audioDurationSeconds ?? b.durationSeconds), ...s.map((b) => b.durationSeconds)];
+  z.some((b) => b == null || b < 2 || b > 15) && n.push("每路有效音频时长必须为 2–15 秒"), z.reduce((b, T) => b + (T ?? 0), 0) > 15 && n.push("有效音频总时长超过 15 秒");
+  const w = /* @__PURE__ */ new Map();
+  p.forEach((b, T) => w.set(b.alias, `<Picture ${T + 1}>`)), u.forEach((b, T) => w.set(b.alias, `<Video ${T + 1}>`)), _.forEach((b, T) => w.set(`${b.alias}.audio`, `<Audio ${T + 1}>`)), s.forEach((b, T) => w.set(b.alias, `<Audio ${_.length + T + 1}>`));
+  const C = a.replace(xt(), (b, T) => w.get(T.trim()) ?? b), A = [...w.entries()].map(([b, T]) => ({ label: T, alias: b, kind: T.slice(1).split(" ")[0].toLowerCase() }));
+  return { compiledPrompt: C, errors: n, slots: A, mixedFiles: y, audioCount: v };
 }
-function ur(e) {
-  var d, i, a, p, b, c;
+function Cr(e) {
+  var a, l, i, c, m, p;
   const t = [];
-  (i = (d = e.project) == null ? void 0 : d.name) != null && i.trim() || t.push("Project name 不能为空"), (p = (a = e.project) == null ? void 0 : a.runId) != null && p.trim() || t.push("Run ID 不能为空"), (!Array.isArray(e.shots) || !e.shots.some((m) => m.enabled)) && t.push("至少需要一个启用分镜");
-  const o = /* @__PURE__ */ new Set();
-  for (const m of e.shots ?? [])
-    (!((b = m.id) != null && b.trim()) || o.has(m.id)) && t.push(`分镜 ID 为空或重复：${m.id || "(空)"}`), o.add(m.id), m.durationSeconds > 0 || t.push(`分镜 ${m.id} 的时长必须大于 0`);
+  (l = (a = e.project) == null ? void 0 : a.name) != null && l.trim() || t.push("Project name 不能为空"), (c = (i = e.project) == null ? void 0 : i.runId) != null && c.trim() || t.push("Run ID 不能为空"), (!Array.isArray(e.shots) || !e.shots.some((u) => u.enabled)) && t.push("至少需要一个启用分镜");
   const n = /* @__PURE__ */ new Set();
-  for (const m of e.assets ?? []) {
-    const h = (c = m.alias) == null ? void 0 : c.toLocaleLowerCase();
-    (!m.alias || /[\s{}]/.test(m.alias) || m.alias.endsWith(".audio") || n.has(h)) && t.push(`素材别名无效或重复：${m.alias || "(空)"}`), n.add(h), m.enabled && !m.path && t.push(`素材 ${m.alias} 尚未选择文件`);
+  for (const u of e.shots ?? [])
+    (!((m = u.id) != null && m.trim()) || n.has(u.id)) && t.push(`分镜 ID 为空或重复：${u.id || "(空)"}`), n.add(u.id), u.durationSeconds > 0 || t.push(`分镜 ${u.id} 的时长必须大于 0`);
+  const o = /* @__PURE__ */ new Set();
+  for (const u of e.assets ?? []) {
+    const _ = (p = u.alias) == null ? void 0 : p.toLocaleLowerCase();
+    (!u.alias || /[\s{}]/.test(u.alias) || u.alias.endsWith(".audio") || o.has(_)) && t.push(`素材别名无效或重复：${u.alias || "(空)"}`), o.add(_), u.enabled && !u.path && t.push(`素材 ${u.alias} 尚未选择文件`);
   }
-  for (const m of e.shots.filter((h) => h.enabled)) t.push(...Lt(e, m).errors.map((h) => `${m.title}: ${h}`));
+  for (const u of e.shots.filter((_) => _.enabled)) t.push(...Ht(e, u).errors.map((_) => `${u.title}: ${_}`));
   return [...new Set(t)];
 }
-function mr(e, t) {
-  const o = [], n = new RegExp(Nt, "g");
-  let d = 0;
-  for (const i of e.matchAll(n)) {
-    const a = i.index ?? 0;
-    a > d && o.push({ text: e.slice(d, a), reference: !1 }), o.push({ text: i[0], reference: !0, valid: t(i[1]) }), d = a + i[0].length;
+function Ir(e, t) {
+  const n = [], o = new RegExp(Ft, "g");
+  let a = 0;
+  for (const l of e.matchAll(o)) {
+    const i = l.index ?? 0;
+    i > a && n.push({ text: e.slice(a, i), reference: !1 }), n.push({ text: l[0], reference: !0, valid: t(l[1]) }), a = i + l[0].length;
   }
-  return d < e.length && o.push({ text: e.slice(d), reference: !1 }), o;
+  return a < e.length && n.push({ text: e.slice(a), reference: !1 }), n;
 }
-function Ue({ value: e, rows: t, onInput: o, isReferenceValid: n }) {
-  const d = Qe(null), i = mr(e, n), a = (p) => {
-    d.current && (d.current.scrollTop = p.currentTarget.scrollTop, d.current.scrollLeft = p.currentTarget.scrollLeft);
+function qe({ value: e, rows: t, onInput: n, isReferenceValid: o }) {
+  const a = tt(null), l = Ir(e, o), i = (c) => {
+    a.current && (a.current.scrollTop = c.currentTarget.scrollTop, a.current.scrollLeft = c.currentTarget.scrollLeft);
   };
   return /* @__PURE__ */ r("span", { class: "td-highlight-textarea", children: [
-    /* @__PURE__ */ r("pre", { ref: d, class: "td-highlight-backdrop", "aria-hidden": "true", children: [
-      i.map((p, b) => p.reference ? /* @__PURE__ */ r("mark", { class: p.valid ? "valid" : "invalid", children: p.text }, b) : p.text),
+    /* @__PURE__ */ r("pre", { ref: a, class: "td-highlight-backdrop", "aria-hidden": "true", children: [
+      l.map((c, m) => c.reference ? /* @__PURE__ */ r("mark", { class: c.valid ? "valid" : "invalid", children: c.text }, m) : c.text),
       e.endsWith(`
 `) && " "
     ] }),
-    /* @__PURE__ */ r("textarea", { class: "td-highlight-input", rows: t, value: e, onInput: o, onScroll: a })
+    /* @__PURE__ */ r("textarea", { class: "td-highlight-input", rows: t, value: e, onInput: n, onScroll: i })
   ] });
 }
-const fr = {
+const Tr = {
   zh: { title: "Theodore 导播台", save: "保存到工作流", close: "关闭", shots: "分镜", assets: "素材库", settings: "项目设置", postprocess: "后处理", addShot: "添加分镜", addAsset: "添加素材", preview: "H3 编译预览", noErrors: "当前分镜通过预检" },
   en: { title: "Theodore Director", save: "Save to workflow", close: "Close", shots: "Shots", assets: "Media", settings: "Project", postprocess: "Post-process", addShot: "Add shot", addAsset: "Add asset", preview: "H3 compile preview", noErrors: "Current shot passes validation" }
 };
-function pe(e, t) {
-  return fr[e][t];
+function me(e, t) {
+  return Tr[e][t];
 }
-function he(e) {
-  return (Array.isArray(e.results) && e.results.length ? e.results : e.path ? [{ path: e.path, bytes: e.bytes, modifiedAt: e.modifiedAt, stage: e.stage, sourcePath: e.sourcePath, completedAt: e.completedAt }] : []).filter((o) => typeof o.path == "string" && o.path.trim().length > 0).sort((o, n) => (n.modifiedAt ?? 0) - (o.modifiedAt ?? 0));
+function ce(e) {
+  return (Array.isArray(e.results) && e.results.length ? e.results : e.path ? [{ path: e.path, bytes: e.bytes, modifiedAt: e.modifiedAt, stage: e.stage, sourcePath: e.sourcePath, completedAt: e.completedAt }] : []).filter((n) => typeof n.path == "string" && n.path.trim().length > 0).sort((n, o) => (o.modifiedAt ?? 0) - (n.modifiedAt ?? 0));
 }
-function Mt(e, t) {
-  const o = /_video_(\d+)/i.exec(e.replace(/\\/g, "/"));
-  return o ? Number(o[1]) : t;
+function Bt(e, t) {
+  const n = /_video_(\d+)/i.exec(e.replace(/\\/g, "/"));
+  return n ? Number(n[1]) : t;
 }
-function gr(e) {
+function Ar(e) {
   return e.stage !== "second_pass";
 }
-function Pe({ src: e, alt: t }) {
-  const o = Qe(null), [n, d] = j(!1);
-  return _e(() => {
-    const i = o.current;
-    if (!i) return;
+function Me({ src: e, alt: t }) {
+  const n = tt(null), [o, a] = I(!1);
+  return ke(() => {
+    const l = n.current;
+    if (!l) return;
     if (!("IntersectionObserver" in window)) {
-      d(!0);
+      a(!0);
       return;
     }
-    const a = new IntersectionObserver((p) => {
-      d(p.some((b) => b.isIntersecting));
+    const i = new IntersectionObserver((c) => {
+      a(c.some((m) => m.isIntersecting));
     }, { rootMargin: "160px" });
-    return a.observe(i), () => a.disconnect();
-  }, []), /* @__PURE__ */ r("div", { class: "td-result-thumb", ref: o, children: n ? /* @__PURE__ */ r("video", { src: e, "aria-label": t, muted: !0, playsInline: !0, preload: "metadata", onLoadedMetadata: (i) => {
-    const a = i.currentTarget;
-    Number.isFinite(a.duration) && a.duration > 0.02 && (a.currentTime = Math.min(0.25, Math.max(0, a.duration - 0.05)));
+    return i.observe(l), () => i.disconnect();
+  }, []), /* @__PURE__ */ r("div", { class: "td-result-thumb", ref: n, children: o ? /* @__PURE__ */ r("video", { src: e, "aria-label": t, muted: !0, playsInline: !0, preload: "metadata", onLoadedMetadata: (l) => {
+    const i = l.currentTarget;
+    Number.isFinite(i.duration) && i.duration > 0.02 && (i.currentTime = Math.min(0.25, Math.max(0, i.duration - 0.05)));
   } }) : /* @__PURE__ */ r("span", { children: "…" }) });
 }
-function re(e, t) {
-  const o = e.trim().replace(/\\/g, "/").replace(/^\.\//, "");
-  if (!o || o.startsWith("/") || /^[A-Za-z]:\//.test(o)) return null;
-  const n = o.split("/").filter(Boolean), d = n.pop();
-  if (!d || n.some((a) => a === "..")) return null;
-  const i = new URLSearchParams({ filename: d, type: t });
-  return n.length && i.set("subfolder", n.join("/")), `/view?${i.toString()}`;
+function Vt(e, t) {
+  const n = e.trim().replace(/\\/g, "/").replace(/^\.\//, "");
+  if (!n || n.startsWith("/") || /^[A-Za-z]:\//.test(n)) return null;
+  const o = n.split("/").filter(Boolean), a = o.pop();
+  if (!a || o.some((i) => i === "..")) return null;
+  const l = new URLSearchParams({ filename: a, type: t });
+  return o.length && l.set("subfolder", o.join("/")), `/view?${l.toString()}`;
 }
-function br(e) {
-  return re(e, "input");
+function Er(e) {
+  return Vt(e, "input");
 }
-function se(e) {
-  return e.trim().replace(/\\/g, "/").split("/").filter(Boolean).pop() ?? "";
+function xe(e) {
+  return e ? e.url && /^https:\/\//i.test(e.url) ? e.url : Vt(e.path, "output") : null;
 }
-function ut({ asset: e, compact: t = !1 }) {
-  const o = br(e.path), n = `td-media-preview ${t ? "compact" : ""}`;
-  return o ? e.kind === "image" ? /* @__PURE__ */ r("div", { class: n, children: /* @__PURE__ */ r("img", { src: o, alt: e.alias, loading: "lazy" }) }) : e.kind === "video" ? /* @__PURE__ */ r("div", { class: n, children: /* @__PURE__ */ r("video", { src: o, controls: !0, preload: "metadata", playsInline: !0 }) }) : /* @__PURE__ */ r("div", { class: n, children: /* @__PURE__ */ r("audio", { src: o, controls: !0, preload: "metadata" }) }) : e.path ? /* @__PURE__ */ r("div", { class: `${n} unavailable`, children: "该路径无法在浏览器中预览 / Preview unavailable" }) : /* @__PURE__ */ r("div", { class: `${n} empty`, children: "尚未选择素材 / No media selected" });
+function oe(e) {
+  return (e.trim().replace(/\\/g, "/").split("/").filter(Boolean).pop() ?? "").split(/[?#]/, 1)[0];
 }
-function Ft(e) {
+function vt({ asset: e, compact: t = !1 }) {
+  const n = Er(e.path), o = `td-media-preview ${t ? "compact" : ""}`;
+  return n ? e.kind === "image" ? /* @__PURE__ */ r("div", { class: o, children: /* @__PURE__ */ r("img", { src: n, alt: e.alias, loading: "lazy" }) }) : e.kind === "video" ? /* @__PURE__ */ r("div", { class: o, children: /* @__PURE__ */ r("video", { src: n, controls: !0, preload: "metadata", playsInline: !0 }) }) : /* @__PURE__ */ r("div", { class: o, children: /* @__PURE__ */ r("audio", { src: n, controls: !0, preload: "metadata" }) }) : e.path ? /* @__PURE__ */ r("div", { class: `${o} unavailable`, children: "该路径无法在浏览器中预览 / Preview unavailable" }) : /* @__PURE__ */ r("div", { class: `${o} empty`, children: "尚未选择素材 / No media selected" });
+}
+function Kt(e) {
   let t = 0;
-  return e.shots.map((o, n) => {
-    const d = {
-      key: `${n}:${o.id}`,
-      shot: o,
-      sourceIndex: n,
-      activeIndex: o.enabled ? t : -1
+  return e.shots.map((n, o) => {
+    const a = {
+      key: `${o}:${n.id}`,
+      shot: n,
+      sourceIndex: o,
+      activeIndex: n.enabled ? t : -1
     };
-    return o.enabled && (t += 1), d;
+    return n.enabled && (t += 1), a;
   });
 }
-function _r(e, t, o) {
-  return e.filter((n) => n.shot.enabled && t[n.key]).map((n) => ({
-    shotId: n.shot.id,
-    activeIndex: n.activeIndex,
-    path: o[n.key] ?? ""
+function Rr(e, t, n) {
+  return e.filter((o) => o.shot.enabled && t[o.key]).map((o) => ({
+    shotId: o.shot.id,
+    activeIndex: o.activeIndex,
+    path: n[o.key] ?? ""
   }));
 }
-function xr(e, t, o) {
-  const n = {};
-  return e.forEach((d) => {
-    const i = d.sourceIndex + 1;
-    n[d.key] = d.shot.enabled && i >= t && i <= o;
-  }), n;
+function Pr(e, t, n) {
+  const o = {};
+  return e.forEach((a) => {
+    const l = a.sourceIndex + 1;
+    o[a.key] = a.shot.enabled && l >= t && l <= n;
+  }), o;
 }
-function vr(e, t, o) {
-  return `/theodore-director/v1/generated-video?${new URLSearchParams({ projectName: e.project.name, runId: e.project.runId, shotId: t, activeIndex: String(o) }).toString()}`;
+const jr = /* @__PURE__ */ new Set(["mp4", "mov", "mkv", "webm", "avi"]);
+function pe(e, t = window.location.hostname) {
+  if (e.mode !== "auto") return e.mode;
+  const n = t.toLowerCase();
+  return n === "runninghub.cn" || n.endsWith(".runninghub.cn") ? "runninghub" : "local";
 }
-function yr(e, t) {
+function qt(e) {
+  const t = [], n = /* @__PURE__ */ new Set();
+  return e.split(/\r?\n|,/).map((o) => o.trim()).filter(Boolean).forEach((o) => {
+    const a = o.indexOf("="), l = a >= 0 ? o.slice(0, a).trim() : "workflow", i = (a >= 0 ? o.slice(a + 1) : o).trim();
+    if (!i || !/^[A-Za-z0-9_-]+$/.test(i)) return;
+    const c = l.toLowerCase() === "merged" ? "merged" : l || "workflow", m = `${c}\0${i}`;
+    n.has(m) || (n.add(m), t.push({ target: c, taskId: i }));
+  }), t;
+}
+function Wt(e, t = window.location) {
+  const n = t.hostname.toLowerCase(), o = n === "runninghub.cn" || n.endsWith(".runninghub.cn") ? t.origin : "https://www.runninghub.cn";
+  return new URL(e, o).toString();
+}
+async function ze(e) {
+  const t = await e.json();
+  if (!e.ok) throw new Error(t.error || t.message || `HTTP ${e.status}`);
+  return t;
+}
+async function Nr(e, t, n, o) {
+  var m;
+  if (pe(e) === "local") {
+    const p = new FormData();
+    p.append("projectName", t), p.append("kind", n), p.append("file", o);
+    const u = await fetch("/theodore-director/v1/assets", { method: "POST", body: p }), _ = await ze(u);
+    if (!_.path) throw new Error("上传响应缺少 path");
+    return _.path;
+  }
+  const a = e.apiKey.trim();
+  if (!a) throw new Error("请先在项目设置中填写 RunningHub API Key（密钥只保存在当前页面）");
+  const l = new FormData();
+  l.append("file", o);
+  const i = await fetch(Wt("/openapi/v2/media/upload/binary"), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${a}` },
+    body: l
+  }), c = await ze(i);
+  if (c.code !== 0 || !((m = c.data) != null && m.fileName)) throw new Error(c.message || "RunningHub 上传响应缺少 fileName");
+  return c.data.fileName;
+}
+async function Jt(e, t) {
+  const n = await fetch(Wt("/openapi/v2/query"), {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${e}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ taskId: t })
+  });
+  return ze(n);
+}
+function Gt(e, t) {
+  return {
+    path: t.url,
+    url: t.url,
+    provider: "runninghub",
+    taskId: e,
+    stage: "legacy_unknown"
+  };
+}
+function Qt(e) {
+  return (e.results ?? []).filter((t) => {
+    const n = t.outputType.toLowerCase().replace(/^\./, "");
+    return jr.has(n) && /^https:\/\//i.test(t.url);
+  });
+}
+function Lr(e, t, n) {
+  const o = t.shots.filter((i) => i.enabled), a = o.findIndex((i) => i.id === n.id);
+  if (a < 0 || !o.length) return [];
+  const l = e.filter((i) => decodeURIComponent(i.url).includes(n.id));
+  return l.length ? l : o.length === 1 ? e : e.length >= o.length ? e.filter((i, c) => c % o.length === a) : [];
+}
+async function Mr(e, t, n) {
+  const o = new URLSearchParams({
+    projectName: e.project.name,
+    runId: e.project.runId,
+    shotId: t.id,
+    activeIndex: String(n)
+  }), a = await fetch(`/theodore-director/v1/generated-video?${o.toString()}`);
+  return ze(a);
+}
+async function rt(e, t, n, o) {
+  if (pe(e) === "local") return Mr(t, n, o);
+  const a = e.apiKey.trim();
+  if (!a) return { found: !1, results: [], error: "请先填写 RunningHub API Key" };
+  const l = qt(e.taskMappings).filter((p) => p.target === "workflow" || p.target === n.id);
+  if (!l.length) return { found: !1, results: [], error: `请添加工作流 taskId，或填写 ${n.id}=taskId` };
+  const i = [], c = [];
+  for (const p of l) {
+    const u = await Jt(a, p.taskId), _ = String(u.status ?? "").toUpperCase();
+    if (_ && _ !== "SUCCESS") {
+      ["FAILED", "ERROR", "CANCELED", "CANCELLED"].includes(_) && c.push(u.errorMessage || `${p.taskId}: ${_}`);
+      continue;
+    }
+    const s = Qt(u), v = p.target === n.id ? s : Lr(s, t, n);
+    i.push(...v.map((y) => Gt(p.taskId, y)));
+  }
+  const m = [...new Map(i.map((p) => [p.url || p.path, p])).values()];
+  return { found: m.length > 0, count: m.length, results: m, error: m.length ? void 0 : c.join("；") || void 0 };
+}
+async function Dr(e, t) {
+  if (pe(e) === "local") {
+    const i = new URLSearchParams({ projectName: t.project.name, runId: t.project.runId }), c = await fetch(`/theodore-director/v1/postprocess/merged-videos?${i.toString()}`);
+    return ze(c);
+  }
+  const n = e.apiKey.trim();
+  if (!n) return { found: !1, results: [], error: "请先填写 RunningHub API Key" };
+  const o = qt(e.taskMappings).filter((i) => i.target === "merged"), a = [];
+  for (const i of o) {
+    const c = await Jt(n, i.taskId);
+    a.push(...Qt(c).map((m) => Gt(i.taskId, m)));
+  }
+  const l = [...new Map(a.map((i) => [i.url || i.path, i])).values()];
+  return { found: l.length > 0, count: l.length, results: l };
+}
+function Fr(e, t) {
   return e === "second_pass" ? t === "zh" ? "二采" : "2nd pass" : e === "first_pass" ? t === "zh" ? "一采" : "1st pass" : t === "zh" ? "旧结果" : "Legacy";
 }
-function wr({ plan: e, language: t, queueSecondPass: o }) {
-  const n = fe(() => Ft(e), [e]), [d, i] = j({}), [a, p] = j({}), [b, c] = j(null), [m, h] = j(0);
-  _e(() => {
-    let f = !1;
-    const w = {};
-    return n.forEach(($) => {
-      w[$.key] = { loading: !0, response: { found: !1, results: [] } };
-    }), i(w), n.forEach(($) => {
-      fetch(vr(e, $.shot.id, $.activeIndex)).then(async (y) => {
-        const C = await y.json();
-        if (!y.ok) throw new Error(C.error || `HTTP ${y.status}`);
-        f || i((k) => ({ ...k, [$.key]: { loading: !1, response: C } }));
-      }).catch((y) => {
-        f || i((C) => ({ ...C, [$.key]: { loading: !1, response: { found: !1, results: [], error: String(y) } } }));
+function Or({ plan: e, language: t, runtime: n, queueSecondPass: o }) {
+  const a = _e(() => Kt(e), [e]), [l, i] = I({}), [c, m] = I({}), [p, u] = I(null), [_, s] = I(0);
+  ke(() => {
+    let y = !1;
+    const S = {};
+    return a.forEach((z) => {
+      S[z.key] = { loading: !0, response: { found: !1, results: [] } };
+    }), i(S), a.forEach((z) => {
+      rt(n, e, z.shot, z.activeIndex).then((w) => {
+        y || i((C) => ({ ...C, [z.key]: { loading: !1, response: w } }));
+      }).catch((w) => {
+        y || i((C) => ({ ...C, [z.key]: { loading: !1, response: { found: !1, results: [], error: String(w) } } }));
       });
     }), () => {
-      f = !0;
+      y = !0;
     };
-  }, [e.project.name, e.project.runId, e.shots.map((f) => f.id).join("|"), m]);
-  const l = async (f, w) => {
+  }, [e.project.name, e.project.runId, e.shots.map((y) => y.id).join("|"), _, n.mode, n.apiKey, n.taskMappings]);
+  const v = async (y, S) => {
     if (o) {
-      p(($) => ({ ...$, [w]: { state: "queued" } }));
+      m((z) => ({ ...z, [S]: { state: "queued" } }));
       try {
         await o({
           plan: e,
-          shotId: f,
-          sourcePath: w,
+          shotId: y,
+          sourcePath: S,
           requestId: `td2_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`
-        }), p(($) => ({ ...$, [w]: { state: "done" } })), h(($) => $ + 1);
-      } catch ($) {
-        p((y) => ({ ...y, [w]: { state: "error", message: String($ instanceof Error ? $.message : $) } }));
+        }), m((z) => ({ ...z, [S]: { state: "done" } })), s((z) => z + 1);
+      } catch (z) {
+        m((w) => ({ ...w, [S]: { state: "error", message: String(z instanceof Error ? z.message : z) } }));
       }
     }
   };
@@ -771,190 +889,190 @@ function wr({ plan: e, language: t, queueSecondPass: o }) {
         /* @__PURE__ */ r("h2", { children: t === "zh" ? "单独二采" : "Standalone second pass" }),
         /* @__PURE__ */ r("p", { children: t === "zh" ? "从满意的一采抽卡直接执行二采，不重跑一采，也不启动 Impact 循环。" : "Refine a selected first-pass result without rerunning the first pass or the Impact loop." })
       ] }),
-      /* @__PURE__ */ r("div", { class: "td-post-actions", children: /* @__PURE__ */ r("button", { onClick: () => h((f) => f + 1), children: [
+      /* @__PURE__ */ r("div", { class: "td-post-actions", children: /* @__PURE__ */ r("button", { onClick: () => s((y) => y + 1), children: [
         "↻ ",
         t === "zh" ? "刷新结果" : "Refresh"
       ] }) })
     ] }),
     !o && /* @__PURE__ */ r("div", { class: "td-post-warning", children: t === "zh" ? "当前工作流缺少后处理二采支流，请重新载入仓库中的 V7 导播台示例工作流。" : "This workflow does not contain the standalone second-pass branch. Reload the V7 example workflow from the repository." }),
-    /* @__PURE__ */ r("div", { class: "td-post-shot-list", children: n.map((f) => {
-      const w = d[f.key], $ = he((w == null ? void 0 : w.response) ?? { results: [] });
+    /* @__PURE__ */ r("div", { class: "td-post-shot-list", children: a.map((y) => {
+      const S = l[y.key], z = ce((S == null ? void 0 : S.response) ?? { results: [] });
       return /* @__PURE__ */ r("article", { class: "td-post-shot", children: [
         /* @__PURE__ */ r("header", { children: [
           /* @__PURE__ */ r("span", { children: [
-            /* @__PURE__ */ r("strong", { children: f.shot.id }),
-            /* @__PURE__ */ r("em", { children: f.shot.title })
+            /* @__PURE__ */ r("strong", { children: y.shot.id }),
+            /* @__PURE__ */ r("em", { children: y.shot.title })
           ] }),
           /* @__PURE__ */ r("span", { children: [
-            f.shot.durationSeconds,
+            y.shot.durationSeconds,
             "s"
           ] })
         ] }),
-        !f.shot.enabled && /* @__PURE__ */ r("div", { class: "td-post-shot-disabled-note", children: t === "zh" ? "镜头已禁用，但仍可对历史一采结果进行后处理。" : "This shot is disabled, but its historical first-pass results remain available." }),
-        w != null && w.loading ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading results…" }) : w != null && w.response.error ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : $.length ? /* @__PURE__ */ r("div", { class: "td-post-result-list", children: $.map((y) => {
-          const C = re(y.path, "output"), k = a[y.path], U = gr(y);
+        !y.shot.enabled && /* @__PURE__ */ r("div", { class: "td-post-shot-disabled-note", children: t === "zh" ? "镜头已禁用，但仍可对历史一采结果进行后处理。" : "This shot is disabled, but its historical first-pass results remain available." }),
+        S != null && S.loading ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading results…" }) : S != null && S.response.error ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : z.length ? /* @__PURE__ */ r("div", { class: "td-post-result-list", children: z.map((w) => {
+          const C = xe(w), A = c[w.path], b = Ar(w);
           return /* @__PURE__ */ r("div", { class: "td-second-pass-result", children: [
-            /* @__PURE__ */ r("button", { class: "td-post-result-choice", onClick: () => C && c({ path: y.path, title: `${f.shot.id} · ${f.shot.title}` }), children: [
-              C ? /* @__PURE__ */ r(Pe, { src: C, alt: se(y.path) }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: "×" }),
+            /* @__PURE__ */ r("button", { class: "td-post-result-choice", onClick: () => C && u({ path: C, title: `${y.shot.id} · ${y.shot.title}` }), children: [
+              C ? /* @__PURE__ */ r(Me, { src: C, alt: oe(w.path) }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: "×" }),
               /* @__PURE__ */ r("span", { children: [
                 /* @__PURE__ */ r("strong", { children: [
-                  yr(y.stage, t),
-                  (y.stage === "legacy_unknown" || !y.stage) && /* @__PURE__ */ r("em", { children: t === "zh" ? "兼容" : "Compatible" })
+                  Fr(w.stage, t),
+                  (w.stage === "legacy_unknown" || !w.stage) && /* @__PURE__ */ r("em", { children: t === "zh" ? "兼容" : "Compatible" })
                 ] }),
-                /* @__PURE__ */ r("span", { title: y.path, children: se(y.path) }),
-                /* @__PURE__ */ r("small", { children: y.bytes ? `${(y.bytes / 1024 / 1024).toFixed(1)} MB` : "" })
+                /* @__PURE__ */ r("span", { title: w.path, children: oe(w.path) }),
+                /* @__PURE__ */ r("small", { children: w.bytes ? `${(w.bytes / 1024 / 1024).toFixed(1)} MB` : "" })
               ] })
             ] }),
-            /* @__PURE__ */ r("button", { class: "primary td-second-pass-run", disabled: !o || !U || (k == null ? void 0 : k.state) === "queued", onClick: () => void l(f.shot.id, y.path), children: U ? (k == null ? void 0 : k.state) === "queued" ? t === "zh" ? "排队/执行中…" : "Queued/running…" : (k == null ? void 0 : k.state) === "done" ? t === "zh" ? "二采完成" : "Completed" : t === "zh" ? "进行二采" : "Run second pass" : t === "zh" ? "已是二采" : "Already refined" }),
-            (k == null ? void 0 : k.state) === "error" && /* @__PURE__ */ r("div", { class: "td-second-pass-error", children: k.message })
-          ] }, y.path);
+            /* @__PURE__ */ r("button", { class: "primary td-second-pass-run", disabled: !o || !b || (A == null ? void 0 : A.state) === "queued", onClick: () => void v(y.shot.id, w.path), children: b ? (A == null ? void 0 : A.state) === "queued" ? t === "zh" ? "排队/执行中…" : "Queued/running…" : (A == null ? void 0 : A.state) === "done" ? t === "zh" ? "二采完成" : "Completed" : t === "zh" ? "进行二采" : "Run second pass" : t === "zh" ? "已是二采" : "Already refined" }),
+            (A == null ? void 0 : A.state) === "error" && /* @__PURE__ */ r("div", { class: "td-second-pass-error", children: A.message })
+          ] }, w.path);
         }) }) : /* @__PURE__ */ r("div", { class: "td-post-shot-empty", children: t === "zh" ? "没有可用的一采结果" : "No first-pass result available" })
-      ] }, f.key);
+      ] }, y.key);
     }) }),
-    b && re(b.path, "output") && /* @__PURE__ */ r("div", { class: "td-post-preview-overlay", role: "presentation", onClick: () => c(null), children: /* @__PURE__ */ r("section", { role: "dialog", "aria-modal": "true", onClick: (f) => f.stopPropagation(), children: [
+    p && /* @__PURE__ */ r("div", { class: "td-post-preview-overlay", role: "presentation", onClick: () => u(null), children: /* @__PURE__ */ r("section", { role: "dialog", "aria-modal": "true", onClick: (y) => y.stopPropagation(), children: [
       /* @__PURE__ */ r("header", { children: [
-        /* @__PURE__ */ r("strong", { children: b.title }),
-        /* @__PURE__ */ r("button", { onClick: () => c(null), children: "×" })
+        /* @__PURE__ */ r("strong", { children: p.title }),
+        /* @__PURE__ */ r("button", { onClick: () => u(null), children: "×" })
       ] }),
-      /* @__PURE__ */ r("video", { src: re(b.path, "output") ?? "", controls: !0, autoPlay: !0, preload: "metadata", playsInline: !0 }),
-      /* @__PURE__ */ r("p", { children: se(b.path) })
+      /* @__PURE__ */ r("video", { src: p.path, controls: !0, autoPlay: !0, preload: "metadata", playsInline: !0 }),
+      /* @__PURE__ */ r("p", { children: oe(p.path) })
     ] }) })
   ] });
 }
-async function mt(e) {
-  const t = await fetch(e), o = await t.json();
-  if (!t.ok) throw new Error(o.error || `HTTP ${t.status}`);
-  return o;
-}
-function kr(e, t, o) {
-  return `/theodore-director/v1/generated-video?${new URLSearchParams({
-    projectName: e.project.name,
-    runId: e.project.runId,
-    shotId: t,
-    activeIndex: String(o)
-  }).toString()}`;
-}
-function zr(e) {
-  return `/theodore-director/v1/postprocess/merged-videos?${new URLSearchParams({ projectName: e.project.name, runId: e.project.runId }).toString()}`;
-}
-function Sr({ plan: e, language: t, queueSecondPass: o }) {
-  const [n, d] = j("merge");
+function Ur({ plan: e, language: t, runtime: n, queueSecondPass: o, queueMerge: a }) {
+  const [l, i] = I("merge");
   return /* @__PURE__ */ r("section", { class: "td-postprocess-shell", children: [
     /* @__PURE__ */ r("div", { class: "td-post-mode-tabs", role: "tablist", children: [
-      /* @__PURE__ */ r("button", { class: n === "merge" ? "active" : "", role: "tab", "aria-selected": n === "merge", onClick: () => d("merge"), children: t === "zh" ? "合并视频" : "Merge videos" }),
-      /* @__PURE__ */ r("button", { class: n === "second-pass" ? "active" : "", role: "tab", "aria-selected": n === "second-pass", onClick: () => d("second-pass"), children: t === "zh" ? "单独二采" : "Standalone second pass" })
+      /* @__PURE__ */ r("button", { class: l === "merge" ? "active" : "", role: "tab", "aria-selected": l === "merge", onClick: () => i("merge"), children: t === "zh" ? "合并视频" : "Merge videos" }),
+      /* @__PURE__ */ r("button", { class: l === "second-pass" ? "active" : "", role: "tab", "aria-selected": l === "second-pass", onClick: () => i("second-pass"), children: t === "zh" ? "单独二采" : "Standalone second pass" })
     ] }),
-    n === "merge" ? /* @__PURE__ */ r($r, { plan: e, language: t }) : /* @__PURE__ */ r(wr, { plan: e, language: t, queueSecondPass: o })
+    l === "merge" ? /* @__PURE__ */ r(Hr, { plan: e, language: t, runtime: n, queueMerge: a }) : /* @__PURE__ */ r(Or, { plan: e, language: t, runtime: n, queueSecondPass: o })
   ] });
 }
-function $r({ plan: e, language: t }) {
-  const o = fe(() => Ft(e), [e]), [n, d] = j({}), [i, a] = j({}), [p, b] = j({}), [c, m] = j(null), [h, l] = j(!1), [f, w] = j(""), [$, y] = j(""), [C, k] = j({ found: !1, results: [] }), [U, x] = j(!1), [I, R] = j(!1), [J, G] = j(""), [_, A] = j(0), [D, P] = j("1"), [Q, K] = j(String(o.length || 1)), V = o.filter((g) => g.shot.enabled), ne = V.length > 0 && V.every((g) => i[g.key]), W = _r(o, i, p), Y = W.filter((g) => !g.path), xe = o.some((g) => {
-    var T;
-    return i[g.key] && ((T = n[g.key]) == null ? void 0 : T.loading);
-  }), ve = o.reduce(
-    (g, T) => g + (T.shot.enabled && i[T.key] ? T.shot.durationSeconds : 0),
+function Hr({ plan: e, language: t, runtime: n, queueMerge: o }) {
+  const a = _e(() => Kt(e), [e]), [l, i] = I({}), [c, m] = I({}), [p, u] = I({}), [_, s] = I(null), [v, y] = I(!1), [S, z] = I(""), [w, C] = I(""), [A, b] = I({ found: !1, results: [] }), [T, j] = I(!1), [D, M] = I(!1), [g, E] = I(""), [N, R] = I(0), [J, X] = I("1"), [K, he] = I(String(a.length || 1)), ie = a.filter((h) => h.shot.enabled), Q = ie.length > 0 && ie.every((h) => c[h.key]), G = Rr(a, c, p), se = G.filter((h) => !h.path), Oe = a.some((h) => {
+    var k;
+    return c[h.key] && ((k = l[h.key]) == null ? void 0 : k.loading);
+  }), ve = a.reduce(
+    (h, k) => h + (k.shot.enabled && c[k.key] ? k.shot.durationSeconds : 0),
     0
-  ), ee = fe(() => he(C), [C]), te = ee.find((g) => g.path === J) ?? ee[0];
-  _e(() => {
-    let g = !1;
-    const T = {}, F = {};
-    return o.forEach((E) => {
-      T[E.key] = E.shot.enabled, F[E.key] = { loading: !0, response: { found: !1, results: [] } };
-    }), a((E) => {
+  ), Z = _e(() => ce(A), [A]), re = Z.find((h) => h.path === g) ?? Z[0];
+  ke(() => {
+    let h = !1;
+    const k = {}, B = {};
+    return a.forEach((U) => {
+      k[U.key] = U.shot.enabled, B[U.key] = { loading: !0, response: { found: !1, results: [] } };
+    }), m((U) => {
       const O = {};
-      return o.forEach((S) => {
-        O[S.key] = S.shot.enabled ? E[S.key] ?? T[S.key] : !1;
+      return a.forEach((H) => {
+        O[H.key] = H.shot.enabled ? U[H.key] ?? k[H.key] : !1;
       }), O;
-    }), d(F), w(""), o.forEach((E) => {
-      mt(kr(e, E.shot.id, E.activeIndex)).then((O) => {
-        if (g) return;
-        const S = he(O);
-        d((Z) => ({ ...Z, [E.key]: { loading: !1, response: O } })), b((Z) => {
-          var le;
+    }), i(B), z(""), a.forEach((U) => {
+      rt(n, e, U.shot, U.activeIndex).then((O) => {
+        if (h) return;
+        const H = ce(O);
+        i((q) => ({ ...q, [U.key]: { loading: !1, response: O } })), u((q) => {
+          var de;
           return {
-            ...Z,
-            [E.key]: S.some((ce) => ce.path === Z[E.key]) ? Z[E.key] : ((le = S[0]) == null ? void 0 : le.path) ?? ""
+            ...q,
+            [U.key]: H.some((ae) => ae.path === q[U.key]) ? q[U.key] : ((de = H[0]) == null ? void 0 : de.path) ?? ""
           };
         });
       }).catch((O) => {
-        g || d((S) => ({
-          ...S,
-          [E.key]: { loading: !1, response: { found: !1, results: [], error: String(O) } }
+        h || i((H) => ({
+          ...H,
+          [U.key]: { loading: !1, response: { found: !1, results: [], error: String(O) } }
         }));
       });
     }), () => {
-      g = !0;
+      h = !0;
     };
-  }, [e.project.name, e.project.runId, e.shots.map((g) => `${g.id}:${g.enabled}`).join("|"), _]), _e(() => {
-    let g = !1;
-    return x(!0), mt(zr(e)).then((T) => {
-      if (g) return;
-      const F = he(T);
-      k(T), G((E) => {
+  }, [e.project.name, e.project.runId, e.shots.map((h) => `${h.id}:${h.enabled}`).join("|"), N, n.mode, n.apiKey, n.taskMappings]), ke(() => {
+    let h = !1;
+    return j(!0), Dr(n, e).then((k) => {
+      if (h) return;
+      const B = ce(k);
+      b(k), E((U) => {
         var O;
-        return F.some((S) => S.path === E) ? E : ((O = F[0]) == null ? void 0 : O.path) ?? "";
+        return B.some((H) => H.path === U) ? U : ((O = B[0]) == null ? void 0 : O.path) ?? "";
       });
-    }).catch((T) => {
-      g || k({ found: !1, results: [], error: String(T) });
+    }).catch((k) => {
+      h || b({ found: !1, results: [], error: String(k) });
     }).finally(() => {
-      g || x(!1);
+      h || j(!1);
     }), () => {
-      g = !0;
+      h = !0;
     };
-  }, [e.project.name, e.project.runId, _]);
-  const ye = () => {
-    const g = !ne;
-    a((T) => {
-      const F = { ...T };
-      return V.forEach((E) => {
-        F[E.key] = g;
-      }), F;
+  }, [e.project.name, e.project.runId, N, n.mode, n.apiKey, n.taskMappings]);
+  const Ue = () => {
+    const h = !Q;
+    m((k) => {
+      const B = { ...k };
+      return ie.forEach((U) => {
+        B[U.key] = h;
+      }), B;
     });
-  }, De = () => {
-    const g = Number(D), T = Number(Q);
-    if (!Number.isInteger(g) || !Number.isInteger(T) || g < 1 || T < g || T > o.length) {
-      window.alert(t === "zh" ? `请输入有效范围：1 ≤ m ≤ n ≤ ${o.length}` : `Enter a valid range: 1 ≤ m ≤ n ≤ ${o.length}`);
+  }, ee = () => {
+    const h = Number(J), k = Number(K);
+    if (!Number.isInteger(h) || !Number.isInteger(k) || h < 1 || k < h || k > a.length) {
+      window.alert(t === "zh" ? `请输入有效范围：1 ≤ m ≤ n ≤ ${a.length}` : `Enter a valid range: 1 ≤ m ≤ n ≤ ${a.length}`);
       return;
     }
-    a(xr(o, g, T));
-  }, L = async () => {
-    if (!W.length) {
+    m(Pr(a, h, k));
+  }, He = async () => {
+    if (!G.length) {
       window.alert(t === "zh" ? "请至少选择一个镜头" : "Select at least one shot.");
       return;
     }
-    if (Y.length) {
-      window.alert(t === "zh" ? `以下已选镜头没有可用结果：${Y.map((g) => g.shotId).join("、")}` : `Selected shots without a result: ${Y.map((g) => g.shotId).join(", ")}`);
+    if (se.length) {
+      window.alert(t === "zh" ? `以下已选镜头没有可用结果：${se.map((h) => h.shotId).join("、")}` : `Selected shots without a result: ${se.map((h) => h.shotId).join(", ")}`);
       return;
     }
-    l(!0), w("");
+    y(!0), z("");
     try {
-      const g = await fetch("/theodore-director/v1/postprocess/merge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectName: e.project.name, runId: e.project.runId, selections: W })
-      }), T = await g.json();
-      if (!g.ok) throw new Error(T.error || `HTTP ${g.status}`);
-      A((F) => F + 1);
-    } catch (g) {
-      w(String(g instanceof Error ? g.message : g));
+      if (o) {
+        const h = await o({
+          projectName: e.project.name,
+          runId: e.project.runId,
+          selections: G,
+          requestId: `tdm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`
+        });
+        h ? (b((k) => ({
+          found: !0,
+          results: [h, ...ce(k).filter((B) => B.path !== h.path)]
+        })), E(h.path)) : R((k) => k + 1);
+      } else if (pe(n) === "local") {
+        const h = await fetch("/theodore-director/v1/postprocess/merge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectName: e.project.name, runId: e.project.runId, selections: G })
+        }), k = await h.json();
+        if (!h.ok) throw new Error(k.error || `HTTP ${h.status}`);
+        R((B) => B + 1);
+      } else
+        throw new Error(t === "zh" ? "当前工作流缺少 RunningHub 合并支流" : "This workflow is missing the RunningHub merge branch");
+    } catch (h) {
+      z(String(h instanceof Error ? h.message : h));
     } finally {
-      l(!1);
+      y(!1);
     }
-  }, B = async () => {
-    R(!0), y("");
-    try {
-      const g = await fetch("/theodore-director/v1/postprocess/open-folder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectName: e.project.name, runId: e.project.runId })
-      }), T = await g.json();
-      if (!g.ok) throw new Error(T.error || `HTTP ${g.status}`);
-    } catch (g) {
-      y(String(g instanceof Error ? g.message : g));
-    } finally {
-      R(!1);
+  }, ue = async () => {
+    if (pe(n) !== "runninghub") {
+      M(!0), C("");
+      try {
+        const h = await fetch("/theodore-director/v1/postprocess/open-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectName: e.project.name, runId: e.project.runId })
+        }), k = await h.json();
+        if (!h.ok) throw new Error(k.error || `HTTP ${h.status}`);
+      } catch (h) {
+        C(String(h instanceof Error ? h.message : h));
+      } finally {
+        M(!1);
+      }
     }
-  }, ae = te != null && te.path ? re(te.path, "output") : null;
+  }, ge = xe(re);
   return /* @__PURE__ */ r("section", { class: "td-postprocess", children: [
     /* @__PURE__ */ r("div", { class: "td-post-header", children: [
       /* @__PURE__ */ r("div", { children: [
@@ -962,118 +1080,118 @@ function $r({ plan: e, language: t }) {
         /* @__PURE__ */ r("p", { children: t === "zh" ? "从每个镜头选择一个结果，按当前分镜顺序进行无损合并。" : "Choose one result per shot and merge them losslessly in storyboard order." })
       ] }),
       /* @__PURE__ */ r("div", { class: "td-post-actions", children: [
-        /* @__PURE__ */ r("button", { disabled: I, onClick: B, children: [
+        pe(n) === "local" && /* @__PURE__ */ r("button", { disabled: D, onClick: ue, children: [
           "📁 ",
-          I ? t === "zh" ? "正在打开…" : "Opening…" : t === "zh" ? "打开结果文件夹" : "Open results folder"
+          D ? t === "zh" ? "正在打开…" : "Opening…" : t === "zh" ? "打开结果文件夹" : "Open results folder"
         ] }),
-        /* @__PURE__ */ r("button", { onClick: () => A((g) => g + 1), children: [
+        /* @__PURE__ */ r("button", { onClick: () => R((h) => h + 1), children: [
           "↻ ",
           t === "zh" ? "刷新结果" : "Refresh"
         ] }),
-        /* @__PURE__ */ r("button", { onClick: ye, children: ne ? t === "zh" ? "全部取消" : "Clear all" : t === "zh" ? "一键全选" : "Select all" })
+        /* @__PURE__ */ r("button", { onClick: Ue, children: Q ? t === "zh" ? "全部取消" : "Clear all" : t === "zh" ? "一键全选" : "Select all" })
       ] })
     ] }),
-    $ && /* @__PURE__ */ r("div", { class: "td-post-error", children: [
+    w && /* @__PURE__ */ r("div", { class: "td-post-error", children: [
       t === "zh" ? "打开结果文件夹失败：" : "Unable to open results folder: ",
-      $
+      w
     ] }),
     /* @__PURE__ */ r("div", { class: "td-post-summary", children: [
-      /* @__PURE__ */ r("span", { children: t === "zh" ? `已选择 ${W.length}/${V.length} 个启用镜头` : `${W.length}/${V.length} enabled shots selected` }),
+      /* @__PURE__ */ r("span", { children: t === "zh" ? `已选择 ${G.length}/${ie.length} 个启用镜头` : `${G.length}/${ie.length} enabled shots selected` }),
       /* @__PURE__ */ r("span", { children: t === "zh" ? `预计时长 ${ve.toFixed(1)} 秒` : `Estimated duration ${ve.toFixed(1)} sec` }),
       /* @__PURE__ */ r("div", { class: "td-post-range", role: "group", "aria-label": t === "zh" ? "合并视频范围" : "Merge video range", children: [
         /* @__PURE__ */ r("span", { children: t === "zh" ? "范围" : "Range" }),
-        /* @__PURE__ */ r("input", { type: "number", min: "1", max: o.length, step: "1", value: D, "aria-label": t === "zh" ? "起始镜头 m" : "Start shot m", onInput: (g) => P(g.currentTarget.value) }),
+        /* @__PURE__ */ r("input", { type: "number", min: "1", max: a.length, step: "1", value: J, "aria-label": t === "zh" ? "起始镜头 m" : "Start shot m", onInput: (h) => X(h.currentTarget.value) }),
         /* @__PURE__ */ r("span", { children: "—" }),
-        /* @__PURE__ */ r("input", { type: "number", min: "1", max: o.length, step: "1", value: Q, "aria-label": t === "zh" ? "结束镜头 n" : "End shot n", onInput: (g) => K(g.currentTarget.value) }),
-        /* @__PURE__ */ r("button", { disabled: !o.length, onClick: De, children: t === "zh" ? "确认范围" : "Apply range" })
+        /* @__PURE__ */ r("input", { type: "number", min: "1", max: a.length, step: "1", value: K, "aria-label": t === "zh" ? "结束镜头 n" : "End shot n", onInput: (h) => he(h.currentTarget.value) }),
+        /* @__PURE__ */ r("button", { disabled: !a.length, onClick: ee, children: t === "zh" ? "确认范围" : "Apply range" })
       ] }),
-      /* @__PURE__ */ r("button", { class: "primary", disabled: h || xe || !W.length || !!Y.length, onClick: L, children: h ? t === "zh" ? "正在合并…" : "Merging…" : t === "zh" ? "合并所选视频" : "Merge selected videos" })
+      /* @__PURE__ */ r("button", { class: "primary", disabled: v || Oe || !G.length || !!se.length, onClick: He, children: v ? t === "zh" ? "正在合并…" : "Merging…" : t === "zh" ? "合并所选视频" : "Merge selected videos" })
     ] }),
-    f && /* @__PURE__ */ r("div", { class: "td-post-error", children: [
+    S && /* @__PURE__ */ r("div", { class: "td-post-error", children: [
       t === "zh" ? "合并失败：" : "Merge failed: ",
-      f
+      S
     ] }),
-    Y.length > 0 && /* @__PURE__ */ r("div", { class: "td-post-warning", children: t === "zh" ? "已选镜头中存在尚未生成视频的镜头。" : "Some selected shots do not have generated videos yet." }),
-    /* @__PURE__ */ r("div", { class: "td-post-shot-list", children: o.map((g) => {
-      const T = n[g.key], F = he((T == null ? void 0 : T.response) ?? { results: [] }), E = !!i[g.key];
-      return /* @__PURE__ */ r("article", { class: `td-post-shot ${E ? "selected" : ""} ${g.shot.enabled ? "" : "disabled"}`, children: [
+    se.length > 0 && /* @__PURE__ */ r("div", { class: "td-post-warning", children: t === "zh" ? "已选镜头中存在尚未生成视频的镜头。" : "Some selected shots do not have generated videos yet." }),
+    /* @__PURE__ */ r("div", { class: "td-post-shot-list", children: a.map((h) => {
+      const k = l[h.key], B = ce((k == null ? void 0 : k.response) ?? { results: [] }), U = !!c[h.key];
+      return /* @__PURE__ */ r("article", { class: `td-post-shot ${U ? "selected" : ""} ${h.shot.enabled ? "" : "disabled"}`, children: [
         /* @__PURE__ */ r("header", { children: [
           /* @__PURE__ */ r("label", { children: [
-            /* @__PURE__ */ r("input", { type: "checkbox", checked: E, disabled: !g.shot.enabled, onChange: (O) => a((S) => ({ ...S, [g.key]: O.currentTarget.checked })) }),
+            /* @__PURE__ */ r("input", { type: "checkbox", checked: U, disabled: !h.shot.enabled, onChange: (O) => m((H) => ({ ...H, [h.key]: O.currentTarget.checked })) }),
             /* @__PURE__ */ r("span", { children: [
-              /* @__PURE__ */ r("strong", { children: g.shot.id }),
-              /* @__PURE__ */ r("em", { children: g.shot.title })
+              /* @__PURE__ */ r("strong", { children: h.shot.id }),
+              /* @__PURE__ */ r("em", { children: h.shot.title })
             ] })
           ] }),
           /* @__PURE__ */ r("span", { children: [
-            g.shot.durationSeconds,
+            h.shot.durationSeconds,
             "s"
           ] })
         ] }),
-        !g.shot.enabled && /* @__PURE__ */ r("div", { class: "td-post-shot-disabled-note", children: t === "zh" ? "该镜头当前已禁用：历史结果可以预览，但不能参加合并。" : "This shot is disabled: historical results can be previewed but cannot be merged." }),
-        T != null && T.loading ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading generated results…" }) : T != null && T.response.error ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : F.length ? /* @__PURE__ */ r("div", { class: "td-post-result-list", children: F.map((O, S) => {
-          const Z = re(O.path, "output"), le = p[g.key] === O.path, ce = Mt(O.path, F.length - S);
-          return /* @__PURE__ */ r("div", { class: `td-post-result ${le ? "selected" : ""}`, children: [
-            /* @__PURE__ */ r("button", { class: "td-post-result-choice", role: "radio", "aria-checked": le, onClick: () => b((Le) => ({ ...Le, [g.key]: O.path })), children: [
-              Z ? /* @__PURE__ */ r(Pe, { src: Z, alt: `${g.shot.title} ${t === "zh" ? "结果" : "result"} ${ce}` }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: "×" }),
+        !h.shot.enabled && /* @__PURE__ */ r("div", { class: "td-post-shot-disabled-note", children: t === "zh" ? "该镜头当前已禁用：历史结果可以预览，但不能参加合并。" : "This shot is disabled: historical results can be previewed but cannot be merged." }),
+        k != null && k.loading ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading generated results…" }) : k != null && k.response.error ? /* @__PURE__ */ r("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : B.length ? /* @__PURE__ */ r("div", { class: "td-post-result-list", children: B.map((O, H) => {
+          const q = xe(O), de = p[h.key] === O.path, ae = Bt(O.path, B.length - H);
+          return /* @__PURE__ */ r("div", { class: `td-post-result ${de ? "selected" : ""}`, children: [
+            /* @__PURE__ */ r("button", { class: "td-post-result-choice", role: "radio", "aria-checked": de, onClick: () => u(($e) => ({ ...$e, [h.key]: O.path })), children: [
+              q ? /* @__PURE__ */ r(Me, { src: q, alt: `${h.shot.title} ${t === "zh" ? "结果" : "result"} ${ae}` }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: "×" }),
               /* @__PURE__ */ r("span", { children: [
                 /* @__PURE__ */ r("strong", { children: [
-                  t === "zh" ? `结果 ${ce}` : `Result ${ce}`,
-                  S === 0 && /* @__PURE__ */ r("em", { children: t === "zh" ? "最新" : "Latest" })
+                  t === "zh" ? `结果 ${ae}` : `Result ${ae}`,
+                  H === 0 && /* @__PURE__ */ r("em", { children: t === "zh" ? "最新" : "Latest" })
                 ] }),
-                /* @__PURE__ */ r("span", { title: O.path, children: se(O.path) }),
+                /* @__PURE__ */ r("span", { title: O.path, children: oe(O.path) }),
                 /* @__PURE__ */ r("small", { children: O.bytes ? `${(O.bytes / 1024 / 1024).toFixed(1)} MB` : "" })
               ] })
             ] }),
-            /* @__PURE__ */ r("button", { class: "td-post-result-play", disabled: !Z, title: t === "zh" ? "播放预览" : "Play preview", onClick: () => Z && m({ path: O.path, title: `${g.shot.id} · ${g.shot.title}` }), children: "▶" })
+            /* @__PURE__ */ r("button", { class: "td-post-result-play", disabled: !q, title: t === "zh" ? "播放预览" : "Play preview", onClick: () => q && s({ path: q, title: `${h.shot.id} · ${h.shot.title}` }), children: "▶" })
           ] }, O.path);
         }) }) : /* @__PURE__ */ r("div", { class: "td-post-shot-empty", children: t === "zh" ? "未找到这个镜头的生成结果" : "No generated result found for this shot" })
-      ] }, g.key);
+      ] }, h.key);
     }) }),
     /* @__PURE__ */ r("section", { class: "td-post-merged", children: [
       /* @__PURE__ */ r("header", { children: /* @__PURE__ */ r("div", { children: [
         /* @__PURE__ */ r("h2", { children: t === "zh" ? "合并结果" : "Merged results" }),
-        /* @__PURE__ */ r("span", { class: `td-result-state ${ee.length ? "found" : ""}`, children: U ? t === "zh" ? "查询中" : "Checking" : t === "zh" ? `${ee.length} 个结果` : `${ee.length} results` })
+        /* @__PURE__ */ r("span", { class: `td-result-state ${Z.length ? "found" : ""}`, children: T ? t === "zh" ? "查询中" : "Checking" : t === "zh" ? `${Z.length} 个结果` : `${Z.length} results` })
       ] }) }),
-      U ? /* @__PURE__ */ r("div", { class: "td-result-empty", children: t === "zh" ? "正在查询合并结果…" : "Loading merged results…" }) : C.error ? /* @__PURE__ */ r("div", { class: "td-result-empty errors", children: t === "zh" ? "无法查询合并结果" : "Unable to query merged results" }) : te && ae ? /* @__PURE__ */ r("div", { class: "td-generated-results", children: [
+      T ? /* @__PURE__ */ r("div", { class: "td-result-empty", children: t === "zh" ? "正在查询合并结果…" : "Loading merged results…" }) : A.error ? /* @__PURE__ */ r("div", { class: "td-result-empty errors", children: t === "zh" ? "无法查询合并结果" : "Unable to query merged results" }) : re && ge ? /* @__PURE__ */ r("div", { class: "td-generated-results", children: [
         /* @__PURE__ */ r("div", { class: "td-generated-video", children: [
-          /* @__PURE__ */ r("video", { src: ae, controls: !0, preload: "metadata", playsInline: !0 }, te.path),
-          /* @__PURE__ */ r("div", { class: "td-generated-meta", title: te.path, children: te.path })
+          /* @__PURE__ */ r("video", { src: ge, controls: !0, preload: "metadata", playsInline: !0 }, re.path),
+          /* @__PURE__ */ r("div", { class: "td-generated-meta", title: re.path, children: re.path })
         ] }),
-        /* @__PURE__ */ r("div", { class: "td-result-list", children: ee.map((g, T) => {
-          const F = re(g.path, "output");
-          return /* @__PURE__ */ r("button", { class: `td-result-item ${g.path === te.path ? "selected" : ""}`, onClick: () => G(g.path), children: [
-            F ? /* @__PURE__ */ r(Pe, { src: F, alt: `${t === "zh" ? "合并结果" : "Merged result"} ${ee.length - T}` }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: "×" }),
+        /* @__PURE__ */ r("div", { class: "td-result-list", children: Z.map((h, k) => {
+          const B = xe(h);
+          return /* @__PURE__ */ r("button", { class: `td-result-item ${h.path === re.path ? "selected" : ""}`, onClick: () => E(h.path), children: [
+            B ? /* @__PURE__ */ r(Me, { src: B, alt: `${t === "zh" ? "合并结果" : "Merged result"} ${Z.length - k}` }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: "×" }),
             /* @__PURE__ */ r("span", { class: "td-result-item-copy", children: [
               /* @__PURE__ */ r("strong", { children: [
-                t === "zh" ? `合并结果 ${ee.length - T}` : `Merged result ${ee.length - T}`,
-                T === 0 && /* @__PURE__ */ r("em", { children: t === "zh" ? "最新" : "Latest" })
+                t === "zh" ? `合并结果 ${Z.length - k}` : `Merged result ${Z.length - k}`,
+                k === 0 && /* @__PURE__ */ r("em", { children: t === "zh" ? "最新" : "Latest" })
               ] }),
-              /* @__PURE__ */ r("span", { children: se(g.path) }),
-              /* @__PURE__ */ r("small", { children: g.bytes ? `${(g.bytes / 1024 / 1024).toFixed(1)} MB` : "" })
+              /* @__PURE__ */ r("span", { children: oe(h.path) }),
+              /* @__PURE__ */ r("small", { children: h.bytes ? `${(h.bytes / 1024 / 1024).toFixed(1)} MB` : h.taskId ? `task ${h.taskId}` : "" })
             ] })
-          ] }, g.path);
+          ] }, h.path);
         }) })
       ] }) : /* @__PURE__ */ r("div", { class: "td-result-empty", children: t === "zh" ? "还没有合并结果" : "No merged result yet" })
     ] }),
-    c && re(c.path, "output") && /* @__PURE__ */ r("div", { class: "td-post-preview-overlay", role: "presentation", onClick: () => m(null), children: /* @__PURE__ */ r("section", { role: "dialog", "aria-modal": "true", onClick: (g) => g.stopPropagation(), children: [
+    _ && /* @__PURE__ */ r("div", { class: "td-post-preview-overlay", role: "presentation", onClick: () => s(null), children: /* @__PURE__ */ r("section", { role: "dialog", "aria-modal": "true", onClick: (h) => h.stopPropagation(), children: [
       /* @__PURE__ */ r("header", { children: [
-        /* @__PURE__ */ r("strong", { children: c.title }),
-        /* @__PURE__ */ r("button", { "aria-label": t === "zh" ? "关闭预览" : "Close preview", onClick: () => m(null), children: "×" })
+        /* @__PURE__ */ r("strong", { children: _.title }),
+        /* @__PURE__ */ r("button", { "aria-label": t === "zh" ? "关闭预览" : "Close preview", onClick: () => s(null), children: "×" })
       ] }),
-      /* @__PURE__ */ r("video", { src: re(c.path, "output") ?? "", controls: !0, autoPlay: !0, preload: "metadata", playsInline: !0 }),
-      /* @__PURE__ */ r("p", { title: c.path, children: se(c.path) })
+      /* @__PURE__ */ r("video", { src: _.path, controls: !0, autoPlay: !0, preload: "metadata", playsInline: !0 }),
+      /* @__PURE__ */ r("p", { title: _.path, children: oe(_.path) })
     ] }) })
   ] });
 }
-function Cr(e) {
-  const t = e.reduce((o, n) => {
-    const d = /^shot_(\d+)$/i.exec(n.id.trim());
-    return d ? Math.max(o, Number(d[1])) : o;
+function Br(e) {
+  const t = e.reduce((n, o) => {
+    const a = /^shot_(\d+)$/i.exec(o.id.trim());
+    return a ? Math.max(n, Number(a[1])) : n;
   }, 0);
   return Math.max(t, e.length) + 1;
 }
-function Tr(e, t = 5) {
+function Vr(e, t = 5) {
   return {
     id: `shot_${String(e).padStart(3, "0")}`,
     title: `Shot ${e}`,
@@ -1087,47 +1205,30 @@ function Tr(e, t = 5) {
     disabledAssetIds: []
   };
 }
-function ft(e, t, o) {
-  const n = Cr(e), d = Array.from({ length: t }, (i, a) => Tr(n + a, o));
-  return [...e, ...d];
+function yt(e, t, n) {
+  const o = Br(e), a = Array.from({ length: t }, (l, i) => Vr(o + i, n));
+  return [...e, ...a];
 }
-const Ot = (e) => `${e}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, Ce = (e) => JSON.parse(JSON.stringify(e)), Ir = { image: "图片", video: "视频", audio: "音频" };
-function gt(e) {
-  var o;
-  const t = Ce(e);
-  return t.schemaVersion = 4, (o = t.project.id) != null && o.trim() || (t.project.id = Ot("project")), t.shots = t.shots.map((n) => ({
-    ...n,
-    latentRelay: n.latentRelay ?? !0,
-    secondSampling: n.secondSampling ?? !0
+const Yt = (e) => `${e}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, Re = (e) => JSON.parse(JSON.stringify(e)), Kr = { image: "图片", video: "视频", audio: "音频" };
+function wt(e) {
+  var n;
+  const t = Re(e);
+  return t.schemaVersion = 4, (n = t.project.id) != null && n.trim() || (t.project.id = Yt("project")), t.shots = t.shots.map((o) => ({
+    ...o,
+    latentRelay: o.latentRelay ?? !0,
+    secondSampling: o.secondSampling ?? !0
   })), t;
 }
-function jr(e) {
+function qr(e) {
   return e.trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g, "_").replace(/[. ]+$/g, "").slice(0, 96) || "theodore_project";
 }
-function Ar(e) {
-  const t = Ot(e);
+function Wr(e) {
+  const t = Yt(e);
   return { id: t, alias: t, kind: e, path: "", enabled: !0, fixed: !1, fixedOrder: 0, shotIds: [], includeVideoAudio: !1, durationSeconds: e === "image" ? null : 2, audioDurationSeconds: null, fingerprint: "" };
 }
-async function bt(e, t, o) {
-  const n = new FormData();
-  n.append("projectName", e), n.append("kind", t), n.append("file", o);
-  const d = await fetch("/theodore-director/v1/assets", { method: "POST", body: n }), i = await d.json();
-  if (!d.ok || !i.path) throw new Error(i.error || `HTTP ${d.status}`);
-  return i.path;
-}
-async function Pr(e, t, o) {
-  const n = new URLSearchParams({
-    projectName: e.project.name,
-    runId: e.project.runId,
-    shotId: t.id,
-    activeIndex: String(o)
-  }), d = await fetch(`/theodore-director/v1/generated-video?${n.toString()}`), i = await d.json();
-  if (!d.ok) throw new Error(i.error || `HTTP ${d.status}`);
-  return i;
-}
-async function Er(e) {
-  var n;
-  if ((n = navigator.clipboard) != null && n.writeText)
+async function Jr(e) {
+  var o;
+  if ((o = navigator.clipboard) != null && o.writeText)
     try {
       await navigator.clipboard.writeText(e);
       return;
@@ -1135,187 +1236,187 @@ async function Er(e) {
     }
   const t = document.createElement("textarea");
   t.value = e, t.style.position = "fixed", t.style.opacity = "0", document.body.append(t), t.select();
-  const o = document.execCommand("copy");
-  if (t.remove(), !o) throw new Error("浏览器拒绝写入剪贴板");
+  const n = document.execCommand("copy");
+  if (t.remove(), !n) throw new Error("浏览器拒绝写入剪贴板");
 }
-function Nr({ initial: e, onSave: t, onClose: o, supportsSecondSampling: n, queueSecondPass: d }) {
-  const [i, a] = j(() => gt(e)), [p, b] = j("shots"), [c, m] = j(0), [h, l] = j(() => navigator.language.startsWith("zh") ? "zh" : "en"), [f, w] = j({}), [$, y] = j(!1), [C, k] = j(!0), [U, x] = j(0), [I, R] = j({ found: !1, results: [] }), [J, G] = j(""), [_, A] = j(!1), [D, P] = j(""), [Q, K] = j(!1), [V, ne] = j(!1), [W, Y] = j([]), [xe, ve] = j("5"), [ee, te] = j("1"), [ye, De] = j("5"), L = i.shots[Math.min(c, i.shots.length - 1)], B = fe(() => L ? Lt(i, L) : null, [i, L]), ae = L != null && L.enabled ? i.shots.slice(0, c).filter((s) => s.enabled).length : -1, g = i.shots.length > 0 && i.shots.every((s) => s.secondSampling), T = W.length > 0 && W.every((s) => s.enabled), F = fe(() => he(I), [I]), E = F.find((s) => s.path === J) ?? F[0], O = E != null && E.path ? re(E.path, "output") : null, S = (s) => a((u) => {
-    const v = Ce(u);
-    return s(v), v;
-  }), Z = (s, u) => S((v) => {
-    const z = s + u;
-    z < 0 || z >= v.shots.length || ([v.shots[s], v.shots[z]] = [v.shots[z], v.shots[s]], m(z));
-  }), le = (s) => S((u) => {
-    u.shots.length <= 1 || (u.shots.splice(s, 1), m((v) => v > s ? v - 1 : v === s ? Math.min(s, u.shots.length - 1) : v));
-  }), ce = () => {
-    Y(Ce(i.shots)), K(!0);
-  }, Le = () => {
-    const s = Number(xe);
-    if (!Number.isFinite(s) || s <= 0) {
-      window.alert(h === "zh" ? "统一时长必须大于 0 秒" : "The shared duration must be greater than 0 seconds.");
+function Gr({ initial: e, onSave: t, onClose: n, supportsSecondSampling: o, queueSecondPass: a, queueMerge: l }) {
+  const [i, c] = I(() => wt(e)), [m, p] = I("shots"), [u, _] = I(0), [s, v] = I(() => navigator.language.startsWith("zh") ? "zh" : "en"), [y, S] = I({}), [z, w] = I(!1), [C, A] = I(!0), [b, T] = I(0), [j, D] = I({ found: !1, results: [] }), [M, g] = I(""), [E, N] = I(!1), [R, J] = I(""), [X, K] = I(!1), [he, ie] = I(!1), [Q, G] = I([]), [se, Oe] = I("5"), [ve, Z] = I("1"), [re, Ue] = I("5"), [ee, He] = I({ mode: "auto", apiKey: "", taskMappings: "" }), [ue, ge] = I({ mode: "auto", apiKey: "", taskMappings: "" }), h = i.shots[Math.min(u, i.shots.length - 1)], k = _e(() => h ? Ht(i, h) : null, [i, h]), B = h != null && h.enabled ? i.shots.slice(0, u).filter((d) => d.enabled).length : -1, U = i.shots.length > 0 && i.shots.every((d) => d.secondSampling), O = Q.length > 0 && Q.every((d) => d.enabled), H = _e(() => ce(j), [j]), q = H.find((d) => d.path === M) ?? H[0], de = xe(q), ae = pe(ee), $e = (d, f, x) => Nr(ee, d, f, x), P = (d) => c((f) => {
+    const x = Re(f);
+    return d(x), x;
+  }), nt = (d, f) => P((x) => {
+    const $ = d + f;
+    $ < 0 || $ >= x.shots.length || ([x.shots[d], x.shots[$]] = [x.shots[$], x.shots[d]], _($));
+  }), Xt = (d) => P((f) => {
+    f.shots.length <= 1 || (f.shots.splice(d, 1), _((x) => x > d ? x - 1 : x === d ? Math.min(d, f.shots.length - 1) : x));
+  }), Zt = () => {
+    G(Re(i.shots)), K(!0);
+  }, er = () => {
+    const d = Number(se);
+    if (!Number.isFinite(d) || d <= 0) {
+      window.alert(s === "zh" ? "统一时长必须大于 0 秒" : "The shared duration must be greater than 0 seconds.");
       return;
     }
-    Y((u) => u.map((v) => ({ ...v, durationSeconds: s })));
-  }, Ut = () => {
-    const s = Number(ee), u = Number(ye);
-    if (!Number.isInteger(s) || s < 1 || s > 100) {
-      window.alert(h === "zh" ? "新增镜头数量必须是 1–100 的整数" : "The shot count must be an integer from 1 to 100.");
+    G((f) => f.map((x) => ({ ...x, durationSeconds: d })));
+  }, tr = () => {
+    const d = Number(ve), f = Number(re);
+    if (!Number.isInteger(d) || d < 1 || d > 100) {
+      window.alert(s === "zh" ? "新增镜头数量必须是 1–100 的整数" : "The shot count must be an integer from 1 to 100.");
       return;
     }
-    if (!Number.isFinite(u) || u <= 0) {
-      window.alert(h === "zh" ? "新增镜头时长必须大于 0 秒" : "The new-shot duration must be greater than 0 seconds.");
+    if (!Number.isFinite(f) || f <= 0) {
+      window.alert(s === "zh" ? "新增镜头时长必须大于 0 秒" : "The new-shot duration must be greater than 0 seconds.");
       return;
     }
-    Y((v) => ft(v, s, u));
-  }, Bt = () => {
-    const s = !T;
-    Y((u) => u.map((v) => ({ ...v, enabled: s })));
-  }, Ht = () => {
-    if (W.some((s) => !Number.isFinite(s.durationSeconds) || s.durationSeconds <= 0)) {
-      window.alert(h === "zh" ? "每个镜头的时长都必须大于 0 秒" : "Every shot duration must be greater than 0 seconds.");
+    G((x) => yt(x, d, f));
+  }, rr = () => {
+    const d = !O;
+    G((f) => f.map((x) => ({ ...x, enabled: d })));
+  }, nr = () => {
+    if (Q.some((d) => !Number.isFinite(d.durationSeconds) || d.durationSeconds <= 0)) {
+      window.alert(s === "zh" ? "每个镜头的时长都必须大于 0 秒" : "Every shot duration must be greater than 0 seconds.");
       return;
     }
-    S((s) => {
-      s.shots = Ce(W);
-    }), m((s) => Math.min(s, W.length - 1)), K(!1);
-  }, Vt = () => {
-    const s = URL.createObjectURL(new Blob([JSON.stringify(i, null, 2)], { type: "application/json" })), u = document.createElement("a");
-    u.href = s, u.download = `${jr(i.project.name)}.director.json`, u.click(), URL.revokeObjectURL(s);
-  }, qt = () => {
-    const s = ur(i);
-    if (s.length) {
+    P((d) => {
+      d.shots = Re(Q);
+    }), _((d) => Math.min(d, Q.length - 1)), K(!1);
+  }, or = () => {
+    const d = URL.createObjectURL(new Blob([JSON.stringify(i, null, 2)], { type: "application/json" })), f = document.createElement("a");
+    f.href = d, f.download = `${qr(i.project.name)}.director.json`, f.click(), URL.revokeObjectURL(d);
+  }, ir = () => {
+    const d = Cr(i);
+    if (d.length) {
       window.alert(`计划未通过校验：
 
-${s.join(`
+${d.join(`
 `)}`);
       return;
     }
     t(i);
   };
-  return _e(() => {
-    let s = !1;
-    return L ? (A(!0), Pr(i, L, ae).then((u) => {
-      if (s) return;
-      const v = he(u);
-      R(u), G((z) => {
-        var N;
-        return v.some((X) => X.path === z) ? z : ((N = v[0]) == null ? void 0 : N.path) ?? "";
+  return ke(() => {
+    let d = !1;
+    return h ? (N(!0), rt(ee, i, h, B).then((f) => {
+      if (d) return;
+      const x = ce(f);
+      D(f), g(($) => {
+        var L;
+        return x.some((Y) => Y.path === $) ? $ : ((L = x[0]) == null ? void 0 : L.path) ?? "";
       });
-    }).catch((u) => {
-      s || (R({ found: !1, results: [], error: String(u) }), G(""));
+    }).catch((f) => {
+      d || (D({ found: !1, results: [], error: String(f) }), g(""));
     }).finally(() => {
-      s || A(!1);
+      d || N(!1);
     }), () => {
-      s = !0;
-    }) : (R({ found: !1, results: [] }), G(""), A(!1), () => {
-      s = !0;
+      d = !0;
+    }) : (D({ found: !1, results: [] }), g(""), N(!1), () => {
+      d = !0;
     });
-  }, [i.project.name, i.project.runId, L == null ? void 0 : L.id, L == null ? void 0 : L.enabled, ae, U]), /* @__PURE__ */ r("div", { class: "td-shell", children: [
+  }, [i.project.name, i.project.runId, h == null ? void 0 : h.id, h == null ? void 0 : h.enabled, B, b, ee.mode, ee.apiKey, ee.taskMappings]), /* @__PURE__ */ r("div", { class: "td-shell", children: [
     /* @__PURE__ */ r("header", { children: [
-      /* @__PURE__ */ r("h1", { children: pe(h, "title") }),
+      /* @__PURE__ */ r("h1", { children: me(s, "title") }),
       /* @__PURE__ */ r("div", { class: "td-actions", children: [
-        /* @__PURE__ */ r("button", { onClick: Vt, children: "导出 / Export" }),
+        /* @__PURE__ */ r("button", { onClick: or, children: "导出 / Export" }),
         /* @__PURE__ */ r("label", { class: "td-import", children: [
           "导入 / Import",
-          /* @__PURE__ */ r("input", { type: "file", accept: "application/json,.json", onChange: async (s) => {
-            var v;
-            const u = (v = s.currentTarget.files) == null ? void 0 : v[0];
-            if (u)
+          /* @__PURE__ */ r("input", { type: "file", accept: "application/json,.json", onChange: async (d) => {
+            var x;
+            const f = (x = d.currentTarget.files) == null ? void 0 : x[0];
+            if (f)
               try {
-                const z = JSON.parse(await u.text());
-                if (!z.project || !Array.isArray(z.shots) || !Array.isArray(z.assets)) throw new Error("不是有效的 Theodore Director Plan");
-                a(gt(z)), m(0);
-              } catch (z) {
-                window.alert(String(z));
+                const $ = JSON.parse(await f.text());
+                if (!$.project || !Array.isArray($.shots) || !Array.isArray($.assets)) throw new Error("不是有效的 Theodore Director Plan");
+                c(wt($)), _(0);
+              } catch ($) {
+                window.alert(String($));
               }
           } })
         ] }),
-        /* @__PURE__ */ r("button", { onClick: () => l(h === "zh" ? "en" : "zh"), children: h === "zh" ? "EN" : "中文" }),
-        /* @__PURE__ */ r("button", { class: "primary", onClick: qt, children: pe(h, "save") }),
-        /* @__PURE__ */ r("button", { onClick: o, children: pe(h, "close") })
+        /* @__PURE__ */ r("button", { onClick: () => v(s === "zh" ? "en" : "zh"), children: s === "zh" ? "EN" : "中文" }),
+        /* @__PURE__ */ r("button", { class: "primary", onClick: ir, children: me(s, "save") }),
+        /* @__PURE__ */ r("button", { onClick: n, children: me(s, "close") })
       ] })
     ] }),
-    /* @__PURE__ */ r("nav", { children: ["shots", "assets", "settings", "postprocess"].map((s) => /* @__PURE__ */ r("button", { class: p === s ? "active" : "", onClick: () => b(s), children: pe(h, s) })) }),
+    /* @__PURE__ */ r("nav", { children: ["shots", "assets", "settings", "postprocess"].map((d) => /* @__PURE__ */ r("button", { class: m === d ? "active" : "", onClick: () => p(d), children: me(s, d) })) }),
     /* @__PURE__ */ r("main", { children: [
-      p === "shots" && /* @__PURE__ */ r("div", { class: "td-shots", children: [
+      m === "shots" && /* @__PURE__ */ r("div", { class: "td-shots", children: [
         /* @__PURE__ */ r("aside", { class: "td-shot-sidebar", children: [
-          n && /* @__PURE__ */ r("button", { class: `wide td-bulk-toggle ${g ? "active" : ""}`, onClick: () => S((s) => {
-            const u = !s.shots.every((v) => v.secondSampling);
-            s.shots.forEach((v) => {
-              v.secondSampling = u;
+          o && /* @__PURE__ */ r("button", { class: `wide td-bulk-toggle ${U ? "active" : ""}`, onClick: () => P((d) => {
+            const f = !d.shots.every((x) => x.secondSampling);
+            d.shots.forEach((x) => {
+              x.secondSampling = f;
             });
-          }), children: h === "zh" ? `全部二次采样：${g ? "开" : "关"}` : `Second sampling for all: ${g ? "ON" : "OFF"}` }),
-          /* @__PURE__ */ r("div", { class: "td-shot-list", children: i.shots.map((s, u) => /* @__PURE__ */ r("div", { class: `td-shot-card ${u === c ? "selected" : ""}`, onClick: () => m(u), children: [
-            /* @__PURE__ */ r("div", { class: "td-shot-delete-action", children: /* @__PURE__ */ r("button", { class: "td-shot-delete", disabled: i.shots.length <= 1, title: h === "zh" ? i.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头" : i.shots.length <= 1 ? "Keep at least one shot" : "Delete shot", "aria-label": h === "zh" ? "删除镜头" : "Delete shot", onClick: (v) => {
-              v.stopPropagation(), le(u);
+          }), children: s === "zh" ? `全部二次采样：${U ? "开" : "关"}` : `Second sampling for all: ${U ? "ON" : "OFF"}` }),
+          /* @__PURE__ */ r("div", { class: "td-shot-list", children: i.shots.map((d, f) => /* @__PURE__ */ r("div", { class: `td-shot-card ${f === u ? "selected" : ""}`, onClick: () => _(f), children: [
+            /* @__PURE__ */ r("div", { class: "td-shot-delete-action", children: /* @__PURE__ */ r("button", { class: "td-shot-delete", disabled: i.shots.length <= 1, title: s === "zh" ? i.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头" : i.shots.length <= 1 ? "Keep at least one shot" : "Delete shot", "aria-label": s === "zh" ? "删除镜头" : "Delete shot", onClick: (x) => {
+              x.stopPropagation(), Xt(f);
             }, children: "×" }) }),
             /* @__PURE__ */ r("strong", { children: [
-              u + 1,
+              f + 1,
               ". ",
-              s.title
+              d.title
             ] }),
             /* @__PURE__ */ r("span", { children: [
-              s.durationSeconds,
+              d.durationSeconds,
               "s · ",
-              s.enabled ? "ON" : "OFF"
+              d.enabled ? "ON" : "OFF"
             ] }),
             /* @__PURE__ */ r("div", { class: "td-shot-move-actions", children: [
-              /* @__PURE__ */ r("button", { title: h === "zh" ? "上移镜头" : "Move shot up", onClick: (v) => {
-                v.stopPropagation(), Z(u, -1);
+              /* @__PURE__ */ r("button", { title: s === "zh" ? "上移镜头" : "Move shot up", onClick: (x) => {
+                x.stopPropagation(), nt(f, -1);
               }, children: "↑" }),
-              /* @__PURE__ */ r("button", { title: h === "zh" ? "下移镜头" : "Move shot down", onClick: (v) => {
-                v.stopPropagation(), Z(u, 1);
+              /* @__PURE__ */ r("button", { title: s === "zh" ? "下移镜头" : "Move shot down", onClick: (x) => {
+                x.stopPropagation(), nt(f, 1);
               }, children: "↓" })
             ] })
-          ] }, s.id)) }),
-          /* @__PURE__ */ r("button", { class: "wide", onClick: () => S((s) => {
-            const u = s.shots.length;
-            s.shots = ft(s.shots, 1, 5), m(u);
+          ] }, d.id)) }),
+          /* @__PURE__ */ r("button", { class: "wide", onClick: () => P((d) => {
+            const f = d.shots.length;
+            d.shots = yt(d.shots, 1, 5), _(f);
           }), children: [
             "＋ ",
-            pe(h, "addShot")
+            me(s, "addShot")
           ] }),
-          /* @__PURE__ */ r("div", { class: "td-shot-batch-entry", children: /* @__PURE__ */ r("button", { class: "wide", onClick: ce, children: h === "zh" ? "批量处理镜头" : "Batch edit shots" }) })
+          /* @__PURE__ */ r("div", { class: "td-shot-batch-entry", children: /* @__PURE__ */ r("button", { class: "wide", onClick: Zt, children: s === "zh" ? "批量处理镜头" : "Batch edit shots" }) })
         ] }),
-        L && /* @__PURE__ */ r("section", { class: "td-form", children: [
+        h && /* @__PURE__ */ r("section", { class: "td-form", children: [
           /* @__PURE__ */ r("div", { class: "td-shot-meta", children: [
             /* @__PURE__ */ r("label", { children: [
               "ID",
-              /* @__PURE__ */ r("input", { value: L.id, onInput: (s) => S((u) => {
-                u.shots[c].id = s.currentTarget.value;
+              /* @__PURE__ */ r("input", { value: h.id, onInput: (d) => P((f) => {
+                f.shots[u].id = d.currentTarget.value;
               }) })
             ] }),
             /* @__PURE__ */ r("label", { children: [
               "标题 / Title",
-              /* @__PURE__ */ r("input", { value: L.title, onInput: (s) => S((u) => {
-                u.shots[c].title = s.currentTarget.value;
+              /* @__PURE__ */ r("input", { value: h.title, onInput: (d) => P((f) => {
+                f.shots[u].title = d.currentTarget.value;
               }) })
             ] }),
             /* @__PURE__ */ r("label", { children: [
               "时长 / Duration",
-              /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: L.durationSeconds, onInput: (s) => S((u) => {
-                u.shots[c].durationSeconds = Number(s.currentTarget.value);
+              /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: h.durationSeconds, onInput: (d) => P((f) => {
+                f.shots[u].durationSeconds = Number(d.currentTarget.value);
               }) })
             ] }),
             /* @__PURE__ */ r("div", { class: "td-shot-switches", children: [
               /* @__PURE__ */ r("label", { class: "td-shot-enabled", children: [
-                /* @__PURE__ */ r("input", { type: "checkbox", checked: L.enabled, onChange: (s) => S((u) => {
-                  u.shots[c].enabled = s.currentTarget.checked;
+                /* @__PURE__ */ r("input", { type: "checkbox", checked: h.enabled, onChange: (d) => P((f) => {
+                  f.shots[u].enabled = d.currentTarget.checked;
                 }) }),
                 /* @__PURE__ */ r("span", { children: "启用 / Enabled" })
               ] }),
-              /* @__PURE__ */ r("label", { class: "td-shot-enabled", title: ae === 0 ? "首个启用镜头没有上一段，执行时会自动忽略接力" : "开启后读取上一段 AV latent 作为 Motion Context", children: [
-                /* @__PURE__ */ r("input", { type: "checkbox", checked: L.latentRelay, onChange: (s) => S((u) => {
-                  u.shots[c].latentRelay = s.currentTarget.checked;
+              /* @__PURE__ */ r("label", { class: "td-shot-enabled", title: B === 0 ? "首个启用镜头没有上一段，执行时会自动忽略接力" : "开启后读取上一段 AV latent 作为 Motion Context", children: [
+                /* @__PURE__ */ r("input", { type: "checkbox", checked: h.latentRelay, onChange: (d) => P((f) => {
+                  f.shots[u].latentRelay = d.currentTarget.checked;
                 }) }),
                 /* @__PURE__ */ r("span", { children: [
                   "latent接力 / Relay",
-                  ae === 0 ? "（首段忽略）" : ""
+                  B === 0 ? "（首段忽略）" : ""
                 ] })
               ] }),
-              n && /* @__PURE__ */ r("label", { class: "td-shot-enabled", title: "开启时执行 RTX 超分和第二次 H3 采样，关闭时直接使用第一采画面", children: [
-                /* @__PURE__ */ r("input", { type: "checkbox", checked: L.secondSampling, onChange: (s) => S((u) => {
-                  u.shots[c].secondSampling = s.currentTarget.checked;
+              o && /* @__PURE__ */ r("label", { class: "td-shot-enabled", title: "开启时执行 RTX 超分和第二次 H3 采样，关闭时直接使用第一采画面", children: [
+                /* @__PURE__ */ r("input", { type: "checkbox", checked: h.secondSampling, onChange: (d) => P((f) => {
+                  f.shots[u].secondSampling = d.currentTarget.checked;
                 }) }),
                 /* @__PURE__ */ r("span", { children: "二次采样 / 2nd pass" })
               ] })
@@ -1327,131 +1428,132 @@ ${s.join(`
               /* @__PURE__ */ r("code", { children: "{{ref:别名}}" }),
               "）"
             ] }),
-            /* @__PURE__ */ r(Ue, { rows: 10, value: L.prompt, isReferenceValid: (s) => Dt(i, L, s), onInput: (s) => S((u) => {
-              u.shots[c].prompt = s.currentTarget.value;
+            /* @__PURE__ */ r(qe, { rows: 10, value: h.prompt, isReferenceValid: (d) => Ut(i, h, d), onInput: (d) => P((f) => {
+              f.shots[u].prompt = d.currentTarget.value;
             }) })
           ] }),
           /* @__PURE__ */ r("label", { children: [
             /* @__PURE__ */ r("span", { class: "td-field-label", children: "负面提示词 / Negative prompt" }),
-            /* @__PURE__ */ r("textarea", { rows: 3, value: L.negativePrompt, onInput: (s) => S((u) => {
-              u.shots[c].negativePrompt = s.currentTarget.value;
+            /* @__PURE__ */ r("textarea", { rows: 3, value: h.negativePrompt, onInput: (d) => P((f) => {
+              f.shots[u].negativePrompt = d.currentTarget.value;
             }) })
           ] }),
           /* @__PURE__ */ r("fieldset", { class: "td-shot-media", children: [
             /* @__PURE__ */ r("legend", { children: "本镜头素材 / Shot media" }),
-            i.assets.map((s) => {
-              const u = !L.disabledAssetIds.includes(s.id), v = se(s.path) || s.alias, z = `{{ref:${s.alias}}}`;
-              return /* @__PURE__ */ r("div", { class: `td-shot-media-card ${u ? "" : "disabled"}`, children: [
+            i.assets.map((d) => {
+              const f = !h.disabledAssetIds.includes(d.id), x = oe(d.path) || d.alias, $ = `{{ref:${d.alias}}}`;
+              return /* @__PURE__ */ r("div", { class: `td-shot-media-card ${f ? "" : "disabled"}`, children: [
                 /* @__PURE__ */ r("div", { class: "td-shot-media-frame", children: [
-                  /* @__PURE__ */ r(ut, { asset: s, compact: !0 }),
-                  /* @__PURE__ */ r("span", { class: "td-shot-media-kind", children: h === "zh" ? Ir[s.kind] : s.kind }),
-                  /* @__PURE__ */ r("label", { class: "td-shot-media-toggle", title: u ? "禁用此素材 / Disable" : "启用此素材 / Enable", children: /* @__PURE__ */ r("input", { type: "checkbox", checked: u, onChange: (N) => S((X) => {
-                    const oe = X.shots[c].disabledAssetIds;
-                    X.shots[c].disabledAssetIds = N.currentTarget.checked ? oe.filter((me) => me !== s.id) : [.../* @__PURE__ */ new Set([...oe, s.id])];
+                  /* @__PURE__ */ r(vt, { asset: d, compact: !0 }),
+                  /* @__PURE__ */ r("span", { class: "td-shot-media-kind", children: s === "zh" ? Kr[d.kind] : d.kind }),
+                  /* @__PURE__ */ r("label", { class: "td-shot-media-toggle", title: f ? "禁用此素材 / Disable" : "启用此素材 / Enable", children: /* @__PURE__ */ r("input", { type: "checkbox", checked: f, onChange: (L) => P((Y) => {
+                    const te = Y.shots[u].disabledAssetIds;
+                    Y.shots[u].disabledAssetIds = L.currentTarget.checked ? te.filter((be) => be !== d.id) : [.../* @__PURE__ */ new Set([...te, d.id])];
                   }) }) })
                 ] }),
-                /* @__PURE__ */ r("button", { class: `td-shot-media-name ${D === s.id ? "copied" : ""}`, title: `${v}
-${h === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
+                /* @__PURE__ */ r("button", { class: `td-shot-media-name ${R === d.id ? "copied" : ""}`, title: `${x}
+${s === "zh" ? "点击复制" : "Click to copy"} ${$}`, onClick: async () => {
                   try {
-                    await Er(z), P(s.id), window.setTimeout(() => P((N) => N === s.id ? "" : N), 1400);
-                  } catch (N) {
-                    window.alert(`${h === "zh" ? "复制失败" : "Copy failed"}: ${String(N)}`);
+                    await Jr($), J(d.id), window.setTimeout(() => J((L) => L === d.id ? "" : L), 1400);
+                  } catch (L) {
+                    window.alert(`${s === "zh" ? "复制失败" : "Copy failed"}: ${String(L)}`);
                   }
                 }, children: [
-                  /* @__PURE__ */ r("span", { children: v }),
-                  D === s.id && /* @__PURE__ */ r("em", { children: h === "zh" ? "已复制" : "Copied" })
+                  /* @__PURE__ */ r("span", { children: x }),
+                  R === d.id && /* @__PURE__ */ r("em", { children: s === "zh" ? "已复制" : "Copied" })
                 ] })
-              ] }, s.id);
+              ] }, d.id);
             })
           ] })
         ] }),
         /* @__PURE__ */ r("aside", { class: "td-preview", children: [
-          /* @__PURE__ */ r("details", { open: $, onToggle: (s) => y(s.currentTarget.open), children: [
+          /* @__PURE__ */ r("details", { open: z, onToggle: (d) => w(d.currentTarget.open), children: [
             /* @__PURE__ */ r("summary", { children: [
-              /* @__PURE__ */ r("strong", { children: pe(h, "preview") }),
+              /* @__PURE__ */ r("strong", { children: me(s, "preview") }),
               /* @__PURE__ */ r("span", { class: "td-summary-counts", children: [
                 "Picture ",
-                (B == null ? void 0 : B.slots.filter((s) => s.kind === "picture").length) ?? 0,
+                (k == null ? void 0 : k.slots.filter((d) => d.kind === "picture").length) ?? 0,
                 "/9 · Video ",
-                (B == null ? void 0 : B.slots.filter((s) => s.kind === "video").length) ?? 0,
+                (k == null ? void 0 : k.slots.filter((d) => d.kind === "video").length) ?? 0,
                 "/3 · Audio ",
-                (B == null ? void 0 : B.audioCount) ?? 0,
+                (k == null ? void 0 : k.audioCount) ?? 0,
                 "/3 · Files ",
-                (B == null ? void 0 : B.mixedFiles) ?? 0,
+                (k == null ? void 0 : k.mixedFiles) ?? 0,
                 "/12"
               ] })
             ] }),
             /* @__PURE__ */ r("div", { class: "td-preview-body", children: [
-              B != null && B.errors.length ? /* @__PURE__ */ r("ul", { class: "errors", children: B.errors.map((s) => /* @__PURE__ */ r("li", { children: s })) }) : /* @__PURE__ */ r("p", { class: "ok", children: pe(h, "noErrors") }),
-              /* @__PURE__ */ r("ol", { children: B == null ? void 0 : B.slots.map((s) => /* @__PURE__ */ r("li", { children: [
-                /* @__PURE__ */ r("code", { children: s.label }),
+              k != null && k.errors.length ? /* @__PURE__ */ r("ul", { class: "errors", children: k.errors.map((d) => /* @__PURE__ */ r("li", { children: d })) }) : /* @__PURE__ */ r("p", { class: "ok", children: me(s, "noErrors") }),
+              /* @__PURE__ */ r("ol", { children: k == null ? void 0 : k.slots.map((d) => /* @__PURE__ */ r("li", { children: [
+                /* @__PURE__ */ r("code", { children: d.label }),
                 " ← ",
-                s.alias
+                d.alias
               ] })) }),
-              /* @__PURE__ */ r("pre", { children: B == null ? void 0 : B.compiledPrompt })
+              /* @__PURE__ */ r("pre", { children: k == null ? void 0 : k.compiledPrompt })
             ] })
           ] }),
-          /* @__PURE__ */ r("details", { open: C, onToggle: (s) => k(s.currentTarget.open), children: [
+          /* @__PURE__ */ r("details", { open: C, onToggle: (d) => A(d.currentTarget.open), children: [
             /* @__PURE__ */ r("summary", { children: [
-              /* @__PURE__ */ r("strong", { children: h === "zh" ? "生成结果" : "Generated result" }),
-              /* @__PURE__ */ r("span", { class: `td-result-state ${F.length ? "found" : ""}`, children: _ ? h === "zh" ? "查询中" : "Checking" : F.length ? h === "zh" ? `${F.length} 个结果` : `${F.length} results` : h === "zh" ? "空" : "Empty" })
+              /* @__PURE__ */ r("strong", { children: s === "zh" ? "生成结果" : "Generated result" }),
+              /* @__PURE__ */ r("span", { class: `td-result-state ${H.length ? "found" : ""}`, children: E ? s === "zh" ? "查询中" : "Checking" : H.length ? s === "zh" ? `${H.length} 个结果` : `${H.length} results` : s === "zh" ? "空" : "Empty" })
             ] }),
             /* @__PURE__ */ r("div", { class: "td-preview-body td-result-body", children: [
-              /* @__PURE__ */ r("div", { class: "td-result-actions", children: /* @__PURE__ */ r("button", { onClick: () => x((s) => s + 1), children: [
+              /* @__PURE__ */ r("div", { class: "td-result-actions", children: /* @__PURE__ */ r("button", { onClick: () => T((d) => d + 1), children: [
                 "↻ ",
-                h === "zh" ? "刷新结果" : "Refresh"
+                s === "zh" ? "刷新结果" : "Refresh"
               ] }) }),
-              _ ? /* @__PURE__ */ r("div", { class: "td-result-empty", children: h === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…" }) : I.error ? /* @__PURE__ */ r("div", { class: "td-result-empty errors", children: h === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again." }) : E && O ? /* @__PURE__ */ r("div", { class: "td-generated-results", children: [
+              E ? /* @__PURE__ */ r("div", { class: "td-result-empty", children: s === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…" }) : j.error ? /* @__PURE__ */ r("div", { class: "td-result-empty errors", children: j.error }) : q && de ? /* @__PURE__ */ r("div", { class: "td-generated-results", children: [
                 /* @__PURE__ */ r("div", { class: "td-generated-video", children: [
-                  /* @__PURE__ */ r("video", { src: O, controls: !0, preload: "metadata", playsInline: !0 }, E.path),
-                  /* @__PURE__ */ r("div", { class: "td-generated-meta", title: E.path, children: [
-                    E.path,
-                    E.bytes ? ` · ${(E.bytes / 1024 / 1024).toFixed(1)} MB` : ""
+                  /* @__PURE__ */ r("video", { src: de, controls: !0, preload: "metadata", playsInline: !0 }, q.path),
+                  /* @__PURE__ */ r("div", { class: "td-generated-meta", title: q.path, children: [
+                    q.path,
+                    q.bytes ? ` · ${(q.bytes / 1024 / 1024).toFixed(1)} MB` : ""
                   ] })
                 ] }),
-                /* @__PURE__ */ r("div", { class: "td-result-list", "aria-label": h === "zh" ? "全部生成结果" : "All generated results", children: F.map((s, u) => {
-                  const v = re(s.path, "output"), z = Mt(s.path, F.length - u), N = s.modifiedAt ? new Date(s.modifiedAt * 1e3).toLocaleString(h === "zh" ? "zh-CN" : "en-US") : "";
-                  return /* @__PURE__ */ r("button", { class: `td-result-item ${s.path === E.path ? "selected" : ""}`, onClick: () => G(s.path), children: [
-                    v ? /* @__PURE__ */ r(Pe, { src: v, alt: `${h === "zh" ? "结果" : "Result"} ${z}` }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: /* @__PURE__ */ r("span", { children: "×" }) }),
+                /* @__PURE__ */ r("div", { class: "td-result-list", "aria-label": s === "zh" ? "全部生成结果" : "All generated results", children: H.map((d, f) => {
+                  const x = xe(d), $ = Bt(d.path, H.length - f), L = d.modifiedAt ? new Date(d.modifiedAt * 1e3).toLocaleString(s === "zh" ? "zh-CN" : "en-US") : "";
+                  return /* @__PURE__ */ r("button", { class: `td-result-item ${d.path === q.path ? "selected" : ""}`, onClick: () => g(d.path), children: [
+                    x ? /* @__PURE__ */ r(Me, { src: x, alt: `${s === "zh" ? "结果" : "Result"} ${$}` }) : /* @__PURE__ */ r("div", { class: "td-result-thumb", children: /* @__PURE__ */ r("span", { children: "×" }) }),
                     /* @__PURE__ */ r("span", { class: "td-result-item-copy", children: [
                       /* @__PURE__ */ r("strong", { children: [
-                        h === "zh" ? `结果 ${z}` : `Result ${z}`,
-                        u === 0 && /* @__PURE__ */ r("em", { children: h === "zh" ? "最新" : "Latest" })
+                        s === "zh" ? `结果 ${$}` : `Result ${$}`,
+                        f === 0 && /* @__PURE__ */ r("em", { children: s === "zh" ? "最新" : "Latest" })
                       ] }),
-                      /* @__PURE__ */ r("span", { title: s.path, children: se(s.path) }),
-                      /* @__PURE__ */ r("small", { children: [s.bytes ? `${(s.bytes / 1024 / 1024).toFixed(1)} MB` : "", N].filter(Boolean).join(" · ") })
+                      /* @__PURE__ */ r("span", { title: d.path, children: oe(d.path) }),
+                      /* @__PURE__ */ r("small", { children: [d.bytes ? `${(d.bytes / 1024 / 1024).toFixed(1)} MB` : "", L, d.taskId ? `task ${d.taskId}` : ""].filter(Boolean).join(" · ") })
                     ] })
-                  ] }, s.path);
+                  ] }, d.path);
                 }) })
-              ] }) : /* @__PURE__ */ r("div", { class: "td-result-empty", children: h === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path" })
+              ] }) : /* @__PURE__ */ r("div", { class: "td-result-empty", children: s === "zh" ? "未找到本段视频" : "No video found for this shot" })
             ] })
           ] })
         ] })
       ] }),
-      p === "assets" && /* @__PURE__ */ r("div", { class: "td-assets", children: [
+      m === "assets" && /* @__PURE__ */ r("div", { class: "td-assets", children: [
+        ae === "runninghub" && /* @__PURE__ */ r("div", { class: `td-runtime-banner ${ee.apiKey.trim() ? "ready" : ""}`, children: ee.apiKey.trim() ? s === "zh" ? "RunningHub 上传已启用；素材路径将保存官方 fileName。" : "RunningHub upload is ready; the official fileName will be stored." : s === "zh" ? "RunningHub 模式：请先在项目设置填写 API Key，再上传素材。" : "RunningHub mode: enter an API Key in Project settings before uploading." }),
         /* @__PURE__ */ r("div", { class: "td-toolbar", children: [
-          ["image", "video", "audio"].map((s) => /* @__PURE__ */ r("button", { onClick: () => S((u) => u.assets.push(Ar(s))), children: [
+          ["image", "video", "audio"].map((d) => /* @__PURE__ */ r("button", { onClick: () => P((f) => f.assets.push(Wr(d))), children: [
             "＋ ",
-            s
+            d
           ] })),
-          /* @__PURE__ */ r("button", { class: "td-asset-batch-entry", onClick: () => ne(!0), children: [
+          /* @__PURE__ */ r("button", { class: "td-asset-batch-entry", onClick: () => ie(!0), children: [
             "⇧ ",
-            h === "zh" ? "批量导入素材" : "Batch import assets"
+            s === "zh" ? "批量导入素材" : "Batch import assets"
           ] })
         ] }),
-        i.assets.map((s, u) => /* @__PURE__ */ r("article", { children: /* @__PURE__ */ r("div", { class: "td-asset-layout", children: [
+        i.assets.map((d, f) => /* @__PURE__ */ r("article", { children: /* @__PURE__ */ r("div", { class: "td-asset-layout", children: [
           /* @__PURE__ */ r("div", { children: [
             /* @__PURE__ */ r("div", { class: "td-grid", children: [
               /* @__PURE__ */ r("label", { children: [
                 "别名 / Alias",
-                /* @__PURE__ */ r("input", { value: s.alias, onInput: (v) => S((z) => {
-                  z.assets[u].alias = v.currentTarget.value;
+                /* @__PURE__ */ r("input", { value: d.alias, onInput: (x) => P(($) => {
+                  $.assets[f].alias = x.currentTarget.value;
                 }) })
               ] }),
               /* @__PURE__ */ r("label", { children: [
                 "类型 / Kind",
-                /* @__PURE__ */ r("select", { value: s.kind, onChange: (v) => S((z) => {
-                  z.assets[u].kind = v.currentTarget.value;
+                /* @__PURE__ */ r("select", { value: d.kind, onChange: (x) => P(($) => {
+                  $.assets[f].kind = x.currentTarget.value;
                 }), children: [
                   /* @__PURE__ */ r("option", { children: "image" }),
                   /* @__PURE__ */ r("option", { children: "video" }),
@@ -1460,295 +1562,362 @@ ${h === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
               ] }),
               /* @__PURE__ */ r("label", { children: [
                 "输入目录相对路径 / Path",
-                /* @__PURE__ */ r("input", { value: s.path, onInput: (v) => S((z) => {
-                  z.assets[u].path = v.currentTarget.value;
+                /* @__PURE__ */ r("input", { value: d.path, onInput: (x) => P(($) => {
+                  $.assets[f].path = x.currentTarget.value;
                 }) }),
                 /* @__PURE__ */ r("span", { class: "td-file-picker", children: [
                   /* @__PURE__ */ r("label", { class: "td-file-button", children: [
                     "选择文件 / Choose file",
-                    /* @__PURE__ */ r("input", { type: "file", accept: s.kind === "image" ? "image/*" : s.kind === "video" ? "video/*" : "audio/*", onChange: async (v) => {
-                      var X;
-                      const z = v.currentTarget, N = (X = z.files) == null ? void 0 : X[0];
-                      if (N) {
-                        w((oe) => ({ ...oe, [s.id]: N.name }));
+                    /* @__PURE__ */ r("input", { type: "file", accept: d.kind === "image" ? "image/*" : d.kind === "video" ? "video/*" : "audio/*", onChange: async (x) => {
+                      var Y;
+                      const $ = x.currentTarget, L = (Y = $.files) == null ? void 0 : Y[0];
+                      if (L) {
+                        S((te) => ({ ...te, [d.id]: L.name }));
                         try {
-                          const oe = await bt(i.project.name, s.kind, N);
-                          S((me) => {
-                            const Xe = me.assets.find((Wt) => Wt.id === s.id);
-                            Xe && (Xe.path = oe);
+                          const te = await $e(i.project.name, d.kind, L);
+                          P((be) => {
+                            const ot = be.assets.find((sr) => sr.id === d.id);
+                            ot && (ot.path = te);
                           });
-                        } catch (oe) {
-                          window.alert(String(oe));
+                        } catch (te) {
+                          window.alert(String(te));
                         } finally {
-                          w((oe) => {
-                            const me = { ...oe };
-                            return delete me[s.id], me;
-                          }), z.value = "";
+                          S((te) => {
+                            const be = { ...te };
+                            return delete be[d.id], be;
+                          }), $.value = "";
                         }
                       }
                     } })
                   ] }),
-                  /* @__PURE__ */ r("span", { class: "td-file-name", title: f[s.id] || s.path, children: f[s.id] ? `${h === "zh" ? "上传中" : "Uploading"}: ${f[s.id]}` : se(s.path) || (h === "zh" ? "未选择文件" : "No file selected") })
+                  /* @__PURE__ */ r("span", { class: "td-file-name", title: y[d.id] || d.path, children: y[d.id] ? `${s === "zh" ? "上传中" : "Uploading"}: ${y[d.id]}` : oe(d.path) || (s === "zh" ? "未选择文件" : "No file selected") })
                 ] })
               ] }),
               /* @__PURE__ */ r("label", { children: [
                 "时长 / Duration",
-                /* @__PURE__ */ r("input", { type: "number", min: "0", step: "0.1", value: s.durationSeconds ?? "", onInput: (v) => S((z) => {
-                  z.assets[u].durationSeconds = v.currentTarget.value ? Number(v.currentTarget.value) : null;
+                /* @__PURE__ */ r("input", { type: "number", min: "0", step: "0.1", value: d.durationSeconds ?? "", onInput: (x) => P(($) => {
+                  $.assets[f].durationSeconds = x.currentTarget.value ? Number(x.currentTarget.value) : null;
                 }) })
               ] }),
               /* @__PURE__ */ r("label", { children: [
                 "固定顺序 / Fixed order",
-                /* @__PURE__ */ r("input", { type: "number", value: s.fixedOrder, onInput: (v) => S((z) => {
-                  z.assets[u].fixedOrder = Number(v.currentTarget.value);
+                /* @__PURE__ */ r("input", { type: "number", value: d.fixedOrder, onInput: (x) => P(($) => {
+                  $.assets[f].fixedOrder = Number(x.currentTarget.value);
                 }) })
               ] }),
               /* @__PURE__ */ r("label", { children: [
                 "限定分镜 ID（逗号分隔）",
-                /* @__PURE__ */ r("input", { value: s.shotIds.join(", "), onInput: (v) => S((z) => {
-                  z.assets[u].shotIds = v.currentTarget.value.split(",").map((N) => N.trim()).filter(Boolean);
+                /* @__PURE__ */ r("input", { value: d.shotIds.join(", "), onInput: (x) => P(($) => {
+                  $.assets[f].shotIds = x.currentTarget.value.split(",").map((L) => L.trim()).filter(Boolean);
                 }) })
               ] })
             ] }),
             /* @__PURE__ */ r("div", { class: "td-flags", children: [
               /* @__PURE__ */ r("label", { children: [
-                /* @__PURE__ */ r("input", { type: "checkbox", checked: s.enabled, onChange: (v) => S((z) => {
-                  z.assets[u].enabled = v.currentTarget.checked;
+                /* @__PURE__ */ r("input", { type: "checkbox", checked: d.enabled, onChange: (x) => P(($) => {
+                  $.assets[f].enabled = x.currentTarget.checked;
                 }) }),
                 "启用"
               ] }),
               /* @__PURE__ */ r("label", { children: [
-                /* @__PURE__ */ r("input", { type: "checkbox", checked: s.fixed, onChange: (v) => S((z) => {
-                  z.assets[u].fixed = v.currentTarget.checked;
+                /* @__PURE__ */ r("input", { type: "checkbox", checked: d.fixed, onChange: (x) => P(($) => {
+                  $.assets[f].fixed = x.currentTarget.checked;
                 }) }),
                 "固定引用"
               ] }),
-              s.kind === "video" && /* @__PURE__ */ r("label", { children: [
-                /* @__PURE__ */ r("input", { type: "checkbox", checked: s.includeVideoAudio, onChange: (v) => S((z) => {
-                  z.assets[u].includeVideoAudio = v.currentTarget.checked;
+              d.kind === "video" && /* @__PURE__ */ r("label", { children: [
+                /* @__PURE__ */ r("input", { type: "checkbox", checked: d.includeVideoAudio, onChange: (x) => P(($) => {
+                  $.assets[f].includeVideoAudio = x.currentTarget.checked;
                 }) }),
                 "启用视频伴音"
               ] }),
-              /* @__PURE__ */ r("button", { class: "danger", onClick: () => S((v) => {
-                v.assets.splice(u, 1);
+              /* @__PURE__ */ r("button", { class: "danger", onClick: () => P((x) => {
+                x.assets.splice(f, 1);
               }), children: "删除" })
             ] })
           ] }),
-          /* @__PURE__ */ r(ut, { asset: s })
-        ] }) }, s.id))
+          /* @__PURE__ */ r(vt, { asset: d })
+        ] }) }, d.id))
       ] }),
-      p === "settings" && /* @__PURE__ */ r("section", { class: "td-form settings", children: [
+      m === "settings" && /* @__PURE__ */ r("section", { class: "td-form settings", children: [
+        /* @__PURE__ */ r("fieldset", { class: "td-runtime-settings", children: [
+          /* @__PURE__ */ r("legend", { children: s === "zh" ? "运行环境" : "Runtime" }),
+          /* @__PURE__ */ r("label", { children: [
+            s === "zh" ? "适配器" : "Adapter",
+            /* @__PURE__ */ r("select", { value: ue.mode, onChange: (d) => ge((f) => ({ ...f, mode: d.currentTarget.value })), children: [
+              /* @__PURE__ */ r("option", { value: "auto", children: s === "zh" ? "自动检测" : "Auto detect" }),
+              /* @__PURE__ */ r("option", { value: "local", children: s === "zh" ? "本地 ComfyUI" : "Local ComfyUI" }),
+              /* @__PURE__ */ r("option", { value: "runninghub", children: "RunningHub" })
+            ] })
+          ] }),
+          /* @__PURE__ */ r("div", { class: "td-runtime-status", children: [
+            s === "zh" ? "当前：" : "Active: ",
+            /* @__PURE__ */ r("strong", { children: ae === "runninghub" ? "RunningHub" : "Local ComfyUI" })
+          ] }),
+          pe(ue) === "runninghub" && /* @__PURE__ */ r(Se, { children: [
+            /* @__PURE__ */ r("label", { children: [
+              "RunningHub API Key",
+              /* @__PURE__ */ r("input", { type: "password", autocomplete: "off", value: ue.apiKey, placeholder: s === "zh" ? "仅保存在当前页面内存" : "Kept only in this page memory", onInput: (d) => ge((f) => ({ ...f, apiKey: d.currentTarget.value })) })
+            ] }),
+            /* @__PURE__ */ r("label", { children: [
+              s === "zh" ? "任务映射（每行一项）" : "Task mappings (one per line)",
+              /* @__PURE__ */ r("textarea", { rows: 5, value: ue.taskMappings, placeholder: `完整工作流 taskId
+shot_003=taskId
+merged=taskId`, onInput: (d) => ge((f) => ({ ...f, taskMappings: d.currentTarget.value })) }),
+              /* @__PURE__ */ r("small", { children: s === "zh" ? "单独 taskId 按启用镜头顺序归属；也可显式指定镜头或合并任务。API Key 和任务映射不会写入工作流。" : "A bare taskId follows enabled-shot order; shot and merged tasks can be explicit. Credentials and mappings are not written to the workflow." })
+            ] })
+          ] }),
+          /* @__PURE__ */ r("div", { class: "td-runtime-apply", children: /* @__PURE__ */ r("button", { class: "primary", onClick: () => He({ ...ue }), children: s === "zh" ? "应用运行环境设置" : "Apply runtime settings" }) })
+        ] }),
         /* @__PURE__ */ r("label", { children: [
           "Project name",
-          /* @__PURE__ */ r("input", { value: i.project.name, onInput: (s) => S((u) => {
-            u.project.name = s.currentTarget.value;
+          /* @__PURE__ */ r("input", { value: i.project.name, onInput: (d) => P((f) => {
+            f.project.name = d.currentTarget.value;
           }) })
         ] }),
         /* @__PURE__ */ r("label", { children: [
           "Run ID",
-          /* @__PURE__ */ r("input", { value: i.project.runId, onInput: (s) => S((u) => {
-            u.project.runId = s.currentTarget.value;
+          /* @__PURE__ */ r("input", { value: i.project.runId, onInput: (d) => P((f) => {
+            f.project.runId = d.currentTarget.value;
           }) })
         ] }),
         /* @__PURE__ */ r("label", { children: [
           "FPS",
-          /* @__PURE__ */ r("input", { type: "number", value: i.defaults.fps, onInput: (s) => S((u) => {
-            u.defaults.fps = Number(s.currentTarget.value);
+          /* @__PURE__ */ r("input", { type: "number", value: i.defaults.fps, onInput: (d) => P((f) => {
+            f.defaults.fps = Number(d.currentTarget.value);
           }) })
         ] }),
         /* @__PURE__ */ r("label", { children: [
           "Base seed",
-          /* @__PURE__ */ r("input", { type: "number", value: i.defaults.baseSeed, onInput: (s) => S((u) => {
-            u.defaults.baseSeed = Number(s.currentTarget.value);
+          /* @__PURE__ */ r("input", { type: "number", value: i.defaults.baseSeed, onInput: (d) => P((f) => {
+            f.defaults.baseSeed = Number(d.currentTarget.value);
           }) })
         ] }),
         /* @__PURE__ */ r("label", { children: [
           "提示词前缀",
-          /* @__PURE__ */ r(Ue, { value: i.promptPrefix, isReferenceValid: (s) => ht(i, s), onInput: (s) => S((u) => {
-            u.promptPrefix = s.currentTarget.value;
+          /* @__PURE__ */ r(qe, { value: i.promptPrefix, isReferenceValid: (d) => _t(i, d), onInput: (d) => P((f) => {
+            f.promptPrefix = d.currentTarget.value;
           }) })
         ] }),
         /* @__PURE__ */ r("label", { children: [
           "提示词后缀",
-          /* @__PURE__ */ r(Ue, { value: i.promptSuffix, isReferenceValid: (s) => ht(i, s), onInput: (s) => S((u) => {
-            u.promptSuffix = s.currentTarget.value;
+          /* @__PURE__ */ r(qe, { value: i.promptSuffix, isReferenceValid: (d) => _t(i, d), onInput: (d) => P((f) => {
+            f.promptSuffix = d.currentTarget.value;
           }) })
         ] })
       ] }),
-      p === "postprocess" && /* @__PURE__ */ r(Sr, { plan: i, language: h, queueSecondPass: d })
+      m === "postprocess" && /* @__PURE__ */ r(Ur, { plan: i, language: s, runtime: ee, queueSecondPass: a, queueMerge: l })
     ] }),
-    Q && /* @__PURE__ */ r("div", { class: "td-batch-overlay", role: "presentation", children: /* @__PURE__ */ r("section", { class: "td-batch-panel", role: "dialog", "aria-modal": "true", "aria-label": h === "zh" ? "批量处理镜头" : "Batch edit shots", children: [
+    X && /* @__PURE__ */ r("div", { class: "td-batch-overlay", role: "presentation", children: /* @__PURE__ */ r("section", { class: "td-batch-panel", role: "dialog", "aria-modal": "true", "aria-label": s === "zh" ? "批量处理镜头" : "Batch edit shots", children: [
       /* @__PURE__ */ r("header", { class: "td-batch-header", children: [
         /* @__PURE__ */ r("div", { children: [
-          /* @__PURE__ */ r("h2", { children: h === "zh" ? "批量处理镜头" : "Batch edit shots" }),
-          /* @__PURE__ */ r("p", { children: h === "zh" ? `当前共 ${W.length} 个镜头` : `${W.length} shots` })
+          /* @__PURE__ */ r("h2", { children: s === "zh" ? "批量处理镜头" : "Batch edit shots" }),
+          /* @__PURE__ */ r("p", { children: s === "zh" ? `当前共 ${Q.length} 个镜头` : `${Q.length} shots` })
         ] }),
-        /* @__PURE__ */ r("button", { "aria-label": h === "zh" ? "关闭" : "Close", onClick: () => K(!1), children: "×" })
+        /* @__PURE__ */ r("button", { "aria-label": s === "zh" ? "关闭" : "Close", onClick: () => K(!1), children: "×" })
       ] }),
       /* @__PURE__ */ r("div", { class: "td-batch-tools", children: [
         /* @__PURE__ */ r("div", { children: [
           /* @__PURE__ */ r("label", { children: [
-            h === "zh" ? "所有镜头时长" : "Duration for all shots",
+            s === "zh" ? "所有镜头时长" : "Duration for all shots",
             /* @__PURE__ */ r("span", { children: [
-              /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: xe, onInput: (s) => ve(s.currentTarget.value) }),
-              /* @__PURE__ */ r("em", { children: h === "zh" ? "秒" : "sec" })
+              /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: se, onInput: (d) => Oe(d.currentTarget.value) }),
+              /* @__PURE__ */ r("em", { children: s === "zh" ? "秒" : "sec" })
             ] })
           ] }),
-          /* @__PURE__ */ r("button", { onClick: Le, children: h === "zh" ? "一键设置所有时长" : "Set all durations" })
+          /* @__PURE__ */ r("button", { onClick: er, children: s === "zh" ? "一键设置所有时长" : "Set all durations" })
         ] }),
         /* @__PURE__ */ r("div", { children: [
           /* @__PURE__ */ r("label", { children: [
-            h === "zh" ? "新增镜头数量" : "New shot count",
-            /* @__PURE__ */ r("input", { type: "number", min: "1", max: "100", step: "1", value: ee, onInput: (s) => te(s.currentTarget.value) })
+            s === "zh" ? "新增镜头数量" : "New shot count",
+            /* @__PURE__ */ r("input", { type: "number", min: "1", max: "100", step: "1", value: ve, onInput: (d) => Z(d.currentTarget.value) })
           ] }),
           /* @__PURE__ */ r("label", { children: [
-            h === "zh" ? "每个镜头时长" : "Duration per shot",
+            s === "zh" ? "每个镜头时长" : "Duration per shot",
             /* @__PURE__ */ r("span", { children: [
-              /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: ye, onInput: (s) => De(s.currentTarget.value) }),
-              /* @__PURE__ */ r("em", { children: h === "zh" ? "秒" : "sec" })
+              /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: re, onInput: (d) => Ue(d.currentTarget.value) }),
+              /* @__PURE__ */ r("em", { children: s === "zh" ? "秒" : "sec" })
             ] })
           ] }),
-          /* @__PURE__ */ r("button", { onClick: Ut, children: h === "zh" ? "批量新增镜头" : "Add shots" })
+          /* @__PURE__ */ r("button", { onClick: tr, children: s === "zh" ? "批量新增镜头" : "Add shots" })
         ] })
       ] }),
       /* @__PURE__ */ r("div", { class: "td-batch-global-actions", children: [
-        /* @__PURE__ */ r("span", { children: h === "zh" ? `已启用 ${W.filter((s) => s.enabled).length}/${W.length} 个镜头` : `${W.filter((s) => s.enabled).length}/${W.length} shots enabled` }),
-        /* @__PURE__ */ r("button", { class: T ? "active" : "", onClick: Bt, children: T ? h === "zh" ? "全部禁用" : "Disable all" : h === "zh" ? "全部启用" : "Enable all" })
+        /* @__PURE__ */ r("span", { children: s === "zh" ? `已启用 ${Q.filter((d) => d.enabled).length}/${Q.length} 个镜头` : `${Q.filter((d) => d.enabled).length}/${Q.length} shots enabled` }),
+        /* @__PURE__ */ r("button", { class: O ? "active" : "", onClick: rr, children: O ? s === "zh" ? "全部禁用" : "Disable all" : s === "zh" ? "全部启用" : "Enable all" })
       ] }),
       /* @__PURE__ */ r("div", { class: "td-batch-table", children: [
         /* @__PURE__ */ r("div", { class: "td-batch-row td-batch-table-head", children: [
           /* @__PURE__ */ r("span", { children: "#" }),
-          /* @__PURE__ */ r("span", { children: h === "zh" ? "镜头名" : "Shot name" }),
-          /* @__PURE__ */ r("span", { children: h === "zh" ? "启用" : "Enabled" }),
-          /* @__PURE__ */ r("span", { children: h === "zh" ? "具体时长" : "Duration" }),
+          /* @__PURE__ */ r("span", { children: s === "zh" ? "镜头名" : "Shot name" }),
+          /* @__PURE__ */ r("span", { children: s === "zh" ? "启用" : "Enabled" }),
+          /* @__PURE__ */ r("span", { children: s === "zh" ? "具体时长" : "Duration" }),
           /* @__PURE__ */ r("span", { children: [
             "latent ",
-            h === "zh" ? "接力" : "relay"
+            s === "zh" ? "接力" : "relay"
           ] })
         ] }),
-        W.map((s, u) => /* @__PURE__ */ r("div", { class: "td-batch-row", children: [
-          /* @__PURE__ */ r("span", { children: u + 1 }),
-          /* @__PURE__ */ r("input", { value: s.title, "aria-label": `${h === "zh" ? "镜头名" : "Shot name"} ${u + 1}`, onInput: (v) => Y((z) => z.map((N, X) => X === u ? { ...N, title: v.currentTarget.value } : N)) }),
+        Q.map((d, f) => /* @__PURE__ */ r("div", { class: "td-batch-row", children: [
+          /* @__PURE__ */ r("span", { children: f + 1 }),
+          /* @__PURE__ */ r("input", { value: d.title, "aria-label": `${s === "zh" ? "镜头名" : "Shot name"} ${f + 1}`, onInput: (x) => G(($) => $.map((L, Y) => Y === f ? { ...L, title: x.currentTarget.value } : L)) }),
           /* @__PURE__ */ r("label", { class: "td-batch-enabled", children: [
-            /* @__PURE__ */ r("input", { type: "checkbox", checked: s.enabled, onChange: (v) => Y((z) => z.map((N, X) => X === u ? { ...N, enabled: v.currentTarget.checked } : N)) }),
-            /* @__PURE__ */ r("span", { children: s.enabled ? h === "zh" ? "开" : "ON" : h === "zh" ? "关" : "OFF" })
+            /* @__PURE__ */ r("input", { type: "checkbox", checked: d.enabled, onChange: (x) => G(($) => $.map((L, Y) => Y === f ? { ...L, enabled: x.currentTarget.checked } : L)) }),
+            /* @__PURE__ */ r("span", { children: d.enabled ? s === "zh" ? "开" : "ON" : s === "zh" ? "关" : "OFF" })
           ] }),
           /* @__PURE__ */ r("label", { class: "td-batch-duration", children: [
-            /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: s.durationSeconds, onInput: (v) => Y((z) => z.map((N, X) => X === u ? { ...N, durationSeconds: Number(v.currentTarget.value) } : N)) }),
-            /* @__PURE__ */ r("span", { children: h === "zh" ? "秒" : "sec" })
+            /* @__PURE__ */ r("input", { type: "number", min: "0.1", step: "0.1", value: d.durationSeconds, onInput: (x) => G(($) => $.map((L, Y) => Y === f ? { ...L, durationSeconds: Number(x.currentTarget.value) } : L)) }),
+            /* @__PURE__ */ r("span", { children: s === "zh" ? "秒" : "sec" })
           ] }),
           /* @__PURE__ */ r("label", { class: "td-batch-relay", children: [
-            /* @__PURE__ */ r("input", { type: "checkbox", checked: s.latentRelay, onChange: (v) => Y((z) => z.map((N, X) => X === u ? { ...N, latentRelay: v.currentTarget.checked } : N)) }),
-            /* @__PURE__ */ r("span", { children: s.latentRelay ? h === "zh" ? "开" : "ON" : h === "zh" ? "关" : "OFF" })
+            /* @__PURE__ */ r("input", { type: "checkbox", checked: d.latentRelay, onChange: (x) => G(($) => $.map((L, Y) => Y === f ? { ...L, latentRelay: x.currentTarget.checked } : L)) }),
+            /* @__PURE__ */ r("span", { children: d.latentRelay ? s === "zh" ? "开" : "ON" : s === "zh" ? "关" : "OFF" })
           ] })
-        ] }, s.id))
+        ] }, d.id))
       ] }),
       /* @__PURE__ */ r("footer", { children: [
-        /* @__PURE__ */ r("button", { onClick: () => K(!1), children: h === "zh" ? "取消" : "Cancel" }),
-        /* @__PURE__ */ r("button", { class: "primary", onClick: Ht, children: h === "zh" ? "应用更改" : "Apply changes" })
+        /* @__PURE__ */ r("button", { onClick: () => K(!1), children: s === "zh" ? "取消" : "Cancel" }),
+        /* @__PURE__ */ r("button", { class: "primary", onClick: nr, children: s === "zh" ? "应用更改" : "Apply changes" })
       ] })
     ] }) }),
-    V && /* @__PURE__ */ r(hr, { language: h, assets: i.assets, projectName: i.project.name, uploadFile: bt, onImported: (s) => S((u) => {
-      u.assets.push(...s);
-    }), onClose: () => ne(!1) })
+    he && /* @__PURE__ */ r($r, { language: s, assets: i.assets, projectName: i.project.name, uploadFile: $e, onImported: (d) => P((f) => {
+      f.assets.push(...d);
+    }), onClose: () => ie(!1) })
   ] });
 }
-function Rr(e, t, o = !1, n) {
-  const d = document.getElementById("theodore-director-modal");
-  if (d) {
-    d.focus();
+function Qr(e, t, n = !1, o, a) {
+  const l = document.getElementById("theodore-director-modal");
+  if (l) {
+    l.focus();
     return;
   }
   const i = document.createElement("div");
   i.id = "theodore-director-modal", i.className = "td-modal", i.tabIndex = -1, document.body.append(i);
-  const a = (b) => {
-    b.key === "Escape" && p();
-  }, p = () => {
-    document.removeEventListener("keydown", a), rt(null, i), i.remove();
+  const c = (p) => {
+    p.key === "Escape" && m();
+  }, m = () => {
+    document.removeEventListener("keydown", c), lt(null, i), i.remove();
   };
-  document.addEventListener("keydown", a), rt(/* @__PURE__ */ r(Nr, { initial: e, onSave: (b) => {
-    t(b), p();
-  }, onClose: p, supportsSecondSampling: o, queueSecondPass: n }), i), i.focus();
+  document.addEventListener("keydown", c), lt(/* @__PURE__ */ r(Gr, { initial: e, onSave: (p) => {
+    t(p), m();
+  }, onClose: m, supportsSecondSampling: n, queueSecondPass: o, queueMerge: a }), i), i.focus();
 }
-const Dr = ":root{--td-bg:#11151b;--td-panel:#1a2029;--td-line:#354052;--td-text:#edf2f8;--td-muted:#9daabd;--td-accent:#74c7a5;--td-danger:#ff7d7d}.td-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;display:block;overflow:hidden;pointer-events:auto;background:#04070bf5;color:var(--td-text);font:14px/1.45 Inter,Segoe UI,sans-serif;isolation:isolate}.td-shell{height:100vh;display:grid;grid-template-rows:auto auto 1fr;background:var(--td-bg)}.td-shell header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--td-line)}.td-shell h1,.td-shell h2{margin:0;font-weight:650}.td-shell h1{font-size:20px}.td-shell h2{font-size:15px;margin-bottom:10px}.td-shell button,.td-shell input,.td-shell textarea,.td-shell select{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;box-sizing:border-box}.td-import{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;cursor:pointer}.td-import input{display:none}.td-shell button{cursor:pointer}.td-shell button:hover,.td-shell button.active{border-color:var(--td-accent)}.td-shell button.primary{background:var(--td-accent);color:#0a1913}.td-shell button.danger{color:var(--td-danger)}.td-actions,.td-toolbar,.td-flags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.td-shell nav{display:flex;gap:8px;padding:9px 20px;border-bottom:1px solid var(--td-line)}.td-shell main{overflow:auto;padding:16px 20px}.td-shots{display:grid;grid-template-columns:230px minmax(360px,1fr) minmax(300px,.8fr);gap:16px;height:100%}.td-shots>aside,.td-form,.td-assets article{background:var(--td-panel);border:1px solid var(--td-line);border-radius:9px;padding:12px;overflow:auto}.td-shot-card{padding:9px;border:1px solid transparent;border-radius:6px;margin-bottom:6px;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;row-gap:4px}.td-shot-card.selected{border-color:var(--td-accent);background:#202b31}.td-shot-card>strong,.td-shot-card>span{grid-column:2}.td-shot-card span{color:var(--td-muted);font-size:12px}.td-shot-delete-action{grid-column:1;grid-row:1/3;display:flex;align-items:center}.td-shot-move-actions{grid-column:3;grid-row:1/3;display:flex;align-items:start;gap:3px}.td-shot-card button{padding:3px 6px}.td-shot-card .td-shot-delete{color:var(--td-danger);font-weight:700}.td-shot-card .td-shot-delete:disabled{opacity:.35;cursor:not-allowed}.wide{width:100%}.td-form{display:flex;flex-direction:column;gap:10px}.td-form label,.td-grid label{display:flex;flex-direction:column;gap:4px;color:var(--td-muted)}.td-form label.check{flex-direction:row}.td-form input,.td-form textarea,.td-grid input,.td-grid select{width:100%}.td-form label.check input{width:auto}.td-form textarea{resize:vertical}.td-field-label{display:block;white-space:nowrap}.td-shot-meta{display:grid;grid-template-columns:minmax(100px,.75fr) minmax(120px,1.5fr) 105px 110px;gap:10px;align-items:end}.td-shot-meta>label{white-space:nowrap}.td-shot-enabled{height:35px;box-sizing:border-box;display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:7px!important;padding:0 8px;border:1px solid var(--td-line);border-radius:6px;background:#222a35;color:var(--td-text)!important;white-space:nowrap;cursor:pointer}.td-shot-enabled:hover{border-color:var(--td-accent)}.td-form .td-shot-enabled input{width:17px;height:17px;margin:0;cursor:pointer}.td-preview pre{white-space:pre-wrap;background:#0d1117;padding:10px;border-radius:6px}.td-preview code{color:#9ee6c7}.td-counters{color:var(--td-muted);margin-bottom:10px}.errors{color:var(--td-danger)}.ok{color:var(--td-accent)}.td-highlight-textarea{position:relative;display:block;width:100%;min-width:0}.td-highlight-backdrop,.td-form textarea.td-highlight-input{box-sizing:border-box;width:100%;margin:0;padding:7px 9px;font-family:ui-monospace,SFMono-Regular,Consolas,Liberation Mono,monospace;font-size:inherit;line-height:1.45;letter-spacing:normal;-moz-tab-size:8;tab-size:8;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}.td-highlight-backdrop{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;border:1px solid transparent;border-radius:6px;background:#222a35;color:var(--td-text);pointer-events:none}.td-form textarea.td-highlight-input{position:relative;z-index:1;display:block;background:transparent;color:transparent;caret-color:var(--td-text);-webkit-text-fill-color:transparent}.td-highlight-input::selection{background:#5898d46b}.td-highlight-backdrop mark{padding:1px 2px;border-radius:3px;color:inherit}.td-highlight-backdrop mark.valid{background:#1d6b50;color:#bfffe6}.td-highlight-backdrop mark.invalid{background:#7a2931;color:#ffd1d5;text-decoration:underline;text-decoration-color:#ff9aa4;text-underline-offset:2px}.td-preview{display:flex;flex-direction:column;gap:10px}.td-preview details{flex:none;border:1px solid var(--td-line);border-radius:8px;overflow:hidden;background:#151b23}.td-preview summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px 12px;cursor:pointer;background:#1d2530;list-style-position:inside}.td-preview summary:hover{background:#222c38}.td-preview details[open]>summary{border-bottom:1px solid var(--td-line)}.td-preview summary strong{color:var(--td-text);font-size:15px}.td-summary-counts{color:var(--td-muted);font-size:11px;white-space:nowrap}.td-preview-body{padding:12px;max-height:calc(100vh - 310px);overflow:auto}.td-preview-body>p:first-child{margin-top:0}.td-preview-body>pre:last-child{margin-bottom:0}.td-result-state{padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted);font-size:11px}.td-result-state.found{background:#183a2e;color:var(--td-accent)}.td-result-actions{display:flex;justify-content:flex-end;margin-bottom:9px}.td-result-actions button{padding:5px 8px}.td-result-empty{min-height:130px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--td-line);border-radius:7px;color:var(--td-muted);text-align:center;padding:12px;box-sizing:border-box}.td-generated-video video{display:block;width:100%;max-height:420px;background:#080b0f;border-radius:7px}.td-generated-meta{margin-top:7px;color:var(--td-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-generated-results{display:flex;flex-direction:column;gap:12px}.td-result-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;padding-right:3px}.td-shell button.td-result-item{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;width:100%;padding:6px;text-align:left;background:#151b23}.td-shell button.td-result-item.selected{border-color:var(--td-accent);background:#1c2a2a}.td-result-thumb{width:112px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;background:#090c10;color:var(--td-muted)}.td-result-thumb img,.td-result-thumb video{display:block;width:100%;height:100%;object-fit:contain}.td-result-item-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.td-result-item-copy>strong{display:flex;align-items:center;gap:7px;color:var(--td-text)}.td-result-item-copy>strong em{padding:1px 6px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-result-item-copy>span,.td-result-item-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-result-item-copy>small{font-size:10px}.td-assets{display:flex;flex-direction:column;gap:10px}.td-assets article{overflow:visible}.td-asset-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}.td-grid{display:grid;grid-template-columns:1fr 130px 2fr 120px;gap:10px;margin-bottom:10px}.td-form fieldset{border:1px solid var(--td-line);border-radius:6px}.settings{max-width:780px;margin:auto}.td-asset-batch-entry{margin-left:auto;border-color:#527061!important;background:#1b2c28!important;color:var(--td-accent)!important}.td-file-picker{display:flex;align-items:center;min-width:0;margin-top:2px}.td-file-button{display:block!important;flex:none;color:var(--td-text)!important;background:#3b4655;border:1px solid var(--td-line);border-radius:5px 0 0 5px;padding:6px 9px;cursor:pointer}.td-file-button:hover{border-color:var(--td-accent)}.td-file-button input{display:none}.td-file-name{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-text);background:#181e26;border:1px solid var(--td-line);border-left:0;border-radius:0 5px 5px 0;padding:6px 9px}.td-media-preview{min-height:150px;background:#0d1117;border:1px solid var(--td-line);border-radius:7px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--td-muted);text-align:center}.td-media-preview img,.td-media-preview video{display:block;width:100%;height:220px;object-fit:contain;background:#090c10}.td-media-preview audio{display:block;width:calc(100% - 16px)}.td-media-preview.empty,.td-media-preview.unavailable{padding:12px;box-sizing:border-box}.td-shot-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px}.td-shot-media legend{padding:0 5px}.td-shot-media-card{min-width:0;border:1px solid var(--td-line);border-radius:7px;overflow:hidden;background:#151b23;transition:opacity .15s,border-color .15s}.td-shot-media-card:hover{border-color:var(--td-accent)}.td-shot-media-card.disabled{opacity:.48}.td-shot-media-frame{position:relative}.td-shot-media-card .td-media-preview.compact{min-height:96px;border:0;border-bottom:1px solid var(--td-line);border-radius:0}.td-shot-media-card .td-media-preview.compact img,.td-shot-media-card .td-media-preview.compact video{height:112px}.td-shot-media-card .td-media-preview.compact audio{width:calc(100% - 10px)}.td-shot-media-kind{position:absolute;top:7px;left:7px;z-index:2;padding:2px 7px;border-radius:999px;background:#090d12d9;border:1px solid #ffffff2b;color:var(--td-text);font-size:12px;line-height:1.5;pointer-events:none}.td-form label.td-shot-media-toggle{position:absolute;top:7px;right:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:6px;background:#090d12d9;border:1px solid #ffffff38;cursor:pointer}.td-form label.td-shot-media-toggle:hover{border-color:var(--td-accent)}.td-form label.td-shot-media-toggle input{width:17px;height:17px;margin:0;cursor:pointer}.td-shell button.td-shot-media-name{position:relative;display:block;width:100%;border:0;border-radius:0;padding:8px 10px;color:var(--td-text);background:#151b23;font-weight:600;overflow:hidden;white-space:nowrap;text-align:left}.td-shot-media-name>span{display:block;overflow:hidden;text-overflow:ellipsis}.td-shell button.td-shot-media-name:hover,.td-shell button.td-shot-media-name:focus-visible{background:#202a35;color:var(--td-accent)}.td-shell button.td-shot-media-name.copied{background:#17372d;color:var(--td-accent)}.td-shot-media-name em{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:2px 6px;border-radius:999px;background:#0d1c17;color:var(--td-accent);font-size:11px;font-style:normal;box-shadow:0 0 0 1px #74c7a566}.td-shot-meta{grid-template-columns:minmax(100px,.75fr) minmax(140px,1.5fr) 105px}.td-shot-switches{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.td-shot-switches .td-shot-enabled{min-width:135px}.td-bulk-toggle{margin-bottom:9px}.td-bulk-toggle.active{background:#17372d;color:var(--td-accent)}.td-shot-sidebar{display:flex;flex-direction:column}.td-shot-list{flex:none}.td-shot-batch-entry{display:flex;align-items:flex-end;flex:1;min-height:90px;padding-top:14px}.td-shot-batch-entry button{border-color:#527061;background:#1b2c28;color:var(--td-accent)}.td-batch-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:28px;background:#05080dbd;box-sizing:border-box}.td-batch-panel{display:flex;flex-direction:column;width:min(1040px,100%);max-height:min(820px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-batch-header h2{font-size:18px;margin:0}.td-batch-header p{margin:3px 0 0;color:var(--td-muted)}.td-batch-header>button{font-size:20px;line-height:1;padding:5px 9px}.td-batch-tools{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;padding:14px 18px;border-bottom:1px solid var(--td-line);background:#151b23}.td-batch-tools>div{display:flex;align-items:end;gap:8px;padding:10px;border:1px solid var(--td-line);border-radius:7px}.td-batch-tools label{display:flex;flex:1;flex-direction:column;gap:4px;color:var(--td-muted);white-space:nowrap}.td-batch-tools label>span,.td-batch-duration{display:flex;align-items:center;gap:6px}.td-batch-tools input{width:100%}.td-batch-tools em{color:var(--td-muted);font-style:normal}.td-batch-tools button{white-space:nowrap}.td-batch-global-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:9px 22px;border-bottom:1px solid var(--td-line);background:#171e27;color:var(--td-muted)}.td-batch-global-actions button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-batch-table{overflow:auto;padding:0 18px}.td-batch-row{display:grid;grid-template-columns:42px minmax(180px,1fr) 100px 150px 120px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-batch-table-head{position:sticky;top:0;z-index:1;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-batch-duration input{min-width:0;width:100%}.td-batch-duration>span{color:var(--td-muted)}.td-batch-enabled,.td-batch-relay{display:flex;align-items:center;gap:7px;justify-content:flex-start;color:var(--td-text)}.td-batch-enabled input,.td-batch-relay input{width:17px;height:17px;margin:0}.td-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-batch-panel{display:flex;flex-direction:column;width:min(1420px,100%);max-height:min(880px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-asset-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-asset-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:92px;margin:14px 18px 10px;border:1px dashed #597084;border-radius:9px;background:#151b23;color:var(--td-text);cursor:pointer;transition:border-color .15s,background .15s}.td-asset-dropzone:hover,.td-asset-dropzone.dragging{border-color:var(--td-accent);background:#1b2c28}.td-asset-dropzone span{color:var(--td-muted);font-size:12px}.td-asset-dropzone input{display:none}.td-asset-batch-warning{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 18px 10px;padding:8px 10px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-asset-batch-warning span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-warning button{padding:2px 7px}.td-asset-batch-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--td-line);border-bottom:1px solid var(--td-line);background:#151b23;color:var(--td-muted)}.td-asset-batch-summary button{padding:5px 8px}.td-asset-batch-list{overflow:auto;padding:0 18px 10px}.td-asset-batch-row{display:grid;grid-template-columns:minmax(210px,1.4fr) minmax(150px,1fr) 115px 135px 105px 72px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-asset-batch-head{position:sticky;top:0;z-index:2;padding-top:10px;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-asset-batch-row.invalid{background:#3b202560}.td-asset-batch-row.imported{background:#17372d55}.td-asset-batch-file{display:flex;min-width:0;flex-direction:column;gap:2px}.td-asset-batch-file strong,.td-asset-batch-file small,.td-asset-batch-file em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-file small{color:var(--td-muted);font-weight:400}.td-asset-batch-file em{color:var(--td-danger);font-size:11px;font-style:normal}.td-asset-batch-duration,.td-asset-batch-audio{display:flex;align-items:center;gap:6px;color:var(--td-muted)}.td-asset-batch-duration input{min-width:0;width:100%}.td-asset-batch-audio input{width:17px;height:17px;margin:0}.td-asset-batch-empty{display:flex;min-height:130px;align-items:center;justify-content:center;color:var(--td-muted)}.td-asset-batch-panel button:disabled,.td-asset-batch-panel input:disabled,.td-asset-batch-panel select:disabled{opacity:.55;cursor:not-allowed}.td-postprocess{display:flex;flex-direction:column;gap:14px;max-width:1500px;margin:0 auto}.td-post-header,.td-post-summary,.td-post-merged{border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px}.td-post-header h2,.td-post-merged h2{margin:0;font-size:17px}.td-post-header p{margin:4px 0 0;color:var(--td-muted)}.td-post-actions{display:flex;gap:8px;flex:none}.td-post-summary{display:flex;align-items:center;gap:18px;padding:10px 14px;color:var(--td-muted)}.td-post-summary>button{margin-left:auto}.td-post-summary button:disabled{opacity:.5;cursor:not-allowed}.td-post-range{display:flex;align-items:center;gap:6px;margin-left:auto}.td-post-range input{width:64px;padding:6px 7px;text-align:center}.td-post-range button{white-space:nowrap}.td-post-summary>.td-post-range+button{margin-left:0}.td-post-error,.td-post-warning{padding:10px 13px;border-radius:7px}.td-post-error{border:1px solid #8b4149;background:#442228;color:#ffd1d5;white-space:pre-wrap}.td-post-warning{border:1px solid #836a32;background:#3a301c;color:#f4d991}.td-post-shot-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;align-items:start}.td-post-shot{min-width:0;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel);overflow:hidden}.td-post-shot.selected{border-color:#527e6c}.td-post-shot.disabled{opacity:.72}.td-post-shot>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--td-line);background:#1d2530}.td-post-shot>header>label{display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer}.td-post-shot>header input{width:18px;height:18px;margin:0;flex:none}.td-post-shot>header label>span{display:flex;min-width:0;gap:8px;align-items:baseline}.td-post-shot>header strong{color:var(--td-text)}.td-post-shot>header em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted);font-style:normal}.td-post-shot>header>span{flex:none;padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted)}.td-post-shot-disabled-note{padding:7px 10px;border-bottom:1px solid var(--td-line);background:#332b1d;color:#e5c77d;font-size:11px}.td-post-shot-empty{min-height:96px;display:flex;align-items:center;justify-content:center;padding:12px;color:var(--td-muted);text-align:center}.td-post-result-list{display:flex;flex-direction:column;gap:7px;max-height:360px;overflow:auto;padding:9px}.td-post-result{display:grid;grid-template-columns:minmax(0,1fr) 35px;gap:6px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:5px}.td-post-result.selected{border-color:var(--td-accent);background:#1c2a2a}.td-shell button.td-post-result-choice{display:grid;grid-template-columns:112px minmax(0,1fr);gap:9px;align-items:center;min-width:0;padding:0;border:0;background:transparent;text-align:left}.td-post-result-choice>span{display:flex;min-width:0;flex-direction:column;gap:3px}.td-post-result-choice>span>strong{display:flex;align-items:center;gap:6px}.td-post-result-choice>span>strong em{padding:1px 5px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-post-result-choice>span>span,.td-post-result-choice>span>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-post-result-choice>span>small{font-size:10px}.td-post-result-play{width:35px;height:35px;padding:0!important}.td-post-result-play:disabled{opacity:.35;cursor:not-allowed}.td-post-merged{padding:12px}.td-post-merged>header>div{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}.td-post-merged .td-generated-results{display:grid;grid-template-columns:minmax(360px,1.6fr) minmax(300px,1fr);align-items:start}.td-post-merged .td-result-list{max-height:420px}.td-post-preview-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:26px;background:#030609d6}.td-post-preview-overlay>section{width:min(980px,100%);max-height:calc(100vh - 52px);overflow:auto;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 80px #000c}.td-post-preview-overlay header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--td-line)}.td-post-preview-overlay header button{font-size:20px;line-height:1;padding:5px 9px}.td-post-preview-overlay video{display:block;width:100%;max-height:calc(100vh - 170px);background:#070a0e}.td-post-preview-overlay p{margin:0;padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}@media(max-width:1200px){.td-asset-layout{grid-template-columns:1fr}.td-asset-layout>.td-media-preview{min-height:120px}.td-asset-layout>.td-media-preview img,.td-asset-layout>.td-media-preview video{height:200px}.td-shot-meta{grid-template-columns:1fr 1.4fr 110px}.td-shot-enabled{grid-column:1/-1;justify-self:start}.td-post-summary{flex-wrap:wrap}.td-post-range{margin-left:0}.td-post-summary>button{margin-left:auto}}@media(max-width:1000px){.td-shots{grid-template-columns:190px 1fr}.td-preview{grid-column:1/-1}.td-grid{grid-template-columns:1fr 1fr}}@media(max-width:900px){.td-post-shot-list,.td-post-merged .td-generated-results{grid-template-columns:1fr}.td-post-header{align-items:flex-start;flex-direction:column}.td-post-actions{width:100%}.td-post-actions button{flex:1}.td-post-summary{align-items:stretch;flex-direction:column;gap:7px}.td-post-range{margin:3px 0;flex-wrap:wrap}.td-post-summary>button{margin:4px 0 0}.td-post-result-list{max-height:none}}@media(max-width:720px){.td-shot-meta{grid-template-columns:1fr 1fr}.td-shot-enabled{grid-column:auto;justify-self:stretch}}@media(max-width:1000px){.td-asset-batch-list{min-width:900px}.td-asset-batch-panel{overflow:auto}.td-asset-batch-panel>.td-batch-header,.td-asset-dropzone,.td-asset-batch-warning,.td-asset-batch-summary,.td-asset-batch-panel>footer{min-width:864px}}@media(max-width:720px){.td-asset-batch-entry{margin-left:0}}.td-postprocess-shell{display:flex;flex-direction:column;gap:12px;max-width:1500px;margin:0 auto}.td-postprocess-shell>.td-postprocess{max-width:none;width:100%;margin:0}.td-post-mode-tabs{display:flex;gap:7px;padding:5px;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-mode-tabs button{min-width:130px}.td-post-mode-tabs button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-second-pass-panel .td-post-shot>header>span:first-child{display:flex;min-width:0;gap:8px;align-items:baseline;padding:0;background:transparent}.td-second-pass-result{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:8px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:6px}.td-second-pass-result:has(.td-second-pass-run:disabled){border-color:#34404d}.td-second-pass-run{width:118px;min-height:38px;padding:6px!important}.td-second-pass-run:disabled{opacity:.62;cursor:not-allowed}.td-second-pass-error{grid-column:1/-1;padding:6px 8px;border-radius:5px;background:#442228;color:#ffd1d5;font-size:11px;white-space:pre-wrap}@media(max-width:620px){.td-post-mode-tabs{flex-direction:column}.td-post-mode-tabs button{width:100%}.td-second-pass-result{grid-template-columns:1fr}.td-second-pass-run{width:100%}}", _t = "theodore-director-styles";
-function Lr() {
-  if (document.getElementById(_t)) return;
+const Yr = ":root{--td-bg:#11151b;--td-panel:#1a2029;--td-line:#354052;--td-text:#edf2f8;--td-muted:#9daabd;--td-accent:#74c7a5;--td-danger:#ff7d7d}.td-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;display:block;overflow:hidden;pointer-events:auto;background:#04070bf5;color:var(--td-text);font:14px/1.45 Inter,Segoe UI,sans-serif;isolation:isolate}.td-shell{height:100vh;display:grid;grid-template-rows:auto auto 1fr;background:var(--td-bg)}.td-shell header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--td-line)}.td-shell h1,.td-shell h2{margin:0;font-weight:650}.td-shell h1{font-size:20px}.td-shell h2{font-size:15px;margin-bottom:10px}.td-shell button,.td-shell input,.td-shell textarea,.td-shell select{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;box-sizing:border-box}.td-import{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;cursor:pointer}.td-import input{display:none}.td-shell button{cursor:pointer}.td-shell button:hover,.td-shell button.active{border-color:var(--td-accent)}.td-shell button.primary{background:var(--td-accent);color:#0a1913}.td-shell button.danger{color:var(--td-danger)}.td-actions,.td-toolbar,.td-flags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.td-shell nav{display:flex;gap:8px;padding:9px 20px;border-bottom:1px solid var(--td-line)}.td-shell main{overflow:auto;padding:16px 20px}.td-shots{display:grid;grid-template-columns:230px minmax(360px,1fr) minmax(300px,.8fr);gap:16px;height:100%}.td-shots>aside,.td-form,.td-assets article{background:var(--td-panel);border:1px solid var(--td-line);border-radius:9px;padding:12px;overflow:auto}.td-shot-card{padding:9px;border:1px solid transparent;border-radius:6px;margin-bottom:6px;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;row-gap:4px}.td-shot-card.selected{border-color:var(--td-accent);background:#202b31}.td-shot-card>strong,.td-shot-card>span{grid-column:2}.td-shot-card span{color:var(--td-muted);font-size:12px}.td-shot-delete-action{grid-column:1;grid-row:1/3;display:flex;align-items:center}.td-shot-move-actions{grid-column:3;grid-row:1/3;display:flex;align-items:start;gap:3px}.td-shot-card button{padding:3px 6px}.td-shot-card .td-shot-delete{color:var(--td-danger);font-weight:700}.td-shot-card .td-shot-delete:disabled{opacity:.35;cursor:not-allowed}.wide{width:100%}.td-form{display:flex;flex-direction:column;gap:10px}.td-form label,.td-grid label{display:flex;flex-direction:column;gap:4px;color:var(--td-muted)}.td-form label.check{flex-direction:row}.td-form input,.td-form textarea,.td-grid input,.td-grid select{width:100%}.td-form label.check input{width:auto}.td-form textarea{resize:vertical}.td-field-label{display:block;white-space:nowrap}.td-shot-meta{display:grid;grid-template-columns:minmax(100px,.75fr) minmax(120px,1.5fr) 105px 110px;gap:10px;align-items:end}.td-shot-meta>label{white-space:nowrap}.td-shot-enabled{height:35px;box-sizing:border-box;display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:7px!important;padding:0 8px;border:1px solid var(--td-line);border-radius:6px;background:#222a35;color:var(--td-text)!important;white-space:nowrap;cursor:pointer}.td-shot-enabled:hover{border-color:var(--td-accent)}.td-form .td-shot-enabled input{width:17px;height:17px;margin:0;cursor:pointer}.td-preview pre{white-space:pre-wrap;background:#0d1117;padding:10px;border-radius:6px}.td-preview code{color:#9ee6c7}.td-counters{color:var(--td-muted);margin-bottom:10px}.errors{color:var(--td-danger)}.ok{color:var(--td-accent)}.td-highlight-textarea{position:relative;display:block;width:100%;min-width:0}.td-highlight-backdrop,.td-form textarea.td-highlight-input{box-sizing:border-box;width:100%;margin:0;padding:7px 9px;font-family:ui-monospace,SFMono-Regular,Consolas,Liberation Mono,monospace;font-size:inherit;line-height:1.45;letter-spacing:normal;-moz-tab-size:8;tab-size:8;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}.td-highlight-backdrop{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;border:1px solid transparent;border-radius:6px;background:#222a35;color:var(--td-text);pointer-events:none}.td-form textarea.td-highlight-input{position:relative;z-index:1;display:block;background:transparent;color:transparent;caret-color:var(--td-text);-webkit-text-fill-color:transparent}.td-highlight-input::selection{background:#5898d46b}.td-highlight-backdrop mark{padding:1px 2px;border-radius:3px;color:inherit}.td-highlight-backdrop mark.valid{background:#1d6b50;color:#bfffe6}.td-highlight-backdrop mark.invalid{background:#7a2931;color:#ffd1d5;text-decoration:underline;text-decoration-color:#ff9aa4;text-underline-offset:2px}.td-preview{display:flex;flex-direction:column;gap:10px}.td-preview details{flex:none;border:1px solid var(--td-line);border-radius:8px;overflow:hidden;background:#151b23}.td-preview summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px 12px;cursor:pointer;background:#1d2530;list-style-position:inside}.td-preview summary:hover{background:#222c38}.td-preview details[open]>summary{border-bottom:1px solid var(--td-line)}.td-preview summary strong{color:var(--td-text);font-size:15px}.td-summary-counts{color:var(--td-muted);font-size:11px;white-space:nowrap}.td-preview-body{padding:12px;max-height:calc(100vh - 310px);overflow:auto}.td-preview-body>p:first-child{margin-top:0}.td-preview-body>pre:last-child{margin-bottom:0}.td-result-state{padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted);font-size:11px}.td-result-state.found{background:#183a2e;color:var(--td-accent)}.td-result-actions{display:flex;justify-content:flex-end;margin-bottom:9px}.td-result-actions button{padding:5px 8px}.td-result-empty{min-height:130px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--td-line);border-radius:7px;color:var(--td-muted);text-align:center;padding:12px;box-sizing:border-box}.td-generated-video video{display:block;width:100%;max-height:420px;background:#080b0f;border-radius:7px}.td-generated-meta{margin-top:7px;color:var(--td-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-generated-results{display:flex;flex-direction:column;gap:12px}.td-result-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;padding-right:3px}.td-shell button.td-result-item{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;width:100%;padding:6px;text-align:left;background:#151b23}.td-shell button.td-result-item.selected{border-color:var(--td-accent);background:#1c2a2a}.td-result-thumb{width:112px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;background:#090c10;color:var(--td-muted)}.td-result-thumb img,.td-result-thumb video{display:block;width:100%;height:100%;object-fit:contain}.td-result-item-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.td-result-item-copy>strong{display:flex;align-items:center;gap:7px;color:var(--td-text)}.td-result-item-copy>strong em{padding:1px 6px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-result-item-copy>span,.td-result-item-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-result-item-copy>small{font-size:10px}.td-assets{display:flex;flex-direction:column;gap:10px}.td-assets article{overflow:visible}.td-asset-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}.td-grid{display:grid;grid-template-columns:1fr 130px 2fr 120px;gap:10px;margin-bottom:10px}.td-form fieldset{border:1px solid var(--td-line);border-radius:6px}.settings{max-width:780px;margin:auto}.td-asset-batch-entry{margin-left:auto;border-color:#527061!important;background:#1b2c28!important;color:var(--td-accent)!important}.td-file-picker{display:flex;align-items:center;min-width:0;margin-top:2px}.td-file-button{display:block!important;flex:none;color:var(--td-text)!important;background:#3b4655;border:1px solid var(--td-line);border-radius:5px 0 0 5px;padding:6px 9px;cursor:pointer}.td-file-button:hover{border-color:var(--td-accent)}.td-file-button input{display:none}.td-file-name{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-text);background:#181e26;border:1px solid var(--td-line);border-left:0;border-radius:0 5px 5px 0;padding:6px 9px}.td-media-preview{min-height:150px;background:#0d1117;border:1px solid var(--td-line);border-radius:7px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--td-muted);text-align:center}.td-media-preview img,.td-media-preview video{display:block;width:100%;height:220px;object-fit:contain;background:#090c10}.td-media-preview audio{display:block;width:calc(100% - 16px)}.td-media-preview.empty,.td-media-preview.unavailable{padding:12px;box-sizing:border-box}.td-shot-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px}.td-shot-media legend{padding:0 5px}.td-shot-media-card{min-width:0;border:1px solid var(--td-line);border-radius:7px;overflow:hidden;background:#151b23;transition:opacity .15s,border-color .15s}.td-shot-media-card:hover{border-color:var(--td-accent)}.td-shot-media-card.disabled{opacity:.48}.td-shot-media-frame{position:relative}.td-shot-media-card .td-media-preview.compact{min-height:96px;border:0;border-bottom:1px solid var(--td-line);border-radius:0}.td-shot-media-card .td-media-preview.compact img,.td-shot-media-card .td-media-preview.compact video{height:112px}.td-shot-media-card .td-media-preview.compact audio{width:calc(100% - 10px)}.td-shot-media-kind{position:absolute;top:7px;left:7px;z-index:2;padding:2px 7px;border-radius:999px;background:#090d12d9;border:1px solid #ffffff2b;color:var(--td-text);font-size:12px;line-height:1.5;pointer-events:none}.td-form label.td-shot-media-toggle{position:absolute;top:7px;right:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:6px;background:#090d12d9;border:1px solid #ffffff38;cursor:pointer}.td-form label.td-shot-media-toggle:hover{border-color:var(--td-accent)}.td-form label.td-shot-media-toggle input{width:17px;height:17px;margin:0;cursor:pointer}.td-shell button.td-shot-media-name{position:relative;display:block;width:100%;border:0;border-radius:0;padding:8px 10px;color:var(--td-text);background:#151b23;font-weight:600;overflow:hidden;white-space:nowrap;text-align:left}.td-shot-media-name>span{display:block;overflow:hidden;text-overflow:ellipsis}.td-shell button.td-shot-media-name:hover,.td-shell button.td-shot-media-name:focus-visible{background:#202a35;color:var(--td-accent)}.td-shell button.td-shot-media-name.copied{background:#17372d;color:var(--td-accent)}.td-shot-media-name em{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:2px 6px;border-radius:999px;background:#0d1c17;color:var(--td-accent);font-size:11px;font-style:normal;box-shadow:0 0 0 1px #74c7a566}.td-shot-meta{grid-template-columns:minmax(100px,.75fr) minmax(140px,1.5fr) 105px}.td-shot-switches{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.td-shot-switches .td-shot-enabled{min-width:135px}.td-bulk-toggle{margin-bottom:9px}.td-bulk-toggle.active{background:#17372d;color:var(--td-accent)}.td-shot-sidebar{display:flex;flex-direction:column}.td-shot-list{flex:none}.td-shot-batch-entry{display:flex;align-items:flex-end;flex:1;min-height:90px;padding-top:14px}.td-shot-batch-entry button{border-color:#527061;background:#1b2c28;color:var(--td-accent)}.td-batch-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:28px;background:#05080dbd;box-sizing:border-box}.td-batch-panel{display:flex;flex-direction:column;width:min(1040px,100%);max-height:min(820px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-batch-header h2{font-size:18px;margin:0}.td-batch-header p{margin:3px 0 0;color:var(--td-muted)}.td-batch-header>button{font-size:20px;line-height:1;padding:5px 9px}.td-batch-tools{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;padding:14px 18px;border-bottom:1px solid var(--td-line);background:#151b23}.td-batch-tools>div{display:flex;align-items:end;gap:8px;padding:10px;border:1px solid var(--td-line);border-radius:7px}.td-batch-tools label{display:flex;flex:1;flex-direction:column;gap:4px;color:var(--td-muted);white-space:nowrap}.td-batch-tools label>span,.td-batch-duration{display:flex;align-items:center;gap:6px}.td-batch-tools input{width:100%}.td-batch-tools em{color:var(--td-muted);font-style:normal}.td-batch-tools button{white-space:nowrap}.td-batch-global-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:9px 22px;border-bottom:1px solid var(--td-line);background:#171e27;color:var(--td-muted)}.td-batch-global-actions button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-batch-table{overflow:auto;padding:0 18px}.td-batch-row{display:grid;grid-template-columns:42px minmax(180px,1fr) 100px 150px 120px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-batch-table-head{position:sticky;top:0;z-index:1;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-batch-duration input{min-width:0;width:100%}.td-batch-duration>span{color:var(--td-muted)}.td-batch-enabled,.td-batch-relay{display:flex;align-items:center;gap:7px;justify-content:flex-start;color:var(--td-text)}.td-batch-enabled input,.td-batch-relay input{width:17px;height:17px;margin:0}.td-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-batch-panel{display:flex;flex-direction:column;width:min(1420px,100%);max-height:min(880px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-asset-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-asset-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:92px;margin:14px 18px 10px;border:1px dashed #597084;border-radius:9px;background:#151b23;color:var(--td-text);cursor:pointer;transition:border-color .15s,background .15s}.td-asset-dropzone:hover,.td-asset-dropzone.dragging{border-color:var(--td-accent);background:#1b2c28}.td-asset-dropzone span{color:var(--td-muted);font-size:12px}.td-asset-dropzone input{display:none}.td-asset-batch-warning{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 18px 10px;padding:8px 10px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-asset-batch-warning span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-warning button{padding:2px 7px}.td-asset-batch-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--td-line);border-bottom:1px solid var(--td-line);background:#151b23;color:var(--td-muted)}.td-asset-batch-summary button{padding:5px 8px}.td-asset-batch-list{overflow:auto;padding:0 18px 10px}.td-asset-batch-row{display:grid;grid-template-columns:minmax(210px,1.4fr) minmax(150px,1fr) 115px 135px 105px 72px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-asset-batch-head{position:sticky;top:0;z-index:2;padding-top:10px;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-asset-batch-row.invalid{background:#3b202560}.td-asset-batch-row.imported{background:#17372d55}.td-asset-batch-file{display:flex;min-width:0;flex-direction:column;gap:2px}.td-asset-batch-file strong,.td-asset-batch-file small,.td-asset-batch-file em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-file small{color:var(--td-muted);font-weight:400}.td-asset-batch-file em{color:var(--td-danger);font-size:11px;font-style:normal}.td-asset-batch-duration,.td-asset-batch-audio{display:flex;align-items:center;gap:6px;color:var(--td-muted)}.td-asset-batch-duration input{min-width:0;width:100%}.td-asset-batch-audio input{width:17px;height:17px;margin:0}.td-asset-batch-empty{display:flex;min-height:130px;align-items:center;justify-content:center;color:var(--td-muted)}.td-asset-batch-panel button:disabled,.td-asset-batch-panel input:disabled,.td-asset-batch-panel select:disabled{opacity:.55;cursor:not-allowed}.td-postprocess{display:flex;flex-direction:column;gap:14px;max-width:1500px;margin:0 auto}.td-post-header,.td-post-summary,.td-post-merged{border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px}.td-post-header h2,.td-post-merged h2{margin:0;font-size:17px}.td-post-header p{margin:4px 0 0;color:var(--td-muted)}.td-post-actions{display:flex;gap:8px;flex:none}.td-post-summary{display:flex;align-items:center;gap:18px;padding:10px 14px;color:var(--td-muted)}.td-post-summary>button{margin-left:auto}.td-post-summary button:disabled{opacity:.5;cursor:not-allowed}.td-post-range{display:flex;align-items:center;gap:6px;margin-left:auto}.td-post-range input{width:64px;padding:6px 7px;text-align:center}.td-post-range button{white-space:nowrap}.td-post-summary>.td-post-range+button{margin-left:0}.td-post-error,.td-post-warning{padding:10px 13px;border-radius:7px}.td-post-error{border:1px solid #8b4149;background:#442228;color:#ffd1d5;white-space:pre-wrap}.td-post-warning{border:1px solid #836a32;background:#3a301c;color:#f4d991}.td-post-shot-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;align-items:start}.td-post-shot{min-width:0;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel);overflow:hidden}.td-post-shot.selected{border-color:#527e6c}.td-post-shot.disabled{opacity:.72}.td-post-shot>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--td-line);background:#1d2530}.td-post-shot>header>label{display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer}.td-post-shot>header input{width:18px;height:18px;margin:0;flex:none}.td-post-shot>header label>span{display:flex;min-width:0;gap:8px;align-items:baseline}.td-post-shot>header strong{color:var(--td-text)}.td-post-shot>header em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted);font-style:normal}.td-post-shot>header>span{flex:none;padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted)}.td-post-shot-disabled-note{padding:7px 10px;border-bottom:1px solid var(--td-line);background:#332b1d;color:#e5c77d;font-size:11px}.td-post-shot-empty{min-height:96px;display:flex;align-items:center;justify-content:center;padding:12px;color:var(--td-muted);text-align:center}.td-post-result-list{display:flex;flex-direction:column;gap:7px;max-height:360px;overflow:auto;padding:9px}.td-post-result{display:grid;grid-template-columns:minmax(0,1fr) 35px;gap:6px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:5px}.td-post-result.selected{border-color:var(--td-accent);background:#1c2a2a}.td-shell button.td-post-result-choice{display:grid;grid-template-columns:112px minmax(0,1fr);gap:9px;align-items:center;min-width:0;padding:0;border:0;background:transparent;text-align:left}.td-post-result-choice>span{display:flex;min-width:0;flex-direction:column;gap:3px}.td-post-result-choice>span>strong{display:flex;align-items:center;gap:6px}.td-post-result-choice>span>strong em{padding:1px 5px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-post-result-choice>span>span,.td-post-result-choice>span>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-post-result-choice>span>small{font-size:10px}.td-post-result-play{width:35px;height:35px;padding:0!important}.td-post-result-play:disabled{opacity:.35;cursor:not-allowed}.td-post-merged{padding:12px}.td-post-merged>header>div{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}.td-post-merged .td-generated-results{display:grid;grid-template-columns:minmax(360px,1.6fr) minmax(300px,1fr);align-items:start}.td-post-merged .td-result-list{max-height:420px}.td-post-preview-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:26px;background:#030609d6}.td-post-preview-overlay>section{width:min(980px,100%);max-height:calc(100vh - 52px);overflow:auto;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 80px #000c}.td-post-preview-overlay header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--td-line)}.td-post-preview-overlay header button{font-size:20px;line-height:1;padding:5px 9px}.td-post-preview-overlay video{display:block;width:100%;max-height:calc(100vh - 170px);background:#070a0e}.td-post-preview-overlay p{margin:0;padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}@media(max-width:1200px){.td-asset-layout{grid-template-columns:1fr}.td-asset-layout>.td-media-preview{min-height:120px}.td-asset-layout>.td-media-preview img,.td-asset-layout>.td-media-preview video{height:200px}.td-shot-meta{grid-template-columns:1fr 1.4fr 110px}.td-shot-enabled{grid-column:1/-1;justify-self:start}.td-post-summary{flex-wrap:wrap}.td-post-range{margin-left:0}.td-post-summary>button{margin-left:auto}}@media(max-width:1000px){.td-shots{grid-template-columns:190px 1fr}.td-preview{grid-column:1/-1}.td-grid{grid-template-columns:1fr 1fr}}@media(max-width:900px){.td-post-shot-list,.td-post-merged .td-generated-results{grid-template-columns:1fr}.td-post-header{align-items:flex-start;flex-direction:column}.td-post-actions{width:100%}.td-post-actions button{flex:1}.td-post-summary{align-items:stretch;flex-direction:column;gap:7px}.td-post-range{margin:3px 0;flex-wrap:wrap}.td-post-summary>button{margin:4px 0 0}.td-post-result-list{max-height:none}}@media(max-width:720px){.td-shot-meta{grid-template-columns:1fr 1fr}.td-shot-enabled{grid-column:auto;justify-self:stretch}}@media(max-width:1000px){.td-asset-batch-list{min-width:900px}.td-asset-batch-panel{overflow:auto}.td-asset-batch-panel>.td-batch-header,.td-asset-dropzone,.td-asset-batch-warning,.td-asset-batch-summary,.td-asset-batch-panel>footer{min-width:864px}}@media(max-width:720px){.td-asset-batch-entry{margin-left:0}}.td-postprocess-shell{display:flex;flex-direction:column;gap:12px;max-width:1500px;margin:0 auto}.td-postprocess-shell>.td-postprocess{max-width:none;width:100%;margin:0}.td-post-mode-tabs{display:flex;gap:7px;padding:5px;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-mode-tabs button{min-width:130px}.td-post-mode-tabs button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-second-pass-panel .td-post-shot>header>span:first-child{display:flex;min-width:0;gap:8px;align-items:baseline;padding:0;background:transparent}.td-second-pass-result{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:8px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:6px}.td-second-pass-result:has(.td-second-pass-run:disabled){border-color:#34404d}.td-second-pass-run{width:118px;min-height:38px;padding:6px!important}.td-second-pass-run:disabled{opacity:.62;cursor:not-allowed}.td-second-pass-error{grid-column:1/-1;padding:6px 8px;border-radius:5px;background:#442228;color:#ffd1d5;font-size:11px;white-space:pre-wrap}@media(max-width:620px){.td-post-mode-tabs{flex-direction:column}.td-post-mode-tabs button{width:100%}.td-second-pass-result{grid-template-columns:1fr}.td-second-pass-run{width:100%}}.td-runtime-settings{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;margin:0 0 8px}.td-runtime-settings legend{padding:0 7px;color:var(--td-accent)}.td-runtime-settings label:has(textarea),.td-runtime-settings label:has(input[type=password]),.td-runtime-apply{grid-column:1/-1}.td-runtime-settings small{display:block;margin-top:5px;color:var(--td-muted);line-height:1.45}.td-runtime-status{display:flex;align-items:center;padding:8px 10px;border:1px solid var(--td-line);border-radius:6px;background:#161d25;color:var(--td-muted)}.td-runtime-status strong{margin-left:4px;color:var(--td-accent)}.td-runtime-apply{display:flex;justify-content:flex-end}.td-runtime-banner{padding:10px 13px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-runtime-banner.ready{border-color:#356f59;background:#18372d;color:#8be1bd}@media(max-width:700px){.td-runtime-settings{grid-template-columns:1fr}.td-runtime-settings label:has(textarea),.td-runtime-settings label:has(input[type=password]),.td-runtime-apply{grid-column:auto}}", kt = "theodore-director-styles";
+function Xr() {
+  if (document.getElementById(kt)) return;
   const e = document.createElement("style");
-  e.id = _t, e.textContent = Dr, document.head.append(e);
+  e.id = kt, e.textContent = Yr, document.head.append(e);
 }
-Lr();
-const Mr = "/scripts/app.js", Fr = "/scripts/api.js";
+Xr();
+function Zr(e) {
+  const t = e.output ?? {}, n = [t.gifs, t.videos, t.images].find((i) => Array.isArray(i)), o = n == null ? void 0 : n[0], a = String((o == null ? void 0 : o.filename) ?? "").trim();
+  return a ? {
+    path: [String((o == null ? void 0 : o.subfolder) ?? "").trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, ""), a].filter(Boolean).join("/"),
+    provider: "local",
+    stage: "legacy_unknown"
+  } : void 0;
+}
+const en = "/scripts/app.js", tn = "/scripts/api.js";
 Promise.all([
   import(
     /* @vite-ignore */
-    Mr
+    en
   ),
   import(
     /* @vite-ignore */
-    Fr
+    tn
   )
 ]).then(([{ app: e }, { api: t }]) => {
-  const o = async (n) => {
-    var w, $;
-    const d = ((w = e.graph) == null ? void 0 : w._nodes) ?? [], i = d.find((y) => y.type === "TheodoreDirector_PostprocessSecondPassSource"), a = d.find((y) => y.type === "TheodoreDirector_SaveSecondPass"), p = ($ = i == null ? void 0 : i.widgets) == null ? void 0 : $.find((y) => y.name === "request_json");
-    if (!i || !a || !p || a.id === void 0)
+  const n = async (a) => {
+    var S, z;
+    const l = ((S = e.graph) == null ? void 0 : S._nodes) ?? [], i = l.find((w) => w.type === "TheodoreDirector_PostprocessSecondPassSource"), c = l.find((w) => w.type === "TheodoreDirector_SaveSecondPass"), m = (z = i == null ? void 0 : i.widgets) == null ? void 0 : z.find((w) => w.name === "request_json");
+    if (!i || !c || !m || c.id === void 0)
       throw new Error("当前工作流缺少后处理单独二采支流，请重新载入仓库中的 V7 导播台示例工作流");
-    const b = p.value, c = i.mode, m = a.mode;
-    let h;
+    const p = m.value, u = i.mode, _ = c.mode;
+    let s;
     try {
-      p.value = JSON.stringify(n), i.mode = 0, a.mode = 0, h = await e.graphToPrompt(e.rootGraph);
+      m.value = JSON.stringify(a), i.mode = 0, c.mode = 0, s = await e.graphToPrompt(e.rootGraph);
     } finally {
-      p.value = b, i.mode = c, a.mode = m;
+      m.value = p, i.mode = u, c.mode = _;
     }
-    const f = (await t.queuePrompt(0, h, { partialExecutionTargets: [String(a.id)] })).prompt_id;
-    if (!f) throw new Error("ComfyUI 没有返回二采任务 ID");
-    await new Promise((y, C) => {
-      const k = () => {
-        t.removeEventListener("execution_success", x), t.removeEventListener("execution_error", I), t.removeEventListener("execution_interrupted", I);
-      }, U = (R) => {
-        var J;
-        return String(((J = R.detail) == null ? void 0 : J.prompt_id) ?? "");
-      }, x = (R) => {
-        U(R) === f && (k(), y());
-      }, I = (R) => {
-        if (U(R) !== f) return;
-        const J = R.detail ?? {};
-        k(), C(new Error(String(J.exception_message ?? J.error ?? "单独二采任务执行失败")));
+    const y = (await t.queuePrompt(0, s, { partialExecutionTargets: [String(c.id)] })).prompt_id;
+    if (!y) throw new Error("ComfyUI 没有返回二采任务 ID");
+    await new Promise((w, C) => {
+      const A = () => {
+        t.removeEventListener("execution_success", T), t.removeEventListener("execution_error", j), t.removeEventListener("execution_interrupted", j);
+      }, b = (D) => {
+        var M;
+        return String(((M = D.detail) == null ? void 0 : M.prompt_id) ?? "");
+      }, T = (D) => {
+        b(D) === y && (A(), w());
+      }, j = (D) => {
+        if (b(D) !== y) return;
+        const M = D.detail ?? {};
+        A(), C(new Error(String(M.exception_message ?? M.error ?? "单独二采任务执行失败")));
       };
-      t.addEventListener("execution_success", x), t.addEventListener("execution_error", I), t.addEventListener("execution_interrupted", I);
+      t.addEventListener("execution_success", T), t.addEventListener("execution_error", j), t.addEventListener("execution_interrupted", j);
+    });
+  }, o = async (a) => {
+    var v, y;
+    const i = (((v = e.graph) == null ? void 0 : v._nodes) ?? []).find((S) => S.type === "TheodoreDirector_MergeVideos"), c = (y = i == null ? void 0 : i.widgets) == null ? void 0 : y.find((S) => S.name === "request_json");
+    if (!i || !c || i.id === void 0)
+      throw new Error("当前工作流缺少 Theodore 合并支流，请重新载入仓库中的 V7.2 示例工作流");
+    const m = c.value, p = i.mode;
+    let u;
+    try {
+      c.value = JSON.stringify(a), i.mode = 0, u = await e.graphToPrompt(e.rootGraph);
+    } finally {
+      c.value = m, i.mode = p;
+    }
+    const s = (await t.queuePrompt(0, u, { partialExecutionTargets: [String(i.id)] })).prompt_id;
+    if (!s) throw new Error("ComfyUI 没有返回合并任务 ID");
+    return new Promise((S, z) => {
+      let w;
+      const C = () => {
+        t.removeEventListener("executed", T), t.removeEventListener("execution_success", j), t.removeEventListener("execution_error", D), t.removeEventListener("execution_interrupted", D);
+      }, A = (M) => M.detail ?? {}, b = (M) => String(M.prompt_id ?? "") === s, T = (M) => {
+        const g = A(M);
+        !b(g) || String(g.node ?? "") !== String(i.id) || (w = Zr(g) ?? w);
+      }, j = (M) => {
+        const g = A(M);
+        b(g) && (C(), S(w));
+      }, D = (M) => {
+        const g = A(M);
+        b(g) && (C(), z(new Error(String(g.exception_message ?? g.error ?? "合并任务执行失败"))));
+      };
+      t.addEventListener("executed", T), t.addEventListener("execution_success", j), t.addEventListener("execution_error", D), t.addEventListener("execution_interrupted", D);
     });
   };
   e.registerExtension({
     name: "Theodore.Director.UI",
-    beforeRegisterNodeDef(n, d) {
-      if (d.name === "TheodoreDirector_PostprocessSecondPassSource") {
-        const a = n.prototype.onNodeCreated;
-        n.prototype.onNodeCreated = function() {
-          var b, c;
-          a == null || a.apply(this);
-          const p = (b = this.widgets) == null ? void 0 : b.find((m) => m.name === "request_json");
-          p && (p.type = "hidden", p.computeSize = () => [0, -4]), this.size = [Math.max(((c = this.size) == null ? void 0 : c[0]) ?? 300, 380), 80];
+    beforeRegisterNodeDef(a, l) {
+      if (l.name === "TheodoreDirector_PostprocessSecondPassSource" || l.name === "TheodoreDirector_MergeVideos") {
+        const c = a.prototype.onNodeCreated;
+        a.prototype.onNodeCreated = function() {
+          var p, u;
+          c == null || c.apply(this);
+          const m = (p = this.widgets) == null ? void 0 : p.find((_) => _.name === "request_json");
+          m && (m.type = "hidden", m.computeSize = () => [0, -4]), this.size = [Math.max(((u = this.size) == null ? void 0 : u[0]) ?? 300, 380), 80];
         };
         return;
       }
-      if (d.name !== "TheodoreDirector_Project") return;
-      const i = n.prototype.onNodeCreated;
-      n.prototype.onNodeCreated = function() {
-        var p, b;
+      if (l.name !== "TheodoreDirector_Project") return;
+      const i = a.prototype.onNodeCreated;
+      a.prototype.onNodeCreated = function() {
+        var m, p;
         i == null || i.apply(this);
-        const a = (p = this.widgets) == null ? void 0 : p.find((c) => c.name === "plan_json");
-        a && (a.type = "hidden", a.computeSize = () => [0, -4], this.addWidget("button", "打开 Theodore 导播台 / Open Director", null, () => {
-          var c;
+        const c = (m = this.widgets) == null ? void 0 : m.find((u) => u.name === "plan_json");
+        c && (c.type = "hidden", c.computeSize = () => [0, -4], this.addWidget("button", "打开 Theodore 导播台 / Open Director", null, () => {
+          var u;
           try {
-            const m = JSON.parse(String(a.value)), h = ((c = e.graph) == null ? void 0 : c._nodes) ?? [], l = h.some((f) => f.type === "TheodoreDirector_PostprocessSecondPassSource") && h.some((f) => f.type === "TheodoreDirector_SaveSecondPass");
-            Rr(m, (f) => {
-              var w, $;
-              a.value = JSON.stringify(f, null, 2), this.setDirtyCanvas(!0, !0), ($ = (w = e.graph) == null ? void 0 : w.setDirtyCanvas) == null || $.call(w, !0, !0);
-            }, !0, l ? o : void 0);
-          } catch (m) {
-            window.alert(`Theodore Director: ${m instanceof Error ? m.message : String(m)}`);
+            const _ = JSON.parse(String(c.value)), s = ((u = e.graph) == null ? void 0 : u._nodes) ?? [], v = s.some((S) => S.type === "TheodoreDirector_PostprocessSecondPassSource") && s.some((S) => S.type === "TheodoreDirector_SaveSecondPass"), y = s.some((S) => S.type === "TheodoreDirector_MergeVideos");
+            Qr(_, (S) => {
+              var z, w;
+              c.value = JSON.stringify(S, null, 2), this.setDirtyCanvas(!0, !0), (w = (z = e.graph) == null ? void 0 : z.setDirtyCanvas) == null || w.call(z, !0, !0);
+            }, !0, v ? n : void 0, y ? o : void 0);
+          } catch (_) {
+            window.alert(`Theodore Director: ${_ instanceof Error ? _.message : String(_)}`);
           }
-        }), this.size = [Math.max(((b = this.size) == null ? void 0 : b[0]) ?? 300, 360), 110]);
+        }), this.size = [Math.max(((p = this.size) == null ? void 0 : p[0]) ?? 300, 360), 110]);
       };
     }
   });
