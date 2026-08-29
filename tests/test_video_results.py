@@ -86,3 +86,16 @@ def test_second_pass_request_rejects_cross_shot_and_traversal(tmp_path):
     invalid["sourcePath"] = "../outside.mp4"
     with pytest.raises(ValueError, match="output 目录之外"):
         parse_second_pass_request(tmp_path, json.dumps(invalid, ensure_ascii=False))
+
+
+def test_second_pass_request_accepts_runninghub_result_url(tmp_path):
+    plan = make_plan()
+    parsed = parse_second_pass_request(tmp_path, {
+        "plan": plan,
+        "shotId": "shot_001",
+        "sourcePath": "https://rh-images.xiaoyaoyou.com/output/result.mp4",
+        "requestId": "request-rh",
+    })
+    assert parsed.source_path is None
+    assert parsed.source_url.startswith("https://")
+    assert parsed.source_relative == parsed.source_url

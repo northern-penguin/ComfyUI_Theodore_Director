@@ -1,5 +1,9 @@
 export interface GeneratedVideoItem {
   path: string;
+  url?: string;
+  /** 运行环境适配器标识；未来云平台无需修改结果模型。 */
+  provider?: string;
+  taskId?: string;
   bytes?: number;
   modifiedAt?: number;
   stage?: "first_pass" | "second_pass" | "legacy_unknown";

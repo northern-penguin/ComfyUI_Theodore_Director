@@ -27,6 +27,19 @@ def test_project_id_is_preserved_but_does_not_affect_generation_hash():
     assert first_plan.plan_hash == second_plan.plan_hash
 
 
+def test_runninghub_task_mappings_round_trip_without_affecting_generation_hash():
+    first = json.loads(DEFAULT_PLAN_JSON)
+    second = json.loads(DEFAULT_PLAN_JSON)
+    second["project"]["runningHubTaskMappings"] = "shot_001=task-123\nmerged=task-456"
+
+    first_plan = load_plan(first)
+    second_plan = load_plan(second)
+
+    assert second_plan.runninghub_task_mappings == "shot_001=task-123\nmerged=task-456"
+    assert json.loads(second_plan.canonical_json)["project"]["runningHubTaskMappings"] == second_plan.runninghub_task_mappings
+    assert first_plan.plan_hash == second_plan.plan_hash
+
+
 def test_v1_plan_without_project_id_migrates_to_stable_v4_plan():
     legacy = json.loads(DEFAULT_PLAN_JSON)
     legacy["schemaVersion"] = 1

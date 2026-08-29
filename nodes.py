@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import tempfile
 from typing import Any
 
 from comfy_api.v0_0_2 import ComfyExtension, InputImpl, Types, io, ui
@@ -14,7 +15,9 @@ from .theodore_director.legacy import import_legacy_script
 from .theodore_director.manifest import commit_shot_result
 from .theodore_director.media import load_audio, load_image, load_video
 from .theodore_director.paths import OutputPaths, build_output_paths, resolve_output_file, shot_result_candidates
+from .theodore_director.postprocess import execute_merge_request
 from .theodore_director.references import resolve_references
+from .theodore_director.remote_media import download_runninghub_video
 from .theodore_director.schema import DEFAULT_PLAN_JSON, Plan, load_plan
 from .theodore_director.selection import ShotSelection, select_shot
 from .theodore_director.video_results import (
@@ -360,7 +363,14 @@ class TheodoreDirectorPostprocessSecondPassSource(io.ComfyNode):
 
         root = Path(folder_paths.get_output_directory()).resolve()
         request = parse_second_pass_request(root, request_json)
-        components = InputImpl.VideoFromFile(str(request.source_path)).get_components()
+        if request.source_url:
+            with tempfile.TemporaryDirectory(prefix="theodore_rh_second_pass_") as temporary:
+                source = download_runninghub_video(request.source_url, Path(temporary))
+                components = InputImpl.VideoFromFile(str(source)).get_components()
+        elif request.source_path is not None:
+            components = InputImpl.VideoFromFile(str(request.source_path)).get_components()
+        else:
+            raise ValueError("单独二采请求没有可读取的源视频")
         if components.audio is None:
             raise ValueError("单独二采要求源视频包含音轨，当前结果没有可用音频")
         return io.NodeOutput(
@@ -433,6 +443,47 @@ class TheodoreDirectorSaveSecondPass(io.ComfyNode):
         )
 
 
+class TheodoreDirectorMergeVideos(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        return io.Schema(
+            node_id="TheodoreDirector_MergeVideos",
+            display_name="Theodore Director - Merge Videos",
+            category=f"{CATEGORY}/Postprocess",
+            description="Merge selected local or RunningHub shot results as a partial ComfyUI execution target.",
+            inputs=[
+                io.String.Input(
+                    "request_json",
+                    display_name="Merge request",
+                    multiline=True,
+                    default="{}",
+                    extra_dict={"theodoreDirectorMergeRequest": True},
+                )
+            ],
+            outputs=[io.String.Output("path")],
+            is_output_node=True,
+        )
+
+    @classmethod
+    def execute(cls, request_json: str):
+        import folder_paths
+
+        root = Path(folder_paths.get_output_directory()).resolve()
+        output_path = execute_merge_request(root, request_json)
+        relative = output_path.relative_to(root).as_posix()
+        return io.NodeOutput(
+            relative,
+            ui=ui.PreviewVideo([
+                ui.SavedResult(output_path.name, output_path.parent.relative_to(root).as_posix(), io.FolderType.output)
+            ]),
+        )
+
+    @classmethod
+    def fingerprint_inputs(cls, request_json: str):
+        # requestId 由每次点击生成，允许用户使用相同素材重复输出不同合并版本。
+        return hashlib.sha256(request_json.encode("utf-8")).hexdigest()
+
+
 class TheodoreDirectorLegacyImport(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -473,5 +524,6 @@ class TheodoreDirectorExtension(ComfyExtension):
             TheodoreDirectorCommitResult,
             TheodoreDirectorPostprocessSecondPassSource,
             TheodoreDirectorSaveSecondPass,
+            TheodoreDirectorMergeVideos,
             TheodoreDirectorLegacyImport,
         ]

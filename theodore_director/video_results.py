@@ -12,6 +12,7 @@ from .manifest import atomic_write_json
 from .paths import build_output_paths_from_values, find_generated_videos
 from .schema import Plan, load_plan
 from .selection import ShotSelection, select_shot_for_postprocess
+from .remote_media import validate_runninghub_result_url
 
 VideoStage = Literal["first_pass", "second_pass", "legacy_unknown"]
 
@@ -30,7 +31,8 @@ class VideoResultMetadata:
 class SecondPassRequest:
     plan: Plan
     shot: ShotSelection
-    source_path: Path
+    source_path: Path | None
+    source_url: str
     source_relative: str
     output_prefix: str
     request_id: str
@@ -102,17 +104,23 @@ def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> Second
         raise ValueError("单独二采请求缺少 shotId、sourcePath 或 requestId")
 
     output_root = root.resolve()
-    candidate = (output_root / source_value).resolve(strict=False)
-    try:
-        candidate.relative_to(output_root)
-    except ValueError as error:
-        raise ValueError(f"拒绝读取 ComfyUI output 目录之外的文件: {candidate}") from error
-    available = find_generated_videos(output_root, plan.project_name, plan.run_id, shot_id, -1)
-    if candidate not in available:
-        raise ValueError(f"选择的视频不属于镜头 {shot_id} 的生成结果: {source_value}")
-    metadata = read_video_result_metadata(candidate)
-    if metadata and metadata.stage == "second_pass":
-        raise ValueError("已完成二采的结果不能再次进行单独二采")
+    source_url = ""
+    candidate: Path | None = None
+    if source_value.lower().startswith("https://"):
+        # RunningHub V2 只返回签名 URL；域名和协议在下载前后都会再次校验。
+        source_url = validate_runninghub_result_url(source_value)
+    else:
+        candidate = (output_root / source_value).resolve(strict=False)
+        try:
+            candidate.relative_to(output_root)
+        except ValueError as error:
+            raise ValueError(f"拒绝读取 ComfyUI output 目录之外的文件: {candidate}") from error
+        available = find_generated_videos(output_root, plan.project_name, plan.run_id, shot_id, -1)
+        if candidate not in available:
+            raise ValueError(f"选择的视频不属于镜头 {shot_id} 的生成结果: {source_value}")
+        metadata = read_video_result_metadata(candidate)
+        if metadata and metadata.stage == "second_pass":
+            raise ValueError("已完成二采的结果不能再次进行单独二采")
 
     shot = select_shot_for_postprocess(plan, shot_id)
     paths = build_output_paths_from_values(plan.project_name, plan.run_id, shot_id, max(0, shot.active_index))
@@ -120,7 +128,8 @@ def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> Second
         plan=plan,
         shot=shot,
         source_path=candidate,
-        source_relative=candidate.relative_to(output_root).as_posix(),
+        source_url=source_url,
+        source_relative=source_url or candidate.relative_to(output_root).as_posix(),
         output_prefix=f"{paths.video_prefix}_2nd",
         request_id=request_id,
     )

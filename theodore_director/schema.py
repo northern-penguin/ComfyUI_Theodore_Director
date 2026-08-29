@@ -126,6 +126,7 @@ class Plan:
     project_id: str
     project_name: str
     run_id: str
+    runninghub_task_mappings: str
     prompt_prefix: str
     prompt_suffix: str
     fps: int
@@ -148,6 +149,8 @@ class Plan:
         data = self.to_dict()
         data["project"] = dict(data["project"])
         data["project"].pop("id", None)
+        # 查询映射只决定从 RunningHub 的哪个任务读取结果，不改变生成内容。
+        data["project"].pop("runningHubTaskMappings", None)
         return json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
     @property
@@ -157,7 +160,12 @@ class Plan:
     def to_dict(self) -> dict[str, Any]:
         return {
             "schemaVersion": self.schema_version,
-            "project": {"id": self.project_id, "name": self.project_name, "runId": self.run_id},
+            "project": {
+                "id": self.project_id,
+                "name": self.project_name,
+                "runId": self.run_id,
+                "runningHubTaskMappings": self.runninghub_task_mappings,
+            },
             "defaults": {"fps": self.fps, "baseSeed": self.base_seed},
             "promptPrefix": self.prompt_prefix,
             "promptSuffix": self.prompt_suffix,
@@ -266,6 +274,7 @@ def load_plan(value: str | dict[str, Any]) -> Plan:
         project_id=str(project.get("id") or "theodore_project"),
         project_name=str(project.get("name") or "Theodore Project"),
         run_id=str(project.get("runId") or "run_001"),
+        runninghub_task_mappings=str(project.get("runningHubTaskMappings", "")),
         prompt_prefix=str(data.get("promptPrefix", "")),
         prompt_suffix=str(data.get("promptSuffix", "")),
         fps=int(defaults.get("fps", 24)),
@@ -290,7 +299,12 @@ def load_plan(value: str | dict[str, Any]) -> Plan:
 
 DEFAULT_PLAN = {
     "schemaVersion": 4,
-    "project": {"id": "", "name": "Theodore Project", "runId": "run_001"},
+    "project": {
+        "id": "",
+        "name": "Theodore Project",
+        "runId": "run_001",
+        "runningHubTaskMappings": "",
+    },
     "defaults": {"fps": 24, "baseSeed": 123456790},
     "promptPrefix": "",
     "promptSuffix": "",
