@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { Language } from "./i18n";
-import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoItem, type GeneratedVideoResponse } from "./generated-results";
+import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, generatedVideoUrl } from "./media";
 import { buildMergeSelections, postprocessShotEntries, selectShotRange } from "./postprocess-selection";
-import { fetchMergedResultsForRuntime, fetchShotResultsForRuntime, resolveRuntimeMode, type RuntimeSettings } from "./runtime";
+import type { RuntimeAdapter, RuntimeAdapterContext } from "./runtime";
 import { StandaloneSecondPassPanel } from "./standalone-second-pass";
-import type { DirectorPlan, QueueMerge, QueueSecondPass } from "./types";
+import type { DirectorPlan } from "./types";
 
 interface PostprocessProps {
   plan: DirectorPlan;
   language: Language;
-  runtime: RuntimeSettings;
-  queueSecondPass?: QueueSecondPass;
-  queueMerge?: QueueMerge;
+  adapter: RuntimeAdapter;
+  context: RuntimeAdapterContext;
 }
 
 interface ShotResultState {
@@ -26,18 +25,18 @@ interface PreviewTarget {
   title: string;
 }
 
-export function PostprocessPanel({ plan, language, runtime, queueSecondPass, queueMerge }: PostprocessProps) {
+export function PostprocessPanel({ plan, language, adapter, context }: PostprocessProps) {
   const [mode, setMode] = useState<"merge" | "second-pass">("merge");
   return <section class="td-postprocess-shell">
     <div class="td-post-mode-tabs" role="tablist">
       <button class={mode === "merge" ? "active" : ""} role="tab" aria-selected={mode === "merge"} onClick={() => setMode("merge")}>{language === "zh" ? "合并视频" : "Merge videos"}</button>
       <button class={mode === "second-pass" ? "active" : ""} role="tab" aria-selected={mode === "second-pass"} onClick={() => setMode("second-pass")}>{language === "zh" ? "单独二采" : "Standalone second pass"}</button>
     </div>
-    {mode === "merge" ? <MergePanel plan={plan} language={language} runtime={runtime} queueMerge={queueMerge}/> : <StandaloneSecondPassPanel plan={plan} language={language} runtime={runtime} queueSecondPass={queueSecondPass}/>}
+    {mode === "merge" ? <MergePanel plan={plan} language={language} adapter={adapter} context={context}/> : <StandaloneSecondPassPanel plan={plan} language={language} adapter={adapter} context={context}/>}
   </section>;
 }
 
-function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
+function MergePanel({ plan, language, adapter, context }: PostprocessProps) {
   const entries = useMemo(() => postprocessShotEntries(plan), [plan]);
   const [shotResults, setShotResults] = useState<Record<string, ShotResultState>>({});
   const [selectedShots, setSelectedShots] = useState<Record<string, boolean>>({});
@@ -65,6 +64,7 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
   );
   const normalizedMergedResults = useMemo(() => normalizeGeneratedResults(mergedResults), [mergedResults]);
   const selectedMerged = normalizedMergedResults.find((item) => item.path === selectedMergedPath) ?? normalizedMergedResults[0];
+  const mergeUnavailable = adapter.unavailableReason("mergeVideos", context);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +87,7 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
 
     // 禁用镜头也查询历史结果供预览，但仍保持不可勾选、不可参与合并。
     entries.forEach((entry) => {
-      void fetchShotResultsForRuntime(runtime, plan, entry.shot, entry.activeIndex)
+      void adapter.fetchShotResults(context, plan, entry.shot, entry.activeIndex)
         .then((response) => {
           if (cancelled) return;
           const results = normalizeGeneratedResults(response);
@@ -106,12 +106,12 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
         });
     });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => `${shot.id}:${shot.enabled}`).join("|") , revision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
+  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => `${shot.id}:${shot.enabled}`).join("|") , revision, adapter.id, context.settings.apiKey, context.settings.taskMappings]);
 
   useEffect(() => {
     let cancelled = false;
     setMergedLoading(true);
-    void fetchMergedResultsForRuntime(runtime, plan)
+    void adapter.fetchMergedResults(context, plan)
       .then((response) => {
         if (cancelled) return;
         const results = normalizeGeneratedResults(response);
@@ -123,7 +123,7 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
       })
       .finally(() => { if (!cancelled) setMergedLoading(false); });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, revision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
+  }, [plan.project.name, plan.project.runId, revision, adapter.id, context.settings.apiKey, context.settings.taskMappings]);
 
   const toggleAll = () => {
     const next = !allSelected;
@@ -161,33 +161,17 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
     setMerging(true);
     setMergeError("");
     try {
-      if (queueMerge) {
-        const result = await queueMerge({
-          projectName: plan.project.name,
-          runId: plan.project.runId,
-          selections,
-          requestId: `tdm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`,
-        });
-        if (result) {
-          setMergedResults((current) => ({
-            found: true,
-            results: [result, ...normalizeGeneratedResults(current).filter((item) => item.path !== result.path)],
-          }));
-          setSelectedMergedPath(result.path);
-        } else {
-          setRevision((current) => current + 1);
-        }
-      } else if (resolveRuntimeMode(runtime) === "local") {
-        const response = await fetch("/theodore-director/v1/postprocess/merge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectName: plan.project.name, runId: plan.project.runId, selections }),
-        });
-        const result = await response.json() as { error?: string };
-        if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
-        setRevision((current) => current + 1);
+      const result = await adapter.mergeVideos(context, {
+        projectName: plan.project.name,
+        runId: plan.project.runId,
+        selections,
+        requestId: `tdm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`,
+      });
+      if (result) {
+        setMergedResults((current) => ({ found: true, results: [result, ...normalizeGeneratedResults(current).filter((item) => item.path !== result.path)] }));
+        setSelectedMergedPath(result.path);
       } else {
-        throw new Error(language === "zh" ? "当前工作流缺少 RunningHub 合并支流" : "This workflow is missing the RunningHub merge branch");
+        setRevision((current) => current + 1);
       }
     } catch (error) {
       setMergeError(String(error instanceof Error ? error.message : error));
@@ -197,17 +181,10 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
   };
 
   const openResultFolder = async () => {
-    if (resolveRuntimeMode(runtime) === "runninghub") return;
     setOpeningFolder(true);
     setFolderError("");
     try {
-      const response = await fetch("/theodore-director/v1/postprocess/open-folder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectName: plan.project.name, runId: plan.project.runId }),
-      });
-      const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+      await adapter.openResultFolder(context, plan);
     } catch (error) {
       setFolderError(String(error instanceof Error ? error.message : error));
     } finally {
@@ -220,7 +197,7 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
   return <section class="td-postprocess">
     <div class="td-post-header">
       <div><h2>{language === "zh" ? "合并视频" : "Merge videos"}</h2><p>{language === "zh" ? "从每个镜头选择一个结果，按当前分镜顺序进行无损合并。" : "Choose one result per shot and merge them losslessly in storyboard order."}</p></div>
-      <div class="td-post-actions">{resolveRuntimeMode(runtime) === "local" && <button disabled={openingFolder} onClick={openResultFolder}>📁 {openingFolder ? (language === "zh" ? "正在打开…" : "Opening…") : (language === "zh" ? "打开结果文件夹" : "Open results folder")}</button>}<button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button><button onClick={toggleAll}>{allSelected ? (language === "zh" ? "全部取消" : "Clear all") : (language === "zh" ? "一键全选" : "Select all")}</button></div>
+      <div class="td-post-actions">{adapter.capabilities.openResultFolder && <button disabled={openingFolder} onClick={openResultFolder}>📁 {openingFolder ? (language === "zh" ? "正在打开…" : "Opening…") : (language === "zh" ? "打开结果文件夹" : "Open results folder")}</button>}<button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button><button onClick={toggleAll}>{allSelected ? (language === "zh" ? "全部取消" : "Clear all") : (language === "zh" ? "一键全选" : "Select all")}</button></div>
     </div>
     {folderError && <div class="td-post-error">{language === "zh" ? "打开结果文件夹失败：" : "Unable to open results folder: "}{folderError}</div>}
     <div class="td-post-summary">
@@ -233,8 +210,9 @@ function MergePanel({ plan, language, runtime, queueMerge }: PostprocessProps) {
         <input type="number" min="1" max={entries.length} step="1" value={rangeEnd} aria-label={language === "zh" ? "结束镜头 n" : "End shot n"} onInput={(event) => setRangeEnd(event.currentTarget.value)}/>
         <button disabled={!entries.length} onClick={confirmRange}>{language === "zh" ? "确认范围" : "Apply range"}</button>
       </div>
-      <button class="primary" disabled={merging || selectedResultsLoading || !selections.length || Boolean(missingSelections.length)} onClick={merge}>{merging ? (language === "zh" ? "正在合并…" : "Merging…") : (language === "zh" ? "合并所选视频" : "Merge selected videos")}</button>
+      <button class="primary" disabled={merging || selectedResultsLoading || !selections.length || Boolean(missingSelections.length) || Boolean(mergeUnavailable)} title={mergeUnavailable ?? ""} onClick={merge}>{merging ? (language === "zh" ? "正在合并…" : "Merging…") : (language === "zh" ? "合并所选视频" : "Merge selected videos")}</button>
     </div>
+    {mergeUnavailable && <div class="td-post-warning">{mergeUnavailable}</div>}
     {mergeError && <div class="td-post-error">{language === "zh" ? "合并失败：" : "Merge failed: "}{mergeError}</div>}
     {missingSelections.length > 0 && <div class="td-post-warning">{language === "zh" ? "已选镜头中存在尚未生成视频的镜头。" : "Some selected shots do not have generated videos yet."}</div>}
     <div class="td-post-shot-list">

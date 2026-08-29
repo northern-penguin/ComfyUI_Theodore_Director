@@ -4,14 +4,14 @@ import { canRunStandaloneSecondPass, normalizeGeneratedResults, type GeneratedVi
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, generatedVideoUrl } from "./media";
 import { postprocessShotEntries } from "./postprocess-selection";
-import { fetchShotResultsForRuntime, type RuntimeSettings } from "./runtime";
-import type { DirectorPlan, QueueSecondPass } from "./types";
+import type { RuntimeAdapter, RuntimeAdapterContext } from "./runtime";
+import type { DirectorPlan } from "./types";
 
 interface Props {
   plan: DirectorPlan;
   language: Language;
-  runtime: RuntimeSettings;
-  queueSecondPass?: QueueSecondPass;
+  adapter: RuntimeAdapter;
+  context: RuntimeAdapterContext;
 }
 
 interface ShotState { loading: boolean; response: GeneratedVideoResponse }
@@ -24,12 +24,13 @@ function stageLabel(stage: string | undefined, language: Language): string {
   return language === "zh" ? "旧结果" : "Legacy";
 }
 
-export function StandaloneSecondPassPanel({ plan, language, runtime, queueSecondPass }: Props) {
+export function StandaloneSecondPassPanel({ plan, language, adapter, context }: Props) {
   const entries = useMemo(() => postprocessShotEntries(plan), [plan]);
   const [states, setStates] = useState<Record<string, ShotState>>({});
   const [jobs, setJobs] = useState<Record<string, JobState>>({});
   const [preview, setPreview] = useState<PreviewTarget | null>(null);
   const [revision, setRevision] = useState(0);
+  const secondPassUnavailable = adapter.unavailableReason("secondPass", context);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,7 +38,7 @@ export function StandaloneSecondPassPanel({ plan, language, runtime, queueSecond
     entries.forEach((entry) => { initial[entry.key] = { loading: true, response: { found: false, results: [] } }; });
     setStates(initial);
     entries.forEach((entry) => {
-      void fetchShotResultsForRuntime(runtime, plan, entry.shot, entry.activeIndex)
+      void adapter.fetchShotResults(context, plan, entry.shot, entry.activeIndex)
         .then((result) => {
           if (!cancelled) setStates((current) => ({ ...current, [entry.key]: { loading: false, response: result } }));
         })
@@ -46,13 +47,13 @@ export function StandaloneSecondPassPanel({ plan, language, runtime, queueSecond
         });
     });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => shot.id).join("|"), revision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
+  }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => shot.id).join("|"), revision, adapter.id, context.settings.apiKey, context.settings.taskMappings]);
 
   const startSecondPass = async (shotId: string, path: string) => {
-    if (!queueSecondPass) return;
+    if (secondPassUnavailable) return;
     setJobs((current) => ({ ...current, [path]: { state: "queued" } }));
     try {
-      await queueSecondPass({
+      await adapter.runSecondPass(context, {
         plan,
         shotId,
         sourcePath: path,
@@ -70,7 +71,7 @@ export function StandaloneSecondPassPanel({ plan, language, runtime, queueSecond
       <div><h2>{language === "zh" ? "单独二采" : "Standalone second pass"}</h2><p>{language === "zh" ? "从满意的一采抽卡直接执行二采，不重跑一采，也不启动 Impact 循环。" : "Refine a selected first-pass result without rerunning the first pass or the Impact loop."}</p></div>
       <div class="td-post-actions"><button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
     </div>
-    {!queueSecondPass && <div class="td-post-warning">{language === "zh" ? "当前工作流缺少后处理二采支流，请重新载入仓库中的 V7 导播台示例工作流。" : "This workflow does not contain the standalone second-pass branch. Reload the V7 example workflow from the repository."}</div>}
+    {secondPassUnavailable && <div class="td-post-warning">{secondPassUnavailable}</div>}
     <div class="td-post-shot-list">
       {entries.map((entry) => {
         const state = states[entry.key];
@@ -90,7 +91,7 @@ export function StandaloneSecondPassPanel({ plan, language, runtime, queueSecond
                   {url ? <LazyVideoThumbnail src={url} alt={assetFileName(item.path)}/> : <div class="td-result-thumb">×</div>}
                   <span><strong>{stageLabel(item.stage, language)}{(item.stage === "legacy_unknown" || !item.stage) && <em>{language === "zh" ? "兼容" : "Compatible"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</small></span>
                 </button>
-                <button class="primary td-second-pass-run" disabled={!queueSecondPass || !eligible || job?.state === "queued"} onClick={() => void startSecondPass(entry.shot.id, item.path)}>{!eligible ? (language === "zh" ? "已是二采" : "Already refined") : job?.state === "queued" ? (language === "zh" ? "排队/执行中…" : "Queued/running…") : job?.state === "done" ? (language === "zh" ? "二采完成" : "Completed") : (language === "zh" ? "进行二采" : "Run second pass")}</button>
+                <button class="primary td-second-pass-run" disabled={Boolean(secondPassUnavailable) || !eligible || job?.state === "queued"} title={secondPassUnavailable ?? ""} onClick={() => void startSecondPass(entry.shot.id, item.path)}>{!eligible ? (language === "zh" ? "已是二采" : "Already refined") : job?.state === "queued" ? (language === "zh" ? "排队/执行中…" : "Queued/running…") : job?.state === "done" ? (language === "zh" ? "二采完成" : "Completed") : (language === "zh" ? "进行二采" : "Run second pass")}</button>
                 {job?.state === "error" && <div class="td-second-pass-error">{job.message}</div>}
               </div>;
             })}</div>}

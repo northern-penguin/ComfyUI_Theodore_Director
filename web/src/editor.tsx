@@ -9,7 +9,7 @@ import { assetFileName, generatedVideoUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
 import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
-import { fetchShotResultsForRuntime, resolveRuntimeMode, uploadAssetForRuntime, type RuntimeSettings } from "./runtime";
+import { resolveRuntimeAdapter, runtimeAdapters, runtimeContext, type RuntimeSettings } from "./runtime";
 import { clearSavedRunningHubApiKey, readSavedRunningHubApiKey, saveRunningHubApiKey } from "./runtime-storage";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueMerge, QueueSecondPass } from "./types";
 
@@ -97,8 +97,12 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const generatedResults = useMemo(() => normalizeGeneratedResults(generatedVideo), [generatedVideo]);
   const selectedGenerated = generatedResults.find((item) => item.path === selectedGeneratedPath) ?? generatedResults[0];
   const selectedGeneratedUrl = generatedVideoUrl(selectedGenerated);
-  const resolvedRuntime = resolveRuntimeMode(runtime);
-  const uploadAsset = (projectName: string, kind: AssetKind, file: File) => uploadAssetForRuntime(runtime, projectName, kind, file);
+  const runtimeAdapter = resolveRuntimeAdapter(runtime);
+  const runtimeDraftAdapter = resolveRuntimeAdapter(runtimeDraft);
+  const adapterContext = runtimeContext(runtime, { queueMerge, queueSecondPass });
+  const AdapterSettingsPanel = runtimeDraftAdapter.SettingsPanel;
+  const assetRuntimeBanner = runtimeAdapter.assetBanner(adapterContext, language);
+  const uploadAsset = (projectName: string, kind: AssetKind, file: File) => runtimeAdapter.uploadAsset(adapterContext, projectName, kind, file);
   const mutate = (fn: (draft: DirectorPlan) => void) => setPlan((current) => { const draft = clone(current); fn(draft); return draft; });
   const moveShot = (from: number, direction: number) => mutate((draft) => { const to = from + direction; if (to < 0 || to >= draft.shots.length) return; [draft.shots[from], draft.shots[to]] = [draft.shots[to], draft.shots[from]]; setSelected(to); });
   const deleteShot = (index: number) => mutate((draft) => {
@@ -202,7 +206,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
     }
     setGeneratedLoading(true);
     // 禁用镜头也按稳定 shot ID 查询历史结果；activeIndex=-1 只表达当前不参加执行。
-    void fetchShotResultsForRuntime(runtime, plan, shot, activeIndex)
+    void runtimeAdapter.fetchShotResults(adapterContext, plan, shot, activeIndex)
       .then((result) => {
         if (cancelled) return;
         const results = normalizeGeneratedResults(result);
@@ -212,7 +216,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
       .catch((error) => { if (!cancelled) { setGeneratedVideo({ found: false, results: [], error: String(error) }); setSelectedGeneratedPath(""); } })
       .finally(() => { if (!cancelled) setGeneratedLoading(false); });
     return () => { cancelled = true; };
-  }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision, runtime.mode, runtime.apiKey, runtime.taskMappings]);
+  }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision, runtimeAdapter.id, runtime.apiKey, runtime.taskMappings]);
 
   return <div class="td-shell">
     <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); importPlan(imported as DirectorPlan); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
@@ -250,15 +254,35 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
         </aside>
       </div>}
       {tab === "assets" && <div class="td-assets">
-        {resolvedRuntime === "runninghub" && <div class={`td-runtime-banner ${runtime.apiKey.trim() ? "ready" : ""}`}>{runtime.apiKey.trim() ? (language === "zh" ? "RunningHub 上传已启用；素材路径将保存官方 fileName。" : "RunningHub upload is ready; the official fileName will be stored.") : (language === "zh" ? "RunningHub 模式：请先在项目设置填写 API Key，再上传素材。" : "RunningHub mode: enter an API Key in Project settings before uploading.")}</div>}
+        {assetRuntimeBanner && <div class={`td-runtime-banner ${assetRuntimeBanner.ready ? "ready" : ""}`}>{assetRuntimeBanner.message}</div>}
         <div class="td-toolbar">{(["image", "video", "audio"] as AssetKind[]).map((kind) => <button onClick={() => mutate((draft) => draft.assets.push(newAsset(kind)))}>＋ {kind}</button>)}<button class="td-asset-batch-entry" onClick={() => setAssetBatchOpen(true)}>⇧ {language === "zh" ? "批量导入素材" : "Batch import assets"}</button></div>
         {plan.assets.map((asset, index) => <article key={asset.id}><div class="td-asset-layout"><div>
           <div class="td-grid"><label>别名 / Alias<input value={asset.alias} onInput={(event) => mutate((draft) => { draft.assets[index].alias = event.currentTarget.value; })}/></label><label>类型 / Kind<select value={asset.kind} onChange={(event) => mutate((draft) => { draft.assets[index].kind = event.currentTarget.value as AssetKind; })}><option>image</option><option>video</option><option>audio</option></select></label><label>输入目录相对路径 / Path<input value={asset.path} onInput={(event) => mutate((draft) => { draft.assets[index].path = event.currentTarget.value; })}/><span class="td-file-picker"><label class="td-file-button">选择文件 / Choose file<input type="file" accept={asset.kind === "image" ? "image/*" : asset.kind === "video" ? "video/*" : "audio/*"} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; setUploadNames((current) => ({ ...current, [asset.id]: file.name })); try { const path = await uploadAsset(plan.project.name, asset.kind, file); mutate((draft) => { const target = draft.assets.find((item) => item.id === asset.id); if (target) target.path = path; }); } catch (error) { window.alert(String(error)); } finally { setUploadNames((current) => { const next = { ...current }; delete next[asset.id]; return next; }); input.value = ""; } }}/></label><span class="td-file-name" title={uploadNames[asset.id] || asset.path}>{uploadNames[asset.id] ? `${language === "zh" ? "上传中" : "Uploading"}: ${uploadNames[asset.id]}` : assetFileName(asset.path) || (language === "zh" ? "未选择文件" : "No file selected")}</span></span></label><label>时长 / Duration<input type="number" min="0" step="0.1" value={asset.durationSeconds ?? ""} onInput={(event) => mutate((draft) => { draft.assets[index].durationSeconds = event.currentTarget.value ? Number(event.currentTarget.value) : null; })}/></label><label>固定顺序 / Fixed order<input type="number" value={asset.fixedOrder} onInput={(event) => mutate((draft) => { draft.assets[index].fixedOrder = Number(event.currentTarget.value); })}/></label><label>限定分镜 ID（逗号分隔）<input value={asset.shotIds.join(", ")} onInput={(event) => mutate((draft) => { draft.assets[index].shotIds = event.currentTarget.value.split(",").map((value) => value.trim()).filter(Boolean); })}/></label></div>
           <div class="td-flags"><label><input type="checkbox" checked={asset.enabled} onChange={(event) => mutate((draft) => { draft.assets[index].enabled = event.currentTarget.checked; })}/>启用</label><label><input type="checkbox" checked={asset.fixed} onChange={(event) => mutate((draft) => { draft.assets[index].fixed = event.currentTarget.checked; })}/>固定引用</label>{asset.kind === "video" && <label><input type="checkbox" checked={asset.includeVideoAudio} onChange={(event) => mutate((draft) => { draft.assets[index].includeVideoAudio = event.currentTarget.checked; })}/>启用视频伴音</label>}<button class="danger" onClick={() => mutate((draft) => { draft.assets.splice(index, 1); })}>删除</button></div>
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
-      {tab === "settings" && <section class="td-form settings"><fieldset class="td-runtime-settings"><legend>{language === "zh" ? "运行环境" : "Runtime"}</legend><label>{language === "zh" ? "适配器" : "Adapter"}<select value={runtimeDraft.mode} onChange={(event) => setRuntimeDraft((current) => ({ ...current, mode: event.currentTarget.value as RuntimeSettings["mode"] }))}><option value="auto">{language === "zh" ? "自动检测" : "Auto detect"}</option><option value="local">{language === "zh" ? "本地 ComfyUI" : "Local ComfyUI"}</option><option value="runninghub">RunningHub</option></select></label><div class="td-runtime-status">{language === "zh" ? "当前：" : "Active: "}<strong>{resolvedRuntime === "runninghub" ? "RunningHub" : "Local ComfyUI"}</strong></div>{resolveRuntimeMode(runtimeDraft) === "runninghub" && <><label>RunningHub API Key<input type="password" autocomplete="off" value={runtimeDraft.apiKey} placeholder={language === "zh" ? "默认仅保存在当前页面内存" : "Kept only in page memory by default"} onInput={(event) => setRuntimeDraft((current) => ({ ...current, apiKey: event.currentTarget.value }))}/></label><div class="td-runtime-key-controls"><label><input type="checkbox" checked={rememberApiKey} onChange={(event) => setRememberApiKey(event.currentTarget.checked)}/><span>{language === "zh" ? "在此设备记住 API Key" : "Remember API Key on this device"}</span></label><button type="button" onClick={clearRememberedApiKey}>{language === "zh" ? "清除已保存 Key" : "Clear saved Key"}</button><small>{language === "zh" ? "默认不保存；公共电脑不建议启用。Key 仅写入当前浏览器站点存储，不进入工作流或导出文件。" : "Off by default; avoid on shared computers. The key is stored only in this browser and never enters the workflow or exports."}</small></div><label>{language === "zh" ? "任务映射（每行一项）" : "Task mappings (one per line)"}<textarea rows={5} value={runtimeDraft.taskMappings} placeholder={"完整工作流 taskId\nshot_003=taskId\nmerged=taskId"} onInput={(event) => { const taskMappings = event.currentTarget.value; setRuntimeDraft((current) => ({ ...current, taskMappings })); mutate((draft) => { draft.project.runningHubTaskMappings = taskMappings; }); }}/><small>{language === "zh" ? "单独 taskId 按启用镜头顺序归属；也可显式指定镜头或合并任务。任务映射属于项目数据，会随工作流保存、导入和导出。" : "A bare taskId follows enabled-shot order; shot and merged tasks can be explicit. Task mappings are project data and follow workflow save, import, and export."}</small></label></>}<div class="td-runtime-apply"><button class="primary" onClick={applyRuntimeSettings}>{language === "zh" ? "应用运行环境设置" : "Apply runtime settings"}</button></div></fieldset><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
-      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} runtime={runtime} queueSecondPass={queueSecondPass} queueMerge={queueMerge}/>}
+      {tab === "settings" && <section class="td-form settings">
+        <fieldset class="td-runtime-settings">
+          <legend>{language === "zh" ? "运行环境" : "Runtime"}</legend>
+          <label>{language === "zh" ? "适配器" : "Adapter"}<select value={runtimeDraft.mode} onChange={(event) => setRuntimeDraft((current) => ({ ...current, mode: event.currentTarget.value as RuntimeSettings["mode"] }))}>
+            <option value="auto">{language === "zh" ? "自动检测" : "Auto detect"}</option>
+            {runtimeAdapters.map((adapter) => <option value={adapter.id} key={adapter.id}>{adapter.displayLabel(language)}</option>)}
+          </select></label>
+          <div class="td-runtime-status">{language === "zh" ? "当前：" : "Active: "}<strong>{runtimeDraftAdapter.displayLabel(language)}</strong></div>
+          {AdapterSettingsPanel && <AdapterSettingsPanel
+            language={language}
+            settings={runtimeDraft}
+            onChange={setRuntimeDraft}
+            rememberSecret={rememberApiKey}
+            onRememberSecretChange={setRememberApiKey}
+            onClearSavedSecret={clearRememberedApiKey}
+            onProjectSettingChange={(key, value) => { if (key === "runningHubTaskMappings") mutate((draft) => { draft.project.runningHubTaskMappings = value; }); }}
+          />}
+          <div class="td-runtime-apply"><button class="primary" onClick={applyRuntimeSettings}>{language === "zh" ? "应用运行环境设置" : "Apply runtime settings"}</button></div>
+        </fieldset>
+        <label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label>
+      </section>}
+      {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} adapter={runtimeAdapter} context={adapterContext}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
       <header class="td-batch-header"><div><h2>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</h2><p>{language === "zh" ? `当前共 ${batchShots.length} 个镜头` : `${batchShots.length} shots`}</p></div><button aria-label={language === "zh" ? "关闭" : "Close"} onClick={() => setBatchOpen(false)}>×</button></header>
