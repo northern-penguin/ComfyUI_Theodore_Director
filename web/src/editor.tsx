@@ -73,6 +73,10 @@ async function writeClipboardText(value: string): Promise<void> {
     }
   }
   // 兼容未开放 Clipboard API 的本机浏览器环境。
+  const previousActive = document.activeElement;
+  const previousSelection = previousActive instanceof HTMLTextAreaElement || previousActive instanceof HTMLInputElement
+    ? { start: previousActive.selectionStart, end: previousActive.selectionEnd, direction: previousActive.selectionDirection }
+    : null;
   const textarea = document.createElement("textarea");
   textarea.value = value;
   textarea.style.position = "fixed";
@@ -81,6 +85,11 @@ async function writeClipboardText(value: string): Promise<void> {
   textarea.select();
   const copied = document.execCommand("copy");
   textarea.remove();
+  // 临时 textarea 会抢走提示词编辑器的焦点，复制后恢复原输入框及其光标/选区。
+  if (previousActive instanceof HTMLElement) previousActive.focus({ preventScroll: true });
+  if (previousSelection && (previousActive instanceof HTMLTextAreaElement || previousActive instanceof HTMLInputElement)) {
+    previousActive.setSelectionRange(previousSelection.start, previousSelection.end, previousSelection.direction ?? undefined);
+  }
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
 }
 
@@ -92,19 +101,28 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const [selected, setSelected] = useState(0);
   const [language, setLanguage] = useState<Language>(() => navigator.language.startsWith("zh") ? "zh" : "en");
   const [uploadNames, setUploadNames] = useState<Record<string, string>>({});
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [resultOpen, setResultOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [resultOpen, setResultOpen] = useState(false);
   const [resultRevision, setResultRevision] = useState(0);
   const [generatedVideo, setGeneratedVideo] = useState<GeneratedVideoResponse>({ found: false, results: [] });
   const [selectedGeneratedPath, setSelectedGeneratedPath] = useState("");
   const [generatedLoading, setGeneratedLoading] = useState(false);
   const [copiedAssetId, setCopiedAssetId] = useState("");
+  const [showAssetAliases, setShowAssetAliases] = useState(true);
   const [batchOpen, setBatchOpen] = useState(false);
   const [assetBatchOpen, setAssetBatchOpen] = useState(false);
   const [batchShots, setBatchShots] = useState<DirectorShot[]>([]);
   const [uniformDuration, setUniformDuration] = useState("5");
   const [appendCount, setAppendCount] = useState("1");
   const [appendDuration, setAppendDuration] = useState("5");
+  useEffect(() => {
+    // 点击素材名只负责复制，不应抢走提示词 textarea 的焦点和光标位置。
+    const preservePromptSelection = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest(".td-shot-media-name")) event.preventDefault();
+    };
+    document.addEventListener("mousedown", preservePromptSelection);
+    return () => document.removeEventListener("mousedown", preservePromptSelection);
+  }, []);
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
@@ -218,7 +236,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
           </div>
           <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>）</span><HighlightedTextarea rows={10} value={shot.prompt} isReferenceValid={(alias) => referenceTokenIsAvailable(plan, shot, alias)} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
           <label><span class="td-field-label">负面提示词 / Negative prompt</span><textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label>
-          <fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const filename = assetFileName(asset.path) || asset.alias; const reference = `{{ref:${asset.alias}}}`; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><button class={`td-shot-media-name ${copiedAssetId === asset.id ? "copied" : ""}`} title={`${filename}\n${language === "zh" ? "点击复制" : "Click to copy"} ${reference}`} onClick={async () => { try { await writeClipboardText(reference); setCopiedAssetId(asset.id); window.setTimeout(() => setCopiedAssetId((current) => current === asset.id ? "" : current), 1400); } catch (error) { window.alert(`${language === "zh" ? "复制失败" : "Copy failed"}: ${String(error)}`); } }}><span>{filename}</span>{copiedAssetId === asset.id && <em>{language === "zh" ? "已复制" : "Copied"}</em>}</button></div>; })}</fieldset>
+          <fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend><label class="td-shot-media-display-toggle"><input type="checkbox" checked={showAssetAliases} onChange={(event) => setShowAssetAliases(event.currentTarget.checked)}/><span>{language === "zh" ? "显示别名" : "Show aliases"}</span></label>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const displayName = showAssetAliases ? asset.alias : (assetFileName(asset.path) || asset.alias); const reference = `{{ref:${asset.alias}}}`; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><button class={`td-shot-media-name ${copiedAssetId === asset.id ? "copied" : ""}`} title={`${displayName}\n${language === "zh" ? "点击复制" : "Click to copy"} ${reference}`} onClick={async () => { try { await writeClipboardText(reference); setCopiedAssetId(asset.id); window.setTimeout(() => setCopiedAssetId((current) => current === asset.id ? "" : current), 1400); } catch (error) { window.alert(`${language === "zh" ? "复制失败" : "Copy failed"}: ${String(error)}`); } }}><span>{displayName}</span>{copiedAssetId === asset.id && <em>{language === "zh" ? "已复制" : "Copied"}</em>}</button></div>; })}</fieldset>
         </section>}
         <aside class="td-preview">
           <details open={previewOpen} onToggle={(event) => setPreviewOpen(event.currentTarget.open)}>
