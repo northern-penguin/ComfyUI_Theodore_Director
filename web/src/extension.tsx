@@ -5,6 +5,7 @@ import type { GeneratedVideoItem } from "./generated-results";
 import directorStyles from "./style.css?inline";
 import { app as comfyApp } from "../../scripts/app.js";
 import { api as comfyApi } from "../../scripts/api.js";
+import { THEODORE_VERSION_LABEL } from "./version";
 
 const STYLE_ID = "theodore-director-styles";
 
@@ -18,6 +19,9 @@ function ensureDirectorStyles(): void {
 
 // ComfyUI 只自动加载 web 目录中的 JavaScript，样式必须由扩展主动注入。
 ensureDirectorStyles();
+
+// 控制台标记用于排查云平台 CDN 是否仍在提供旧的前端构建。
+console.info(`[Theodore Director] frontend ${THEODORE_VERSION_LABEL}`);
 
 interface Widget { name: string; value: unknown; type?: string; computeSize?: () => [number, number] }
 interface ComfyNode { id?: number | string; mode?: number; widgets?: Widget[]; addWidget: (type: string, name: string, value: unknown, callback: () => void) => Widget; setDirtyCanvas: (foreground: boolean, background: boolean) => void; size?: [number, number]; type?: string; title?: string }
@@ -159,7 +163,7 @@ function registerDirectorExtension(): void {
 
   app.registerExtension({
     name: "Theodore.Director.UI",
-    beforeRegisterNodeDef(nodeType: NodeType, nodeData: { name: string }) {
+    beforeRegisterNodeDef(nodeType: NodeType, nodeData: { name: string; display_name?: string }) {
       if (nodeData.name === "TheodoreDirector_PostprocessSecondPassSource" || nodeData.name === "TheodoreDirector_MergeVideos") {
         const originalSourceCreated = nodeType.prototype.onNodeCreated;
         nodeType.prototype.onNodeCreated = function (this: ComfyNode) {
@@ -183,7 +187,7 @@ function registerDirectorExtension(): void {
         // JSON 仍嵌入工作流，但收起原始文本控件，日常操作只通过可视化编辑器。
         dataWidget.type = "hidden";
         dataWidget.computeSize = () => [0, -4];
-        this.addWidget("button", "打开 Theodore 导播台 / Open Director", null, () => {
+        this.addWidget("button", `打开 Theodore 导播台 / Open Director · ${THEODORE_VERSION_LABEL}`, null, () => {
           try {
             const initial = JSON.parse(String(dataWidget.value)) as DirectorPlan;
             const workflowNodes = app.graph?._nodes ?? [];
@@ -194,7 +198,7 @@ function registerDirectorExtension(): void {
               dataWidget.value = JSON.stringify(plan, null, 2);
               this.setDirtyCanvas(true, true);
               app.graph?.setDirtyCanvas?.(true, true);
-            }, true, supportsStandaloneSecondPass ? queueStandaloneSecondPass : undefined, supportsMerge ? queueMerge : undefined);
+            }, true, supportsStandaloneSecondPass ? queueStandaloneSecondPass : undefined, supportsMerge ? queueMerge : undefined, nodeData.display_name);
           } catch (error) {
             window.alert(`Theodore Director: ${error instanceof Error ? error.message : String(error)}`);
           }

@@ -25,6 +25,7 @@ from .theodore_director.video_results import (
     parse_second_pass_request,
     write_video_result_metadata,
 )
+from .theodore_director.version import VERSION_LABEL
 
 PlanType = io.Custom("THEODORE_DIRECTOR_PLAN")
 ShotType = io.Custom("THEODORE_DIRECTOR_SHOT")
@@ -39,7 +40,8 @@ class TheodoreDirectorProject(io.ComfyNode):
     def define_schema(cls):
         return io.Schema(
             node_id="TheodoreDirector_Project",
-            display_name="Theodore Director Project",
+            # 把后端实际部署版本放在节点标题中；即使前端入口加载失败也能直接确认版本。
+            display_name=f"Theodore Director Project · {VERSION_LABEL}",
             category=CATEGORY,
             description="Open the full storyboard editor and emit an immutable project plan.",
             inputs=[
@@ -56,13 +58,15 @@ class TheodoreDirectorProject(io.ComfyNode):
                 io.String.Output("plan_hash", display_name="plan hash"),
                 io.String.Output("project_name", display_name="project name"),
                 io.Int.Output("active_shot_count", display_name="active shots"),
+                # 只读输出位于末尾，不改变现有工作流的输出索引和连线。
+                io.String.Output("version", display_name=f"version {VERSION_LABEL}"),
             ],
         )
 
     @classmethod
     def execute(cls, plan_json: str):
         plan = load_plan(plan_json)
-        return io.NodeOutput(plan, plan.plan_hash, plan.project_name, len(plan.active_shots))
+        return io.NodeOutput(plan, plan.plan_hash, plan.project_name, len(plan.active_shots), VERSION_LABEL)
 
     @classmethod
     def fingerprint_inputs(cls, plan_json: str):

@@ -1,6 +1,6 @@
 [project]
 name = "comfyui-theodore-director"
-version = "0.1.0"
+version = "0.2.0"
 description = "A model-agnostic storyboard director for ComfyUI with a MiniMax H3 adapter"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -29,6 +29,8 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 重启 ComfyUI。仓库已提交构建后的 `web/dist`，普通用户不需要安装 Node.js 或运行前端构建。
 
+版本确认：`Theodore Director Project` 节点标题会显示后端实际部署的版本和构建号；导播台标题栏、项目设置的“版本诊断”和浏览器控制台会显示前端版本。云平台中两处标记不一致，或节点标题仍是旧版本，说明平台尚未同步完整的新构建。节点类型 ID 始终保持不变，版本文字不会影响已有工作流。
+
 “后处理 → 合并视频”需要 FFmpeg。程序依次查找 `THEODORE_DIRECTOR_FFMPEG` 环境变量、系统 `PATH` 和可选的 `imageio-ffmpeg` 内置程序；整合包若未提供 FFmpeg，请自行安装并加入 `PATH`。合并使用无损流复制、不重新编码；V7.2 通过局部 ComfyUI 任务执行合并节点，不运行 H3 模型，也不占用 GPU。
 
 然后导入仓库内的成品工作流：

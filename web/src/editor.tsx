@@ -12,6 +12,7 @@ import { appendShots } from "./shot-batch";
 import { resolveRuntimeAdapter, runtimeAdapters, runtimeContext, type RuntimeSettings } from "./runtime";
 import { clearSavedRunningHubApiKey, readSavedRunningHubApiKey, saveRunningHubApiKey } from "./runtime-storage";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueMerge, QueueSecondPass } from "./types";
+import { THEODORE_BUILD_ID, THEODORE_VERSION, THEODORE_VERSION_LABEL } from "./version";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -73,9 +74,9 @@ async function writeClipboardText(value: string): Promise<void> {
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
 }
 
-interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean; queueSecondPass?: QueueSecondPass; queueMerge?: QueueMerge }
+interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean; queueSecondPass?: QueueSecondPass; queueMerge?: QueueMerge; backendDisplayName?: string }
 
-function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondPass, queueMerge }: EditorProps) {
+function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondPass, queueMerge, backendDisplayName }: EditorProps) {
   const [plan, setPlan] = useState<DirectorPlan>(() => normalizePlan(initial));
   const [savedApiKeyAtOpen] = useState(() => readSavedRunningHubApiKey());
   const [tab, setTab] = useState<"shots" | "assets" | "settings" | "postprocess">("shots");
@@ -237,7 +238,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   }, [plan.project.name, plan.project.runId, shot?.id, shot?.enabled, activeIndex, resultRevision, runtimeAdapter.id, runtime.apiKey, runtime.taskMappings]);
 
   return <div class="td-shell">
-    <header><h1>{t(language, "title")}</h1><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); importPlan(imported as DirectorPlan); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
+    <header><div class="td-brand"><h1>{t(language, "title")}</h1><span class="td-version-badge" title={language === "zh" ? "前端版本与构建号" : "Frontend version and build ID"}>{THEODORE_VERSION_LABEL}</span></div><div class="td-actions"><button onClick={exportPlan}>导出 / Export</button><label class="td-import">导入 / Import<input type="file" accept="application/json,.json" onChange={async (event) => { const file = event.currentTarget.files?.[0]; if (!file) return; try { const imported = JSON.parse(await file.text()) as Partial<DirectorPlan>; if (!imported.project || !Array.isArray(imported.shots) || !Array.isArray(imported.assets)) throw new Error("不是有效的 Theodore Director Plan"); importPlan(imported as DirectorPlan); } catch (error) { window.alert(String(error)); } }}/></label><button onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{language === "zh" ? "EN" : "中文"}</button><button class="primary" onClick={savePlan}>{t(language, "save")}</button><button onClick={onClose}>{t(language, "close")}</button></div></header>
     <nav>{(["shots", "assets", "settings", "postprocess"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
@@ -280,6 +281,12 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
       {tab === "settings" && <section class="td-form settings">
+        <fieldset class="td-version-info">
+          <legend>{language === "zh" ? "版本诊断" : "Version diagnostics"}</legend>
+          <div><span>{language === "zh" ? "前端" : "Frontend"}</span><strong>v{THEODORE_VERSION}</strong><small>{THEODORE_BUILD_ID}</small></div>
+          <div><span>{language === "zh" ? "后端节点" : "Backend node"}</span><strong>{backendDisplayName || (language === "zh" ? "未报告" : "Not reported")}</strong></div>
+          <div><span>{language === "zh" ? "当前适配器" : "Active adapter"}</span><strong>{runtimeAdapter.displayLabel(language)}</strong></div>
+        </fieldset>
         <fieldset class="td-runtime-settings">
           <legend>{language === "zh" ? "运行环境" : "Runtime"}</legend>
           <label>{language === "zh" ? "适配器" : "Adapter"}<select value={runtimeDraft.mode} onChange={(event) => setRuntimeDraft((current) => ({ ...current, mode: event.currentTarget.value as RuntimeSettings["mode"] }))}>
@@ -316,7 +323,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   </div>;
 }
 
-export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false, queueSecondPass?: QueueSecondPass, queueMerge?: QueueMerge): void {
+export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) => void, supportsSecondSampling = false, queueSecondPass?: QueueSecondPass, queueMerge?: QueueMerge, backendDisplayName?: string): void {
   const existing = document.getElementById("theodore-director-modal");
   if (existing) {
     // 防止快速重复点击在画布上叠加多个编辑器实例。
@@ -335,6 +342,6 @@ export function openEditor(initial: DirectorPlan, onSave: (plan: DirectorPlan) =
     host.remove();
   };
   document.addEventListener("keydown", onKeyDown);
-  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling} queueSecondPass={queueSecondPass} queueMerge={queueMerge}/>, host);
+  render(<Editor initial={initial} onSave={(plan) => { onSave(plan); close(); }} onClose={close} supportsSecondSampling={supportsSecondSampling} queueSecondPass={queueSecondPass} queueMerge={queueMerge} backendDisplayName={backendDisplayName}/>, host);
   host.focus();
 }

@@ -1,5 +1,7 @@
 """ComfyUI Theodore Director 扩展入口。"""
 
+from .theodore_director.version import VERSION as __version__
+
 WEB_DIRECTORY = "./web/dist"
 
 
@@ -10,4 +12,4 @@ async def comfy_entrypoint():
     return TheodoreDirectorExtension()
 
 
-__all__ = ["WEB_DIRECTORY", "comfy_entrypoint"]
+__all__ = ["WEB_DIRECTORY", "comfy_entrypoint", "__version__"]
