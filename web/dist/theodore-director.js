@@ -1,4 +1,6 @@
-var Ue, O, Ot, ce, bt, Ut, Bt, We, Ee, $e, qt, tt, Xe, Ze, Le = {}, De = [], zn = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, Be = Array.isArray;
+import { app as zn } from "../../scripts/app.js";
+import { api as $n } from "../../scripts/api.js";
+var Ue, O, Ot, ce, bt, Ut, Bt, We, Ee, $e, qt, tt, Xe, Ze, Le = {}, De = [], Cn = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i, Be = Array.isArray;
 function oe(e, t) {
   for (var r in t) e[r] = t[r];
   return e;
@@ -6,7 +8,7 @@ function oe(e, t) {
 function nt(e) {
   e && e.parentNode && e.parentNode.removeChild(e);
 }
-function $n(e, t, r) {
+function In(e, t, r) {
   var o, a, d, s = {};
   for (d in t) d == "key" ? o = t[d] : d == "ref" ? a = t[d] : s[d] = t[d];
   if (arguments.length > 2 && (s.children = arguments.length > 3 ? Ue.call(arguments, 2) : r), typeof e == "function" && e.defaultProps != null) for (d in e.defaultProps) s[d] === void 0 && (s[d] = e.defaultProps[d]);
@@ -27,7 +29,7 @@ function ve(e, t) {
   for (var r; t < e.__k.length; t++) if ((r = e.__k[t]) != null && r.__e != null) return r.__e;
   return typeof e.type == "function" ? ve(e) : null;
 }
-function Cn(e) {
+function Rn(e) {
   if (e.__P && e.__d) {
     var t = e.__v, r = t.__e, o = [], a = [], d = oe({}, t);
     d.__v = t.__v + 1, O.vnode && O.vnode(d), rt(e.__P, d, t, e.__n, e.__P.namespaceURI, 32 & t.__u ? [r] : null, o, r ?? ve(t), !!(32 & t.__u), a), d.__v = t.__v, d.__.__k[d.__i] = d, Jt(o, d, a), t.__e = t.__ = null, d.__e != r && Kt(d);
@@ -43,17 +45,17 @@ function vt(e) {
 }
 function Fe() {
   try {
-    for (var e, t = 1; ce.length; ) ce.length > t && ce.sort(Bt), e = ce.shift(), t = ce.length, Cn(e);
+    for (var e, t = 1; ce.length; ) ce.length > t && ce.sort(Bt), e = ce.shift(), t = ce.length, Rn(e);
   } finally {
     ce.length = Fe.__r = 0;
   }
 }
 function Vt(e, t, r, o, a, d, s, c, h, u, f) {
   var _, p, l, I, w, k, y = o && o.__k || De, S = t.length;
-  for (h = In(r, t, y, h, S), _ = 0; _ < S; _++) (l = r.__k[_]) != null && (p = l.__i != -1 && y[l.__i] || Le, l.__i = _, k = rt(e, l, p, a, d, s, c, h, u, f), I = l.__e, l.ref && p.ref != l.ref && (p.ref && ot(p.ref, null, l), f.push(l.ref, l.__c || I, l)), w == null && I != null && (w = I), 4 & l.__u ? (h = Wt(l, h, e), p.__e && (p.__e = null)) : typeof l.type == "function" && k !== void 0 ? h = k : I && (h = I.nextSibling), l.__u &= -7);
+  for (h = Tn(r, t, y, h, S), _ = 0; _ < S; _++) (l = r.__k[_]) != null && (p = l.__i != -1 && y[l.__i] || Le, l.__i = _, k = rt(e, l, p, a, d, s, c, h, u, f), I = l.__e, l.ref && p.ref != l.ref && (p.ref && ot(p.ref, null, l), f.push(l.ref, l.__c || I, l)), w == null && I != null && (w = I), 4 & l.__u ? (h = Wt(l, h, e), p.__e && (p.__e = null)) : typeof l.type == "function" && k !== void 0 ? h = k : I && (h = I.nextSibling), l.__u &= -7);
   return r.__e = w, h;
 }
-function In(e, t, r, o, a) {
+function Tn(e, t, r, o, a) {
   var d, s, c, h, u, f = r.length, _ = f, p = 0;
   for (e.__k = new Array(a), d = 0; d < a; d++) (s = t[d]) != null && typeof s != "boolean" && typeof s != "function" ? (typeof s == "string" || typeof s == "number" || typeof s == "bigint" || s.constructor == String ? s = e.__k[d] = Pe(null, s, null, null, null) : Be(s) ? s = e.__k[d] = Pe(Ie, { children: s }, null, null, null) : s.constructor === void 0 && s.__b > 0 ? s = e.__k[d] = Pe(s.type, s.props, s.key, s.ref ? s.ref : null, s.__v) : e.__k[d] = s, h = d + p, s.__ = e, s.__b = e.__b + 1, c = null, (u = s.__i = An(s, r, h, _)) != -1 && (_--, (c = r[u]) && (c.__u |= 2)), c == null || c.__v == null ? (u == -1 && (a > f ? p-- : a < f && p++), typeof s.type != "function" && (s.__u |= 4)) : u != h && (u == h - 1 ? p-- : u == h + 1 ? p++ : (u > h ? p-- : p++, s.__u |= 4))) : e.__k[d] = null;
   if (_) for (d = 0; d < f; d++) (c = r[d]) != null && (2 & c.__u) == 0 && (c.__e == o && (o = ve(c)), Qt(c, c));
@@ -80,9 +82,9 @@ function An(e, t, r, o) {
   return -1;
 }
 function xt(e, t, r) {
-  t[0] == "-" ? e.setProperty(t, r ?? "") : e[t] = r == null ? "" : typeof r != "number" || zn.test(t) ? r : r + "px";
+  t[0] == "-" ? e.setProperty(t, r ?? "") : e[t] = r == null ? "" : typeof r != "number" || Cn.test(t) ? r : r + "px";
 }
-function Te(e, t, r, o, a) {
+function Ae(e, t, r, o, a) {
   var d, s;
   e: if (t == "style") if (typeof r == "string") e.style.cssText = r;
   else {
@@ -111,25 +113,25 @@ function _t(e) {
   };
 }
 function rt(e, t, r, o, a, d, s, c, h, u) {
-  var f, _, p, l, I, w, k, y, S, P, g, A, H, D, N, b, T = t.type;
+  var f, _, p, l, I, w, k, y, S, P, g, R, H, D, N, b, A = t.type;
   if (t.constructor !== void 0) return null;
   128 & r.__u && (h = !!(32 & r.__u), d = [c = t.__e = r.__e]), (f = O.__b) && f(t);
-  e: if (typeof T == "function") {
+  e: if (typeof A == "function") {
     _ = s.length;
     try {
-      if (S = t.props, P = T.prototype && T.prototype.render, g = (f = T.contextType) && o[f.__c], A = f ? g ? g.props.value : f.__ : o, r.__c ? y = (p = t.__c = r.__c).__ = p.__E : (P ? t.__c = p = new T(S, A) : (t.__c = p = new Me(S, A), p.constructor = T, p.render = Tn), g && g.sub(p), p.state || (p.state = {}), p.__n = o, l = p.__d = !0, p.__h = [], p._sb = []), P && p.__s == null && (p.__s = p.state), P && T.getDerivedStateFromProps != null && (p.__s == p.state && (p.__s = oe({}, p.__s)), oe(p.__s, T.getDerivedStateFromProps(S, p.__s))), I = p.props, w = p.state, p.__v = t, l) P && T.getDerivedStateFromProps == null && p.componentWillMount != null && p.componentWillMount(), P && p.componentDidMount != null && p.__h.push(p.componentDidMount);
+      if (S = t.props, P = A.prototype && A.prototype.render, g = (f = A.contextType) && o[f.__c], R = f ? g ? g.props.value : f.__ : o, r.__c ? y = (p = t.__c = r.__c).__ = p.__E : (P ? t.__c = p = new A(S, R) : (t.__c = p = new Me(S, R), p.constructor = A, p.render = Pn), g && g.sub(p), p.state || (p.state = {}), p.__n = o, l = p.__d = !0, p.__h = [], p._sb = []), P && p.__s == null && (p.__s = p.state), P && A.getDerivedStateFromProps != null && (p.__s == p.state && (p.__s = oe({}, p.__s)), oe(p.__s, A.getDerivedStateFromProps(S, p.__s))), I = p.props, w = p.state, p.__v = t, l) P && A.getDerivedStateFromProps == null && p.componentWillMount != null && p.componentWillMount(), P && p.componentDidMount != null && p.__h.push(p.componentDidMount);
       else {
-        if (P && T.getDerivedStateFromProps == null && S !== I && p.componentWillReceiveProps != null && p.componentWillReceiveProps(S, A), t.__v == r.__v || !p.__e && p.shouldComponentUpdate != null && p.shouldComponentUpdate(S, p.__s, A) === !1) {
+        if (P && A.getDerivedStateFromProps == null && S !== I && p.componentWillReceiveProps != null && p.componentWillReceiveProps(S, R), t.__v == r.__v || !p.__e && p.shouldComponentUpdate != null && p.shouldComponentUpdate(S, p.__s, R) === !1) {
           t.__v != r.__v && (p.props = S, p.state = p.__s, p.__d = !1), t.__e = r.__e, t.__k = r.__k, t.__k.some(function(F) {
             F && (F.__ = t);
           }), De.push.apply(p.__h, p._sb), p._sb = [], p.__h.length && s.push(p), c = ve(r);
           break e;
         }
-        p.componentWillUpdate != null && p.componentWillUpdate(S, p.__s, A), P && p.componentDidUpdate != null && p.__h.push(function() {
+        p.componentWillUpdate != null && p.componentWillUpdate(S, p.__s, R), P && p.componentDidUpdate != null && p.__h.push(function() {
           p.componentDidUpdate(I, w, k);
         });
       }
-      if (p.context = A, p.props = S, p.__P = e, p.__e = !1, H = O.__r, D = 0, P) p.state = p.__s, p.__d = !1, H && H(t), f = p.render(p.props, p.state, p.context), De.push.apply(p.__h, p._sb), p._sb = [];
+      if (p.context = R, p.props = S, p.__P = e, p.__e = !1, H = O.__r, D = 0, P) p.state = p.__s, p.__d = !1, H && H(t), f = p.render(p.props, p.state, p.context), De.push.apply(p.__h, p._sb), p._sb = [];
       else do
         p.__d = !1, H && H(t), f = p.render(p.props, p.state, p.context), p.state = p.__s;
       while (p.__d && ++D < 25);
@@ -143,7 +145,7 @@ function rt(e, t, r, o, a, d, s, c, h, u) {
       } else t.__e = r.__e;
       t.__k == null && (t.__k = r.__k || []), F.then || Gt(t), O.__e(F, t, r);
     }
-  } else d == null && t.__v == r.__v ? (t.__k = r.__k, t.__e = r.__e) : c = t.__e = Rn(r.__e, t, r, o, a, d, s, h, u);
+  } else d == null && t.__v == r.__v ? (t.__k = r.__k, t.__e = r.__e) : c = t.__e = En(r.__e, t, r, o, a, d, s, h, u);
   return (f = O.diffed) && f(t), 128 & t.__u ? void 0 : c;
 }
 function Gt(e) {
@@ -164,7 +166,7 @@ function Jt(e, t, r) {
 function Yt(e) {
   return typeof e != "object" || e == null || e.__b > 0 ? e : Be(e) ? e.map(Yt) : e.constructor !== void 0 ? null : oe({}, e);
 }
-function Rn(e, t, r, o, a, d, s, c, h) {
+function En(e, t, r, o, a, d, s, c, h) {
   var u, f, _, p, l, I, w, k = r.props || Le, y = t.props, S = t.type;
   if (S == "svg" ? a = "http://www.w3.org/2000/svg" : S == "math" ? a = "http://www.w3.org/1998/Math/MathML" : a || (a = "http://www.w3.org/1999/xhtml"), d != null) {
     for (u = 0; u < d.length; u++) if ((l = d[u]) && "setAttribute" in l == !!S && (S ? l.localName == S : l.nodeType == 3)) {
@@ -179,11 +181,11 @@ function Rn(e, t, r, o, a, d, s, c, h) {
   if (S == null) k === y || c && e.data == y || (e.data = y);
   else {
     if (d = S == "textarea" && y.defaultValue != null ? null : d && Ue.call(e.childNodes), !c && d != null) for (k = {}, u = 0; u < e.attributes.length; u++) k[(l = e.attributes[u]).name] = l.value;
-    for (u in k) l = k[u], u == "dangerouslySetInnerHTML" ? _ = l : u == "children" || u in y || u == "value" && "defaultValue" in y || u == "checked" && "defaultChecked" in y || Te(e, u, null, l, a);
-    for (u in y) l = y[u], u == "children" ? p = l : u == "dangerouslySetInnerHTML" ? f = l : u == "value" ? I = l : u == "checked" ? w = l : c && typeof l != "function" || k[u] === l || Te(e, u, l, k[u], a);
+    for (u in k) l = k[u], u == "dangerouslySetInnerHTML" ? _ = l : u == "children" || u in y || u == "value" && "defaultValue" in y || u == "checked" && "defaultChecked" in y || Ae(e, u, null, l, a);
+    for (u in y) l = y[u], u == "children" ? p = l : u == "dangerouslySetInnerHTML" ? f = l : u == "value" ? I = l : u == "checked" ? w = l : c && typeof l != "function" || k[u] === l || Ae(e, u, l, k[u], a);
     if (f) c || _ && (f.__html == _.__html || f.__html == e.innerHTML) || (e.innerHTML = f.__html), t.__k = [];
     else if (_ && (e.innerHTML = ""), Vt(t.type == "template" ? e.content : e, Be(p) ? p : [p], t, r, o, S == "foreignObject" ? "http://www.w3.org/1999/xhtml" : a, d, s, d ? d[0] : r.__k && ve(r, 0), c, h), d != null) for (u = d.length; u--; ) nt(d[u]);
-    c && S != "textarea" || (u = "value", S == "progress" && I == null ? e.removeAttribute("value") : I != null && (I !== e[u] || S == "progress" && !I || S == "option" && I != k[u]) && Te(e, u, I, k[u], a), u = "checked", w != null && w != e[u] && Te(e, u, w, k[u], a));
+    c && S != "textarea" || (u = "value", S == "progress" && I == null ? e.removeAttribute("value") : I != null && (I !== e[u] || S == "progress" && !I || S == "option" && I != k[u]) && Ae(e, u, I, k[u], a), u = "checked", w != null && w != e[u] && Ae(e, u, w, k[u], a));
   }
   return e;
 }
@@ -210,12 +212,12 @@ function Qt(e, t, r) {
   if (o = e.__k) for (a = 0; a < o.length; a++) o[a] && Qt(o[a], t, r || typeof e.type != "function");
   r || nt(e.__e), e.__c = e.__ = e.__e = void 0;
 }
-function Tn(e, t, r) {
+function Pn(e, t, r) {
   return this.constructor(e, r);
 }
 function yt(e, t, r) {
   var o, a, d, s;
-  t == document && (t = document.documentElement), O.__ && O.__(e, t), a = (o = !1) ? null : t.__k, d = [], s = [], rt(t, e = t.__k = $n(Ie, null, [e]), a || Le, Le, t.namespaceURI, a ? null : t.firstChild ? Ue.call(t.childNodes) : null, d, a ? a.__e : t.firstChild, o, s), Jt(d, e, s), e.props.children = null;
+  t == document && (t = document.documentElement), O.__ && O.__(e, t), a = (o = !1) ? null : t.__k, d = [], s = [], rt(t, e = t.__k = In(Ie, null, [e]), a || Le, Le, t.namespaceURI, a ? null : t.firstChild ? Ue.call(t.childNodes) : null, d, a ? a.__e : t.firstChild, o, s), Jt(d, e, s), e.props.children = null;
 }
 Ue = De.slice, O = { __e: function(e, t, r, o) {
   for (var a, d, s; t = t.__; ) if ((a = t.__c) && !a.__) try {
@@ -232,12 +234,12 @@ Ue = De.slice, O = { __e: function(e, t, r, o) {
 }, Me.prototype.render = Ie, ce = [], Ut = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, Bt = function(e, t) {
   return e.__v.__b - t.__v.__b;
 }, Fe.__r = 0, We = Math.random().toString(8), Ee = "__d" + We, $e = "__a" + We, qt = /(PointerCapture)$|Capture$/i, tt = 0, Xe = _t(!1), Ze = _t(!0);
-var En = 0;
+var Mn = 0;
 function n(e, t, r, o, a, d) {
   t || (t = {});
   var s, c, h = t;
   if ("ref" in h) for (c in h = {}, t) c == "ref" ? s = t[c] : h[c] = t[c];
-  var u = { type: e, props: h, key: r, ref: s, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --En, __i: -1, __u: 0, __source: a, __self: d };
+  var u = { type: e, props: h, key: r, ref: s, __k: null, __: null, __b: 0, __e: null, __c: null, constructor: void 0, __v: --Mn, __i: -1, __u: 0, __source: a, __self: d };
   if (typeof e == "function" && (s = e.defaultProps)) for (c in s) h[c] === void 0 && (h[c] = s[c]);
   return O.vnode && O.vnode(u), u;
 }
@@ -248,9 +250,9 @@ function st(e, t) {
   return e >= r.__.length && r.__.push({}), r.__[e];
 }
 function C(e) {
-  return He = 1, Pn(en, e);
+  return He = 1, jn(en, e);
 }
-function Pn(e, t, r) {
+function jn(e, t, r) {
   var o = st(Ce++, 2);
   if (o.t = e, !o.__c && (o.__ = [en(void 0, t), function(c) {
     var h = o.__N ? o.__N[0] : o.__[0], u = o.t(h, c);
@@ -296,7 +298,7 @@ function Se(e, t) {
   var r = st(Ce++, 7);
   return Zt(r.__H, t) && (r.__ = e(), r.__H = t, r.__h = e), r.__;
 }
-function Mn() {
+function Nn() {
   for (var e; e = Xt.shift(); ) {
     var t = e.__H;
     if (e.__P && t) try {
@@ -319,7 +321,7 @@ K.__b = function(e) {
 }, K.diffed = function(e) {
   zt && zt(e);
   var t = e.__c;
-  t && t.__H && (t.__H.__h.length && (Xt.push(t) !== 1 && wt === K.requestAnimationFrame || ((wt = K.requestAnimationFrame) || jn)(Mn)), t.__H.__.some(function(r) {
+  t && t.__H && (t.__H.__h.length && (Xt.push(t) !== 1 && wt === K.requestAnimationFrame || ((wt = K.requestAnimationFrame) || Ln)(Nn)), t.__H.__.some(function(r) {
     r.u && (r.__H = r.u, r.u = void 0);
   })), Ge = B = null;
 }, K.__c = function(e, t) {
@@ -345,12 +347,12 @@ K.__b = function(e) {
     }
   }), r.__H = void 0, t && K.__e(t, r.__v));
 };
-var At = typeof requestAnimationFrame == "function";
-function jn(e) {
+var Rt = typeof requestAnimationFrame == "function";
+function Ln(e) {
   var t, r = function() {
-    clearTimeout(o), At && cancelAnimationFrame(t), setTimeout(e);
+    clearTimeout(o), Rt && cancelAnimationFrame(t), setTimeout(e);
   }, o = setTimeout(r, 35);
-  At && (t = requestAnimationFrame(r));
+  Rt && (t = requestAnimationFrame(r));
 }
 function je(e) {
   var t = B, r = e.__c;
@@ -368,7 +370,7 @@ function Zt(e, t) {
 function en(e, t) {
   return typeof t == "function" ? t(e) : t;
 }
-const Nn = {
+const Dn = {
   png: "image",
   jpg: "image",
   jpeg: "image",
@@ -388,26 +390,26 @@ const Nn = {
 function tn(e) {
   var o;
   const t = ((o = e.name.split(".").pop()) == null ? void 0 : o.toLocaleLowerCase()) ?? "";
-  if (e.name.includes(".")) return Nn[t] ?? null;
+  if (e.name.includes(".")) return Dn[t] ?? null;
   const r = e.type.split("/", 1)[0];
   return r === "image" || r === "video" || r === "audio" ? r : null;
 }
-function Ln(e) {
+function Fn(e) {
   const a = e.replace(/\.[^.]+$/, "").replace(/^\s*\d+\s*[-_. ]+/, "").normalize("NFKC").replace(/[\s-]+/g, "_").replace(/[{}]/g, "").replace(/_+/g, "_").replace(/^[_\.]+|[_\.]+$/g, "").slice(0, 96) || "asset";
   return a.toLocaleLowerCase().endsWith(".audio") ? `${a}_asset` : a;
 }
-function Dn(e, t) {
+function Hn(e, t) {
   const r = new Set(Array.from(t, (a) => a.toLocaleLowerCase()));
   if (!r.has(e.toLocaleLowerCase())) return e;
   let o = 2;
   for (; r.has(`${e}_${o}`.toLocaleLowerCase()); ) o += 1;
   return `${e}_${o}`;
 }
-function Fn(e, t, r) {
+function On(e, t, r) {
   const o = e.trim().toLocaleLowerCase();
   return !e.trim() || /[\s{}]/.test(e) || o.endsWith(".audio") ? "invalid" : Array.from(t, (d) => d.toLocaleLowerCase()).includes(o) || Array.from(r, (d) => d.trim().toLocaleLowerCase()).filter((d) => d === o).length > 1 ? "duplicate" : null;
 }
-function Hn(e, t, r) {
+function Un(e, t, r) {
   const o = new Set(Array.from(t)), a = [], d = [];
   for (const s of e) {
     const c = tn(s);
@@ -415,12 +417,12 @@ function Hn(e, t, r) {
       d.push(s.name);
       continue;
     }
-    const h = Dn(Ln(s.name), o);
+    const h = Hn(Fn(s.name), o);
     o.add(h), a.push({ id: r(), file: s, alias: h, kind: c, durationSeconds: c === "image" ? null : 2, includeVideoAudio: !1, status: "pending", error: "" });
   }
   return { drafts: a, rejected: d };
 }
-function On(e, t, r) {
+function Bn(e, t, r) {
   return {
     id: e.id,
     alias: e.alias.trim(),
@@ -436,7 +438,7 @@ function On(e, t, r) {
     fingerprint: ""
   };
 }
-function Un(e, t) {
+function qn(e, t) {
   return t === "image" ? Promise.resolve(null) : new Promise((r) => {
     const o = document.createElement(t === "video" ? "video" : "audio"), a = URL.createObjectURL(e);
     let d = !1;
@@ -446,26 +448,26 @@ function Un(e, t) {
     o.preload = "metadata", o.onloadedmetadata = () => s(Number.isFinite(o.duration) && o.duration > 0 ? Math.round(o.duration * 10) / 10 : null), o.onerror = () => s(null), o.src = a;
   });
 }
-const Bn = () => `asset_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, Je = (e, t) => t === "zh" ? { image: "图片", video: "视频", audio: "音频" }[e] : e;
-function qn({ language: e, assets: t, projectName: r, onClose: o, onImported: a, uploadFile: d }) {
+const Kn = () => `asset_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, Je = (e, t) => t === "zh" ? { image: "图片", video: "视频", audio: "音频" }[e] : e;
+function Vn({ language: e, assets: t, projectName: r, onClose: o, onImported: a, uploadFile: d }) {
   const [s, c] = C([]), [h, u] = C([]), [f, _] = C(!1), [p, l] = C(!1), I = it([]);
   I.current = s;
-  const w = t.map((b) => b.alias), k = (b, T) => c((F) => F.map((M) => M.id === b ? { ...M, ...T } : M)), y = (b) => {
+  const w = t.map((b) => b.alias), k = (b, A) => c((F) => F.map((M) => M.id === b ? { ...M, ...A } : M)), y = (b) => {
     if (!b.length || p) return;
-    const T = [...w, ...I.current.map((M) => M.alias)], F = Hn(b, T, Bn);
+    const A = [...w, ...I.current.map((M) => M.alias)], F = Un(b, A, Kn);
     F.rejected.length && u((M) => [...M, ...F.rejected]), F.drafts.length && (c((M) => [...M, ...F.drafts]), F.drafts.forEach((M) => {
-      Un(M.file, M.kind).then((W) => {
+      qn(M.file, M.kind).then((W) => {
         W != null && c((Y) => Y.map((V) => V.id === M.id && V.kind === M.kind && V.durationSeconds === 2 ? { ...V, durationSeconds: W } : V));
       });
     }));
   }, P = s.filter((b) => b.status !== "imported").map((b) => b.alias), g = (b) => {
     if (b.status === "imported") return null;
-    const T = Fn(b.alias, w, P);
-    return T === "invalid" ? e === "zh" ? "别名为空、包含空白/花括号，或使用了保留后缀 .audio" : "Alias is empty, contains whitespace/braces, or uses reserved .audio" : T === "duplicate" ? e === "zh" ? "别名与素材库或本批次其他素材重复" : "Alias duplicates an existing or staged asset" : tn(b.file) !== b.kind ? e === "zh" ? "文件扩展名与所选类型不匹配" : "The extension does not match the selected kind" : b.kind !== "image" && (b.durationSeconds == null || b.durationSeconds <= 0) ? e === "zh" ? "视频或音频时长必须大于 0" : "Video/audio duration must be greater than 0" : null;
-  }, A = async () => {
-    const T = I.current.filter((Y) => Y.status === "pending" || Y.status === "error");
-    if (!T.length) return;
-    if (T.some(g)) {
+    const A = On(b.alias, w, P);
+    return A === "invalid" ? e === "zh" ? "别名为空、包含空白/花括号，或使用了保留后缀 .audio" : "Alias is empty, contains whitespace/braces, or uses reserved .audio" : A === "duplicate" ? e === "zh" ? "别名与素材库或本批次其他素材重复" : "Alias duplicates an existing or staged asset" : tn(b.file) !== b.kind ? e === "zh" ? "文件扩展名与所选类型不匹配" : "The extension does not match the selected kind" : b.kind !== "image" && (b.durationSeconds == null || b.durationSeconds <= 0) ? e === "zh" ? "视频或音频时长必须大于 0" : "Video/audio duration must be greater than 0" : null;
+  }, R = async () => {
+    const A = I.current.filter((Y) => Y.status === "pending" || Y.status === "error");
+    if (!A.length) return;
+    if (A.some(g)) {
       window.alert(e === "zh" ? "请先修正列表中标红的项目。" : "Fix the highlighted rows before importing.");
       return;
     }
@@ -473,18 +475,18 @@ function qn({ language: e, assets: t, projectName: r, onClose: o, onImported: a,
     const F = Math.max(0, ...t.map((Y) => Y.fixedOrder)) + 1;
     let M = 0;
     const W = async () => {
-      for (; M < T.length; ) {
-        const Y = M++, V = T[Y];
+      for (; M < A.length; ) {
+        const Y = M++, V = A[Y];
         k(V.id, { status: "uploading", error: "" });
         try {
           const ue = await d(r, V.kind, V.file);
-          a([On(V, ue, F + Y)]), k(V.id, { status: "imported", error: "" });
+          a([Bn(V, ue, F + Y)]), k(V.id, { status: "imported", error: "" });
         } catch (ue) {
           k(V.id, { status: "error", error: String(ue) });
         }
       }
     };
-    await Promise.all(Array.from({ length: Math.min(2, T.length) }, W)), l(!1);
+    await Promise.all(Array.from({ length: Math.min(2, A.length) }, W)), l(!1);
   }, H = s.filter((b) => b.status === "imported").length, D = s.filter((b) => b.status === "error").length, N = s.length - H;
   return /* @__PURE__ */ n("div", { class: "td-batch-overlay", role: "presentation", children: /* @__PURE__ */ n("section", { class: "td-asset-batch-panel", role: "dialog", "aria-modal": "true", "aria-label": e === "zh" ? "批量导入素材" : "Batch import assets", children: [
     /* @__PURE__ */ n("header", { class: "td-batch-header", children: [
@@ -499,8 +501,8 @@ function qn({ language: e, assets: t, projectName: r, onClose: o, onImported: a,
     }, onDragOver: (b) => b.preventDefault(), onDragLeave: (b) => {
       b.currentTarget === b.target && _(!1);
     }, onDrop: (b) => {
-      var T;
-      b.preventDefault(), _(!1), y(Array.from(((T = b.dataTransfer) == null ? void 0 : T.files) ?? []));
+      var A;
+      b.preventDefault(), _(!1), y(Array.from(((A = b.dataTransfer) == null ? void 0 : A.files) ?? []));
     }, children: [
       /* @__PURE__ */ n("strong", { children: e === "zh" ? "拖拽素材到这里，或点击选择多个文件" : "Drop media here, or click to select multiple files" }),
       /* @__PURE__ */ n("span", { children: e === "zh" ? "支持图片、视频、音频混合导入" : "Mixed image, video, and audio selection is supported" }),
@@ -527,8 +529,8 @@ function qn({ language: e, assets: t, projectName: r, onClose: o, onImported: a,
       ] }),
       !s.length && /* @__PURE__ */ n("div", { class: "td-asset-batch-empty", children: e === "zh" ? "尚未选择素材" : "No media selected" }),
       s.map((b) => {
-        const T = g(b), F = p || b.status === "imported" || b.status === "uploading";
-        return /* @__PURE__ */ n("div", { class: `td-asset-batch-row ${T || b.status === "error" ? "invalid" : ""} ${b.status === "imported" ? "imported" : ""}`, children: [
+        const A = g(b), F = p || b.status === "imported" || b.status === "uploading";
+        return /* @__PURE__ */ n("div", { class: `td-asset-batch-row ${A || b.status === "error" ? "invalid" : ""} ${b.status === "imported" ? "imported" : ""}`, children: [
           /* @__PURE__ */ n("div", { class: "td-asset-batch-file", children: [
             /* @__PURE__ */ n("strong", { title: b.file.name, children: b.file.name }),
             /* @__PURE__ */ n("small", { children: [
@@ -536,7 +538,7 @@ function qn({ language: e, assets: t, projectName: r, onClose: o, onImported: a,
               " MB · ",
               b.status === "pending" ? e === "zh" ? "待导入" : "Pending" : b.status === "uploading" ? e === "zh" ? "上传中" : "Uploading" : b.status === "imported" ? e === "zh" ? "已完成" : "Imported" : e === "zh" ? "失败" : "Failed"
             ] }),
-            (T || b.error) && /* @__PURE__ */ n("em", { title: T || b.error, children: T || b.error })
+            (A || b.error) && /* @__PURE__ */ n("em", { title: A || b.error, children: A || b.error })
           ] }),
           /* @__PURE__ */ n("input", { disabled: F, value: b.alias, onInput: (M) => k(b.id, { alias: M.currentTarget.value, status: "pending", error: "" }) }),
           /* @__PURE__ */ n("select", { disabled: F, value: b.kind, onChange: (M) => {
@@ -561,12 +563,12 @@ function qn({ language: e, assets: t, projectName: r, onClose: o, onImported: a,
     ] }),
     /* @__PURE__ */ n("footer", { children: [
       /* @__PURE__ */ n("button", { disabled: p, onClick: o, children: e === "zh" ? "关闭" : "Close" }),
-      /* @__PURE__ */ n("button", { class: "primary", disabled: p || !s.some((b) => b.status === "pending" || b.status === "error"), onClick: () => void A(), children: p ? e === "zh" ? "正在导入…" : "Importing…" : D ? e === "zh" ? "重试失败项" : "Retry failed" : e === "zh" ? "开始导入" : "Start import" })
+      /* @__PURE__ */ n("button", { class: "primary", disabled: p || !s.some((b) => b.status === "pending" || b.status === "error"), onClick: () => void R(), children: p ? e === "zh" ? "正在导入…" : "Importing…" : D ? e === "zh" ? "重试失败项" : "Retry failed" : e === "zh" ? "开始导入" : "Start import" })
     ] })
   ] }) });
 }
 const nn = String.raw`\{\{ref:([^{}]+)}}`;
-function Rt() {
+function Tt() {
   return new RegExp(nn, "g");
 }
 function rn(e, t) {
@@ -579,18 +581,18 @@ function on(e, t, r) {
   const o = r.trim(), a = o.endsWith(".audio"), d = a ? o.slice(0, -6) : o, s = rn(e, t).get(d);
   return s ? !a || s.kind === "video" && s.includeVideoAudio : !1;
 }
-function Tt(e, t) {
+function At(e, t) {
   const r = e.shots.filter((o) => o.enabled);
   return r.length > 0 && r.every((o) => on(e, o, t));
 }
 function sn(e, t) {
   const r = [], o = rn(e, t), a = [e.promptPrefix, t.prompt, e.promptSuffix].filter(Boolean).join(`
-`), d = [...a.matchAll(Rt())].map((g) => g[1].trim()), s = [], c = /* @__PURE__ */ new Set(), h = (g) => {
+`), d = [...a.matchAll(Tt())].map((g) => g[1].trim()), s = [], c = /* @__PURE__ */ new Set(), h = (g) => {
     c.has(g.id) || (c.add(g.id), s.push(g));
   };
-  [...o.values()].filter((g) => g.fixed).sort((g, A) => g.fixedOrder - A.fixedOrder || g.alias.localeCompare(A.alias)).forEach(h);
+  [...o.values()].filter((g) => g.fixed).sort((g, R) => g.fixedOrder - R.fixedOrder || g.alias.localeCompare(R.alias)).forEach(h);
   for (const g of d) {
-    const A = g.endsWith(".audio") ? g.slice(0, -6) : g, H = o.get(A);
+    const R = g.endsWith(".audio") ? g.slice(0, -6) : g, H = o.get(R);
     if (!H) {
       r.push(`未找到或已禁用素材：${g}`);
       continue;
@@ -601,15 +603,15 @@ function sn(e, t) {
   u.length > 9 && r.push(`参考图 ${u.length}/9，超出 H3 上限`), f.length > 3 && r.push(`参考视频 ${f.length}/3，超出 H3 上限`), l > 3 && r.push(`有效音频 ${l}/3，超出 H3 总上限`), I > 12 && r.push(`混合文件 ${I}/12，超出 H3 上限`), l && !u.length && !f.length && r.push("音频参考不能单独使用");
   const w = f.filter((g) => typeof g.durationSeconds == "number");
   for (const g of f) (g.durationSeconds == null || g.durationSeconds < 2 || g.durationSeconds > 15) && r.push(`视频 ${g.alias} 的时长必须为 2–15 秒`);
-  w.reduce((g, A) => g + (A.durationSeconds ?? 0), 0) > 15 && r.push("参考视频总时长超过 15 秒");
+  w.reduce((g, R) => g + (R.durationSeconds ?? 0), 0) > 15 && r.push("参考视频总时长超过 15 秒");
   const k = [..._.map((g) => g.audioDurationSeconds ?? g.durationSeconds), ...p.map((g) => g.durationSeconds)];
-  k.some((g) => g == null || g < 2 || g > 15) && r.push("每路有效音频时长必须为 2–15 秒"), k.reduce((g, A) => g + (A ?? 0), 0) > 15 && r.push("有效音频总时长超过 15 秒");
+  k.some((g) => g == null || g < 2 || g > 15) && r.push("每路有效音频时长必须为 2–15 秒"), k.reduce((g, R) => g + (R ?? 0), 0) > 15 && r.push("有效音频总时长超过 15 秒");
   const y = /* @__PURE__ */ new Map();
-  u.forEach((g, A) => y.set(g.alias, `<Picture ${A + 1}>`)), f.forEach((g, A) => y.set(g.alias, `<Video ${A + 1}>`)), _.forEach((g, A) => y.set(`${g.alias}.audio`, `<Audio ${A + 1}>`)), p.forEach((g, A) => y.set(g.alias, `<Audio ${_.length + A + 1}>`));
-  const S = a.replace(Rt(), (g, A) => y.get(A.trim()) ?? g), P = [...y.entries()].map(([g, A]) => ({ label: A, alias: g, kind: A.slice(1).split(" ")[0].toLowerCase() }));
+  u.forEach((g, R) => y.set(g.alias, `<Picture ${R + 1}>`)), f.forEach((g, R) => y.set(g.alias, `<Video ${R + 1}>`)), _.forEach((g, R) => y.set(`${g.alias}.audio`, `<Audio ${R + 1}>`)), p.forEach((g, R) => y.set(g.alias, `<Audio ${_.length + R + 1}>`));
+  const S = a.replace(Tt(), (g, R) => y.get(R.trim()) ?? g), P = [...y.entries()].map(([g, R]) => ({ label: R, alias: g, kind: R.slice(1).split(" ")[0].toLowerCase() }));
   return { compiledPrompt: S, errors: r, slots: P, mixedFiles: I, audioCount: l };
 }
-function Kn(e) {
+function Wn(e) {
   var a, d, s, c, h, u;
   const t = [];
   (d = (a = e.project) == null ? void 0 : a.name) != null && d.trim() || t.push("Project name 不能为空"), (c = (s = e.project) == null ? void 0 : s.runId) != null && c.trim() || t.push("Run ID 不能为空"), (!Array.isArray(e.shots) || !e.shots.some((f) => f.enabled)) && t.push("至少需要一个启用分镜");
@@ -624,7 +626,7 @@ function Kn(e) {
   for (const f of e.shots.filter((_) => _.enabled)) t.push(...sn(e, f).errors.map((_) => `${f.title}: ${_}`));
   return [...new Set(t)];
 }
-function Vn(e, t) {
+function Gn(e, t) {
   const r = [], o = new RegExp(nn, "g");
   let a = 0;
   for (const d of e.matchAll(o)) {
@@ -634,7 +636,7 @@ function Vn(e, t) {
   return a < e.length && r.push({ text: e.slice(a), reference: !1 }), r;
 }
 function Ye({ value: e, rows: t, onInput: r, isReferenceValid: o }) {
-  const a = it(null), d = Vn(e, o), s = (c) => {
+  const a = it(null), d = Gn(e, o), s = (c) => {
     a.current && (a.current.scrollTop = c.currentTarget.scrollTop, a.current.scrollLeft = c.currentTarget.scrollLeft);
   };
   return /* @__PURE__ */ n("span", { class: "td-highlight-textarea", children: [
@@ -646,12 +648,12 @@ function Ye({ value: e, rows: t, onInput: r, isReferenceValid: o }) {
     /* @__PURE__ */ n("textarea", { class: "td-highlight-input", rows: t, value: e, onInput: r, onScroll: s })
   ] });
 }
-const Wn = {
+const Jn = {
   zh: { title: "Theodore 导播台", save: "保存到工作流", close: "关闭", shots: "分镜", assets: "素材库", settings: "项目设置", postprocess: "后处理", addShot: "添加分镜", addAsset: "添加素材", preview: "H3 编译预览", noErrors: "当前分镜通过预检" },
   en: { title: "Theodore Director", save: "Save to workflow", close: "Close", shots: "Shots", assets: "Media", settings: "Project", postprocess: "Post-process", addShot: "Add shot", addAsset: "Add asset", preview: "H3 compile preview", noErrors: "Current shot passes validation" }
 };
 function ge(e, t) {
-  return Wn[e][t];
+  return Jn[e][t];
 }
 function pe(e) {
   return (Array.isArray(e.results) && e.results.length ? e.results : e.path ? [{ path: e.path, bytes: e.bytes, modifiedAt: e.modifiedAt, stage: e.stage, sourcePath: e.sourcePath, completedAt: e.completedAt }] : []).filter((r) => typeof r.path == "string" && r.path.trim().length > 0).sort((r, o) => (o.modifiedAt ?? 0) - (r.modifiedAt ?? 0));
@@ -660,7 +662,7 @@ function an(e, t) {
   const r = /_video_(\d+)/i.exec(e.replace(/\\/g, "/"));
   return r ? Number(r[1]) : t;
 }
-function Gn(e) {
+function Yn(e) {
   return e.stage !== "second_pass";
 }
 function Oe({ src: e, alt: t }) {
@@ -689,7 +691,7 @@ function dn(e, t) {
   const d = new URLSearchParams({ filename: a, type: t });
   return o.length && d.set("subfolder", o.join("/")), `/view?${d.toString()}`;
 }
-function Jn(e) {
+function Qn(e) {
   return dn(e, "input");
 }
 function we(e) {
@@ -699,7 +701,7 @@ function se(e) {
   return (e.trim().replace(/\\/g, "/").split("/").filter(Boolean).pop() ?? "").split(/[?#]/, 1)[0];
 }
 function Et({ asset: e, compact: t = !1 }) {
-  const r = Jn(e.path), o = `td-media-preview ${t ? "compact" : ""}`;
+  const r = Qn(e.path), o = `td-media-preview ${t ? "compact" : ""}`;
   return r ? e.kind === "image" ? /* @__PURE__ */ n("div", { class: o, children: /* @__PURE__ */ n("img", { src: r, alt: e.alias, loading: "lazy" }) }) : e.kind === "video" ? /* @__PURE__ */ n("div", { class: o, children: /* @__PURE__ */ n("video", { src: r, controls: !0, preload: "metadata", playsInline: !0 }) }) : /* @__PURE__ */ n("div", { class: o, children: /* @__PURE__ */ n("audio", { src: r, controls: !0, preload: "metadata" }) }) : e.path ? /* @__PURE__ */ n("div", { class: `${o} unavailable`, children: "该路径无法在浏览器中预览 / Preview unavailable" }) : /* @__PURE__ */ n("div", { class: `${o} empty`, children: "尚未选择素材 / No media selected" });
 }
 function ln(e) {
@@ -714,24 +716,24 @@ function ln(e) {
     return r.enabled && (t += 1), a;
   });
 }
-function Yn(e, t, r) {
+function Xn(e, t, r) {
   return e.filter((o) => o.shot.enabled && t[o.key]).map((o) => ({
     shotId: o.shot.id,
     activeIndex: o.activeIndex,
     path: r[o.key] ?? ""
   }));
 }
-function Qn(e, t, r) {
+function Zn(e, t, r) {
   const o = {};
   return e.forEach((a) => {
     const d = a.sourceIndex + 1;
     o[a.key] = a.shot.enabled && d >= t && d <= r;
   }), o;
 }
-function Xn(e, t) {
+function er(e, t) {
   return e === "second_pass" ? t === "zh" ? "二采" : "2nd pass" : e === "first_pass" ? t === "zh" ? "一采" : "1st pass" : t === "zh" ? "旧结果" : "Legacy";
 }
-function Zn({ plan: e, language: t, adapter: r, context: o }) {
+function tr({ plan: e, language: t, adapter: r, context: o }) {
   const a = Se(() => ln(e), [e]), [d, s] = C({}), [c, h] = C({}), [u, f] = C(null), [_, p] = C(0), l = r.unavailableReason("secondPass", o);
   ke(() => {
     let w = !1;
@@ -790,20 +792,20 @@ function Zn({ plan: e, language: t, adapter: r, context: o }) {
         ] }),
         !w.shot.enabled && /* @__PURE__ */ n("div", { class: "td-post-shot-disabled-note", children: t === "zh" ? "镜头已禁用，但仍可对历史一采结果进行后处理。" : "This shot is disabled, but its historical first-pass results remain available." }),
         k != null && k.loading ? /* @__PURE__ */ n("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading results…" }) : k != null && k.response.error ? /* @__PURE__ */ n("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : y.length ? /* @__PURE__ */ n("div", { class: "td-post-result-list", children: y.map((S) => {
-          const P = we(S), g = c[S.path], A = Gn(S);
+          const P = we(S), g = c[S.path], R = Yn(S);
           return /* @__PURE__ */ n("div", { class: "td-second-pass-result", children: [
             /* @__PURE__ */ n("button", { class: "td-post-result-choice", onClick: () => P && f({ path: P, title: `${w.shot.id} · ${w.shot.title}` }), children: [
               P ? /* @__PURE__ */ n(Oe, { src: P, alt: se(S.path) }) : /* @__PURE__ */ n("div", { class: "td-result-thumb", children: "×" }),
               /* @__PURE__ */ n("span", { children: [
                 /* @__PURE__ */ n("strong", { children: [
-                  Xn(S.stage, t),
+                  er(S.stage, t),
                   (S.stage === "legacy_unknown" || !S.stage) && /* @__PURE__ */ n("em", { children: t === "zh" ? "兼容" : "Compatible" })
                 ] }),
                 /* @__PURE__ */ n("span", { title: S.path, children: se(S.path) }),
                 /* @__PURE__ */ n("small", { children: S.bytes ? `${(S.bytes / 1024 / 1024).toFixed(1)} MB` : "" })
               ] })
             ] }),
-            /* @__PURE__ */ n("button", { class: "primary td-second-pass-run", disabled: !!l || !A || (g == null ? void 0 : g.state) === "queued", title: l ?? "", onClick: () => void I(w.shot.id, S.path), children: A ? (g == null ? void 0 : g.state) === "queued" ? t === "zh" ? "排队/执行中…" : "Queued/running…" : (g == null ? void 0 : g.state) === "done" ? t === "zh" ? "二采完成" : "Completed" : t === "zh" ? "进行二采" : "Run second pass" : t === "zh" ? "已是二采" : "Already refined" }),
+            /* @__PURE__ */ n("button", { class: "primary td-second-pass-run", disabled: !!l || !R || (g == null ? void 0 : g.state) === "queued", title: l ?? "", onClick: () => void I(w.shot.id, S.path), children: R ? (g == null ? void 0 : g.state) === "queued" ? t === "zh" ? "排队/执行中…" : "Queued/running…" : (g == null ? void 0 : g.state) === "done" ? t === "zh" ? "二采完成" : "Completed" : t === "zh" ? "进行二采" : "Run second pass" : t === "zh" ? "已是二采" : "Already refined" }),
             (g == null ? void 0 : g.state) === "error" && /* @__PURE__ */ n("div", { class: "td-second-pass-error", children: g.message })
           ] }, S.path);
         }) }) : /* @__PURE__ */ n("div", { class: "td-post-shot-empty", children: t === "zh" ? "没有可用的一采结果" : "No first-pass result available" })
@@ -819,33 +821,33 @@ function Zn({ plan: e, language: t, adapter: r, context: o }) {
     ] }) })
   ] });
 }
-function er({ plan: e, language: t, adapter: r, context: o }) {
+function nr({ plan: e, language: t, adapter: r, context: o }) {
   const [a, d] = C("merge");
   return /* @__PURE__ */ n("section", { class: "td-postprocess-shell", children: [
     /* @__PURE__ */ n("div", { class: "td-post-mode-tabs", role: "tablist", children: [
       /* @__PURE__ */ n("button", { class: a === "merge" ? "active" : "", role: "tab", "aria-selected": a === "merge", onClick: () => d("merge"), children: t === "zh" ? "合并视频" : "Merge videos" }),
       /* @__PURE__ */ n("button", { class: a === "second-pass" ? "active" : "", role: "tab", "aria-selected": a === "second-pass", onClick: () => d("second-pass"), children: t === "zh" ? "单独二采" : "Standalone second pass" })
     ] }),
-    a === "merge" ? /* @__PURE__ */ n(tr, { plan: e, language: t, adapter: r, context: o }) : /* @__PURE__ */ n(Zn, { plan: e, language: t, adapter: r, context: o })
+    a === "merge" ? /* @__PURE__ */ n(rr, { plan: e, language: t, adapter: r, context: o }) : /* @__PURE__ */ n(tr, { plan: e, language: t, adapter: r, context: o })
   ] });
 }
-function tr({ plan: e, language: t, adapter: r, context: o }) {
-  const a = Se(() => ln(e), [e]), [d, s] = C({}), [c, h] = C({}), [u, f] = C({}), [_, p] = C(null), [l, I] = C(!1), [w, k] = C(""), [y, S] = C(""), [P, g] = C({ found: !1, results: [] }), [A, H] = C(!1), [D, N] = C(!1), [b, T] = C(""), [F, M] = C(0), [W, Y] = C("1"), [V, ue] = C(String(a.length || 1)), he = a.filter((v) => v.shot.enabled), me = he.length > 0 && he.every((v) => c[v.key]), ie = Yn(a, c, u), ae = ie.filter((v) => !v.path), Q = a.some((v) => {
-    var R;
-    return c[v.key] && ((R = d[v.key]) == null ? void 0 : R.loading);
+function rr({ plan: e, language: t, adapter: r, context: o }) {
+  const a = Se(() => ln(e), [e]), [d, s] = C({}), [c, h] = C({}), [u, f] = C({}), [_, p] = C(null), [l, I] = C(!1), [w, k] = C(""), [y, S] = C(""), [P, g] = C({ found: !1, results: [] }), [R, H] = C(!1), [D, N] = C(!1), [b, A] = C(""), [F, M] = C(0), [W, Y] = C("1"), [V, ue] = C(String(a.length || 1)), he = a.filter((v) => v.shot.enabled), me = he.length > 0 && he.every((v) => c[v.key]), ie = Xn(a, c, u), ae = ie.filter((v) => !v.path), Q = a.some((v) => {
+    var T;
+    return c[v.key] && ((T = d[v.key]) == null ? void 0 : T.loading);
   }), Z = a.reduce(
-    (v, R) => v + (R.shot.enabled && c[R.key] ? R.shot.durationSeconds : 0),
+    (v, T) => v + (T.shot.enabled && c[T.key] ? T.shot.durationSeconds : 0),
     0
   ), X = Se(() => pe(P), [P]), de = X.find((v) => v.path === b) ?? X[0], fe = r.unavailableReason("mergeVideos", o);
   ke(() => {
     let v = !1;
-    const R = {}, q = {};
+    const T = {}, q = {};
     return a.forEach((U) => {
-      R[U.key] = U.shot.enabled, q[U.key] = { loading: !0, response: { found: !1, results: [] } };
+      T[U.key] = U.shot.enabled, q[U.key] = { loading: !0, response: { found: !1, results: [] } };
     }), h((U) => {
       const $ = {};
       return a.forEach((E) => {
-        $[E.key] = E.shot.enabled ? U[E.key] ?? R[E.key] : !1;
+        $[E.key] = E.shot.enabled ? U[E.key] ?? T[E.key] : !1;
       }), $;
     }), s(q), k(""), a.forEach((U) => {
       r.fetchShotResults(o, e, U.shot, U.activeIndex).then(($) => {
@@ -869,15 +871,15 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
     };
   }, [e.project.name, e.project.runId, e.shots.map((v) => `${v.id}:${v.enabled}`).join("|"), F, r.id, o.settings.apiKey, o.settings.taskMappings]), ke(() => {
     let v = !1;
-    return H(!0), r.fetchMergedResults(o, e).then((R) => {
+    return H(!0), r.fetchMergedResults(o, e).then((T) => {
       if (v) return;
-      const q = pe(R);
-      g(R), T((U) => {
+      const q = pe(T);
+      g(T), A((U) => {
         var $;
         return q.some((E) => E.path === U) ? U : (($ = q[0]) == null ? void 0 : $.path) ?? "";
       });
-    }).catch((R) => {
-      v || g({ found: !1, results: [], error: String(R) });
+    }).catch((T) => {
+      v || g({ found: !1, results: [], error: String(T) });
     }).finally(() => {
       v || H(!1);
     }), () => {
@@ -886,19 +888,19 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
   }, [e.project.name, e.project.runId, F, r.id, o.settings.apiKey, o.settings.taskMappings]);
   const qe = () => {
     const v = !me;
-    h((R) => {
-      const q = { ...R };
+    h((T) => {
+      const q = { ...T };
       return he.forEach((U) => {
         q[U.key] = v;
       }), q;
     });
-  }, Ae = () => {
-    const v = Number(W), R = Number(V);
-    if (!Number.isInteger(v) || !Number.isInteger(R) || v < 1 || R < v || R > a.length) {
+  }, Re = () => {
+    const v = Number(W), T = Number(V);
+    if (!Number.isInteger(v) || !Number.isInteger(T) || v < 1 || T < v || T > a.length) {
       window.alert(t === "zh" ? `请输入有效范围：1 ≤ m ≤ n ≤ ${a.length}` : `Enter a valid range: 1 ≤ m ≤ n ≤ ${a.length}`);
       return;
     }
-    h(Qn(a, v, R));
+    h(Zn(a, v, T));
   }, Ke = async () => {
     if (!ie.length) {
       window.alert(t === "zh" ? "请至少选择一个镜头" : "Select at least one shot.");
@@ -916,7 +918,7 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
         selections: ie,
         requestId: `tdm_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`
       });
-      v ? (g((R) => ({ found: !0, results: [v, ...pe(R).filter((q) => q.path !== v.path)] })), T(v.path)) : M((R) => R + 1);
+      v ? (g((T) => ({ found: !0, results: [v, ...pe(T).filter((q) => q.path !== v.path)] })), A(v.path)) : M((T) => T + 1);
     } catch (v) {
       k(String(v instanceof Error ? v.message : v));
     } finally {
@@ -962,7 +964,7 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
         /* @__PURE__ */ n("input", { type: "number", min: "1", max: a.length, step: "1", value: W, "aria-label": t === "zh" ? "起始镜头 m" : "Start shot m", onInput: (v) => Y(v.currentTarget.value) }),
         /* @__PURE__ */ n("span", { children: "—" }),
         /* @__PURE__ */ n("input", { type: "number", min: "1", max: a.length, step: "1", value: V, "aria-label": t === "zh" ? "结束镜头 n" : "End shot n", onInput: (v) => ue(v.currentTarget.value) }),
-        /* @__PURE__ */ n("button", { disabled: !a.length, onClick: Ae, children: t === "zh" ? "确认范围" : "Apply range" })
+        /* @__PURE__ */ n("button", { disabled: !a.length, onClick: Re, children: t === "zh" ? "确认范围" : "Apply range" })
       ] }),
       /* @__PURE__ */ n("button", { class: "primary", disabled: l || Q || !ie.length || !!ae.length || !!fe, title: fe ?? "", onClick: Ke, children: l ? t === "zh" ? "正在合并…" : "Merging…" : t === "zh" ? "合并所选视频" : "Merge selected videos" })
     ] }),
@@ -973,7 +975,7 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
     ] }),
     ae.length > 0 && /* @__PURE__ */ n("div", { class: "td-post-warning", children: t === "zh" ? "已选镜头中存在尚未生成视频的镜头。" : "Some selected shots do not have generated videos yet." }),
     /* @__PURE__ */ n("div", { class: "td-post-shot-list", children: a.map((v) => {
-      const R = d[v.key], q = pe((R == null ? void 0 : R.response) ?? { results: [] }), U = !!c[v.key];
+      const T = d[v.key], q = pe((T == null ? void 0 : T.response) ?? { results: [] }), U = !!c[v.key];
       return /* @__PURE__ */ n("article", { class: `td-post-shot ${U ? "selected" : ""} ${v.shot.enabled ? "" : "disabled"}`, children: [
         /* @__PURE__ */ n("header", { children: [
           /* @__PURE__ */ n("label", { children: [
@@ -989,7 +991,7 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
           ] })
         ] }),
         !v.shot.enabled && /* @__PURE__ */ n("div", { class: "td-post-shot-disabled-note", children: t === "zh" ? "该镜头当前已禁用：历史结果可以预览，但不能参加合并。" : "This shot is disabled: historical results can be previewed but cannot be merged." }),
-        R != null && R.loading ? /* @__PURE__ */ n("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading generated results…" }) : R != null && R.response.error ? /* @__PURE__ */ n("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : q.length ? /* @__PURE__ */ n("div", { class: "td-post-result-list", children: q.map(($, E) => {
+        T != null && T.loading ? /* @__PURE__ */ n("div", { class: "td-post-shot-empty", children: t === "zh" ? "正在查询生成结果…" : "Loading generated results…" }) : T != null && T.response.error ? /* @__PURE__ */ n("div", { class: "td-post-shot-empty errors", children: t === "zh" ? "查询失败，请重启 ComfyUI 后重试。" : "Query failed. Restart ComfyUI and retry." }) : q.length ? /* @__PURE__ */ n("div", { class: "td-post-result-list", children: q.map(($, E) => {
           const G = we($), ne = u[v.key] === $.path, re = an($.path, q.length - E);
           return /* @__PURE__ */ n("div", { class: `td-post-result ${ne ? "selected" : ""}`, children: [
             /* @__PURE__ */ n("button", { class: "td-post-result-choice", role: "radio", "aria-checked": ne, onClick: () => f((ee) => ({ ...ee, [v.key]: $.path })), children: [
@@ -1011,21 +1013,21 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
     /* @__PURE__ */ n("section", { class: "td-post-merged", children: [
       /* @__PURE__ */ n("header", { children: /* @__PURE__ */ n("div", { children: [
         /* @__PURE__ */ n("h2", { children: t === "zh" ? "合并结果" : "Merged results" }),
-        /* @__PURE__ */ n("span", { class: `td-result-state ${X.length ? "found" : ""}`, children: A ? t === "zh" ? "查询中" : "Checking" : t === "zh" ? `${X.length} 个结果` : `${X.length} results` })
+        /* @__PURE__ */ n("span", { class: `td-result-state ${X.length ? "found" : ""}`, children: R ? t === "zh" ? "查询中" : "Checking" : t === "zh" ? `${X.length} 个结果` : `${X.length} results` })
       ] }) }),
-      A ? /* @__PURE__ */ n("div", { class: "td-result-empty", children: t === "zh" ? "正在查询合并结果…" : "Loading merged results…" }) : P.error ? /* @__PURE__ */ n("div", { class: "td-result-empty errors", children: t === "zh" ? "无法查询合并结果" : "Unable to query merged results" }) : de && _e ? /* @__PURE__ */ n("div", { class: "td-generated-results", children: [
+      R ? /* @__PURE__ */ n("div", { class: "td-result-empty", children: t === "zh" ? "正在查询合并结果…" : "Loading merged results…" }) : P.error ? /* @__PURE__ */ n("div", { class: "td-result-empty errors", children: t === "zh" ? "无法查询合并结果" : "Unable to query merged results" }) : de && _e ? /* @__PURE__ */ n("div", { class: "td-generated-results", children: [
         /* @__PURE__ */ n("div", { class: "td-generated-video", children: [
           /* @__PURE__ */ n("video", { src: _e, controls: !0, preload: "metadata", playsInline: !0 }, de.path),
           /* @__PURE__ */ n("div", { class: "td-generated-meta", title: de.path, children: de.path })
         ] }),
-        /* @__PURE__ */ n("div", { class: "td-result-list", children: X.map((v, R) => {
+        /* @__PURE__ */ n("div", { class: "td-result-list", children: X.map((v, T) => {
           const q = we(v);
-          return /* @__PURE__ */ n("button", { class: `td-result-item ${v.path === de.path ? "selected" : ""}`, onClick: () => T(v.path), children: [
-            q ? /* @__PURE__ */ n(Oe, { src: q, alt: `${t === "zh" ? "合并结果" : "Merged result"} ${X.length - R}` }) : /* @__PURE__ */ n("div", { class: "td-result-thumb", children: "×" }),
+          return /* @__PURE__ */ n("button", { class: `td-result-item ${v.path === de.path ? "selected" : ""}`, onClick: () => A(v.path), children: [
+            q ? /* @__PURE__ */ n(Oe, { src: q, alt: `${t === "zh" ? "合并结果" : "Merged result"} ${X.length - T}` }) : /* @__PURE__ */ n("div", { class: "td-result-thumb", children: "×" }),
             /* @__PURE__ */ n("span", { class: "td-result-item-copy", children: [
               /* @__PURE__ */ n("strong", { children: [
-                t === "zh" ? `合并结果 ${X.length - R}` : `Merged result ${X.length - R}`,
-                R === 0 && /* @__PURE__ */ n("em", { children: t === "zh" ? "最新" : "Latest" })
+                t === "zh" ? `合并结果 ${X.length - T}` : `Merged result ${X.length - T}`,
+                T === 0 && /* @__PURE__ */ n("em", { children: t === "zh" ? "最新" : "Latest" })
               ] }),
               /* @__PURE__ */ n("span", { children: se(v.path) }),
               /* @__PURE__ */ n("small", { children: v.bytes ? `${(v.bytes / 1024 / 1024).toFixed(1)} MB` : v.taskId ? `task ${v.taskId}` : "" })
@@ -1044,14 +1046,14 @@ function tr({ plan: e, language: t, adapter: r, context: o }) {
     ] }) })
   ] });
 }
-function nr(e) {
+function or(e) {
   const t = e.reduce((r, o) => {
     const a = /^shot_(\d+)$/i.exec(o.id.trim());
     return a ? Math.max(r, Number(a[1])) : r;
   }, 0);
   return Math.max(t, e.length) + 1;
 }
-function rr(e, t = 5) {
+function sr(e, t = 5) {
   return {
     id: `shot_${String(e).padStart(3, "0")}`,
     title: `Shot ${e}`,
@@ -1066,7 +1068,7 @@ function rr(e, t = 5) {
   };
 }
 function Pt(e, t, r) {
-  const o = nr(e), a = Array.from({ length: t }, (d, s) => rr(o + s, r));
+  const o = or(e), a = Array.from({ length: t }, (d, s) => sr(o + s, r));
   return [...e, ...a];
 }
 async function be(e) {
@@ -1074,7 +1076,7 @@ async function be(e) {
   if (!e.ok) throw new Error(t.error || t.message || `HTTP ${e.status}`);
   return t;
 }
-function or(e, t) {
+function ir(e, t) {
   return new Error(`${e} adapter does not support ${t}`);
 }
 const at = {
@@ -1135,7 +1137,7 @@ const at = {
     await be(r);
   }
 };
-function sr({ language: e, settings: t, onChange: r, rememberSecret: o, onRememberSecretChange: a, onClearSavedSecret: d, onProjectSettingChange: s }) {
+function ar({ language: e, settings: t, onChange: r, rememberSecret: o, onRememberSecretChange: a, onClearSavedSecret: d, onProjectSettingChange: s }) {
   return /* @__PURE__ */ n(Ie, { children: [
     /* @__PURE__ */ n("label", { children: [
       "RunningHub API Key",
@@ -1161,7 +1163,7 @@ merged=taskId`, onInput: (c) => {
     ] })
   ] });
 }
-const ir = /* @__PURE__ */ new Set(["mp4", "mov", "mkv", "webm", "avi"]);
+const dr = /* @__PURE__ */ new Set(["mp4", "mov", "mkv", "webm", "avi"]);
 function cn(e) {
   const t = e.toLowerCase();
   return t === "runninghub.cn" || t.endsWith(".runninghub.cn");
@@ -1193,21 +1195,21 @@ function Nt(e, t) {
 function Lt(e) {
   return (e.results ?? []).filter((t) => {
     const r = t.outputType.toLowerCase().replace(/^\./, "");
-    return ir.has(r) && /^https:\/\//i.test(t.url);
+    return dr.has(r) && /^https:\/\//i.test(t.url);
   });
 }
-function ar(e, t, r) {
+function lr(e, t, r) {
   const o = t.shots.filter((s) => s.enabled), a = o.findIndex((s) => s.id === r.id);
   if (a < 0 || !o.length) return [];
   const d = e.filter((s) => decodeURIComponent(s.url).includes(r.id));
   return d.length ? d : o.length === 1 ? e : e.length >= o.length ? e.filter((s, c) => c % o.length === a) : [];
 }
-const dr = {
+const cr = {
   id: "runninghub",
   label: "RunningHub",
   displayLabel: () => "RunningHub",
   matchesHostname: cn,
-  SettingsPanel: sr,
+  SettingsPanel: ar,
   assetBanner(e, t) {
     const r = this.unavailableReason("uploadAsset", e);
     return {
@@ -1241,7 +1243,7 @@ const dr = {
         ["FAILED", "ERROR", "CANCELED", "CANCELLED"].includes(f) && s.push(u.errorMessage || `${h.taskId}: ${f}`);
         continue;
       }
-      const _ = Lt(u), p = h.target === r.id ? _ : ar(_, t, r);
+      const _ = Lt(u), p = h.target === r.id ? _ : lr(_, t, r);
       d.push(...p.map((l) => Nt(h.taskId, l)));
     }
     const c = [...new Map(d.map((h) => [h.url || h.path, h])).values()];
@@ -1271,16 +1273,16 @@ const dr = {
     await e.queueSecondPass(t);
   },
   async openResultFolder() {
-    throw or("runninghub", "openResultFolder");
+    throw ir("runninghub", "openResultFolder");
   }
-}, dt = [dr, at];
+}, dt = [cr, at];
 function Dt(e, t = typeof window > "u" ? "localhost" : window.location.hostname) {
-  return e.mode !== "auto" ? lr(e.mode) : dt.find((r) => r.id !== "local" && r.matchesHostname(t)) ?? at;
+  return e.mode !== "auto" ? pr(e.mode) : dt.find((r) => r.id !== "local" && r.matchesHostname(t)) ?? at;
 }
-function lr(e) {
+function pr(e) {
   return dt.find((t) => t.id === e) ?? at;
 }
-function cr(e, t = {}) {
+function ur(e, t = {}) {
   return { settings: e, ...t };
 }
 const lt = "theodore-director.runninghub-api-key";
@@ -1291,7 +1293,7 @@ function ct() {
     return null;
   }
 }
-function pr(e = ct()) {
+function hr(e = ct()) {
   var t;
   try {
     return ((t = e == null ? void 0 : e.getItem(lt)) == null ? void 0 : t.trim()) || null;
@@ -1299,7 +1301,7 @@ function pr(e = ct()) {
     return null;
   }
 }
-function ur(e, t = ct()) {
+function mr(e, t = ct()) {
   const r = e.trim();
   if (!r || !t) return !1;
   try {
@@ -1316,7 +1318,7 @@ function Qe(e = ct()) {
     return !1;
   }
 }
-const un = (e) => `${e}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, Ne = (e) => JSON.parse(JSON.stringify(e)), hr = { image: "图片", video: "视频", audio: "音频" };
+const un = (e) => `${e}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`, Ne = (e) => JSON.parse(JSON.stringify(e)), fr = { image: "图片", video: "视频", audio: "音频" };
 function Ft(e) {
   var r, o;
   const t = Ne(e);
@@ -1326,14 +1328,14 @@ function Ft(e) {
     secondSampling: a.secondSampling ?? !0
   })), t;
 }
-function mr(e) {
+function gr(e) {
   return e.trim().replace(/[<>:"/\\|?*\u0000-\u001f]+/g, "_").replace(/[. ]+$/g, "").slice(0, 96) || "theodore_project";
 }
-function fr(e) {
+function br(e) {
   const t = un(e);
   return { id: t, alias: t, kind: e, path: "", enabled: !0, fixed: !1, fixedOrder: 0, shotIds: [], includeVideoAudio: !1, durationSeconds: e === "image" ? null : 2, audioDurationSeconds: null, fingerprint: "" };
 }
-async function gr(e) {
+async function vr(e) {
   var d;
   if ((d = navigator.clipboard) != null && d.writeText)
     try {
@@ -1346,15 +1348,15 @@ async function gr(e) {
   const a = document.execCommand("copy");
   if (o.remove(), t instanceof HTMLElement && t.focus({ preventScroll: !0 }), r && (t instanceof HTMLTextAreaElement || t instanceof HTMLInputElement) && t.setSelectionRange(r.start, r.end, r.direction ?? void 0), !a) throw new Error("浏览器拒绝写入剪贴板");
 }
-function br({ initial: e, onSave: t, onClose: r, supportsSecondSampling: o, queueSecondPass: a, queueMerge: d }) {
-  const [s, c] = C(() => Ft(e)), [h] = C(() => pr()), [u, f] = C("shots"), [_, p] = C(0), [l, I] = C(() => navigator.language.startsWith("zh") ? "zh" : "en"), [w, k] = C({}), [y, S] = C(!0), [P, g] = C(!1), [A, H] = C(0), [D, N] = C({ found: !1, results: [] }), [b, T] = C(""), [F, M] = C(!1), [W, Y] = C(""), [V, ue] = C(!0), [he, me] = C(!1), [ie, ae] = C(!1), [Q, Z] = C([]), [X, de] = C("5"), [fe, qe] = C("1"), [Ae, Ke] = C("5");
+function xr({ initial: e, onSave: t, onClose: r, supportsSecondSampling: o, queueSecondPass: a, queueMerge: d }) {
+  const [s, c] = C(() => Ft(e)), [h] = C(() => hr()), [u, f] = C("shots"), [_, p] = C(0), [l, I] = C(() => navigator.language.startsWith("zh") ? "zh" : "en"), [w, k] = C({}), [y, S] = C(!0), [P, g] = C(!1), [R, H] = C(0), [D, N] = C({ found: !1, results: [] }), [b, A] = C(""), [F, M] = C(!1), [W, Y] = C(""), [V, ue] = C(!0), [he, me] = C(!1), [ie, ae] = C(!1), [Q, Z] = C([]), [X, de] = C("5"), [fe, qe] = C("1"), [Re, Ke] = C("5");
   ke(() => {
     const i = (m) => {
       m.target instanceof Element && m.target.closest(".td-shot-media-name") && m.preventDefault();
     };
     return document.addEventListener("mousedown", i), () => document.removeEventListener("mousedown", i);
   }, []);
-  const [xe, _e] = C(() => ({ mode: "auto", apiKey: h ?? "", taskMappings: e.project.runningHubTaskMappings ?? "" })), [v, R] = C(() => ({ mode: "auto", apiKey: h ?? "", taskMappings: e.project.runningHubTaskMappings ?? "" })), [q, U] = C(h !== null), $ = s.shots[Math.min(_, s.shots.length - 1)], E = Se(() => $ ? sn(s, $) : null, [s, $]), G = $ != null && $.enabled ? s.shots.slice(0, _).filter((i) => i.enabled).length : -1, ne = s.shots.length > 0 && s.shots.every((i) => i.secondSampling), re = Q.length > 0 && Q.every((i) => i.enabled), ee = Se(() => pe(D), [D]), le = ee.find((i) => i.path === b) ?? ee[0], pt = we(le), ze = Dt(xe), ut = Dt(v), Re = cr(xe, { queueMerge: d, queueSecondPass: a }), ht = ut.SettingsPanel, Ve = ze.assetBanner(Re, l), mt = (i, m, x) => ze.uploadAsset(Re, i, m, x), j = (i) => c((m) => {
+  const [xe, _e] = C(() => ({ mode: "auto", apiKey: h ?? "", taskMappings: e.project.runningHubTaskMappings ?? "" })), [v, T] = C(() => ({ mode: "auto", apiKey: h ?? "", taskMappings: e.project.runningHubTaskMappings ?? "" })), [q, U] = C(h !== null), $ = s.shots[Math.min(_, s.shots.length - 1)], E = Se(() => $ ? sn(s, $) : null, [s, $]), G = $ != null && $.enabled ? s.shots.slice(0, _).filter((i) => i.enabled).length : -1, ne = s.shots.length > 0 && s.shots.every((i) => i.secondSampling), re = Q.length > 0 && Q.every((i) => i.enabled), ee = Se(() => pe(D), [D]), le = ee.find((i) => i.path === b) ?? ee[0], pt = we(le), ze = Dt(xe), ut = Dt(v), Te = ur(xe, { queueMerge: d, queueSecondPass: a }), ht = ut.SettingsPanel, Ve = ze.assetBanner(Te, l), mt = (i, m, x) => ze.uploadAsset(Te, i, m, x), j = (i) => c((m) => {
     const x = Ne(m);
     return i(x), x;
   }), ft = (i, m) => j((x) => {
@@ -1372,7 +1374,7 @@ function br({ initial: e, onSave: t, onClose: r, supportsSecondSampling: o, queu
     }
     Z((m) => m.map((x) => ({ ...x, durationSeconds: i })));
   }, gn = () => {
-    const i = Number(fe), m = Number(Ae);
+    const i = Number(fe), m = Number(Re);
     if (!Number.isInteger(i) || i < 1 || i > 100) {
       window.alert(l === "zh" ? "新增镜头数量必须是 1–100 的整数" : "The shot count must be an integer from 1 to 100.");
       return;
@@ -1395,9 +1397,9 @@ function br({ initial: e, onSave: t, onClose: r, supportsSecondSampling: o, queu
     }), p((i) => Math.min(i, Q.length - 1)), me(!1);
   }, xn = () => {
     const i = URL.createObjectURL(new Blob([JSON.stringify(s, null, 2)], { type: "application/json" })), m = document.createElement("a");
-    m.href = i, m.download = `${mr(s.project.name)}.director.json`, m.click(), URL.revokeObjectURL(i);
+    m.href = i, m.download = `${gr(s.project.name)}.director.json`, m.click(), URL.revokeObjectURL(i);
   }, _n = () => {
-    const i = Kn(s);
+    const i = Wn(s);
     if (i.length) {
       window.alert(`计划未通过校验：
 
@@ -1410,32 +1412,32 @@ ${i.join(`
     const i = { ...v };
     j((m) => {
       m.project.runningHubTaskMappings = i.taskMappings;
-    }), _e(i), q && i.apiKey.trim() ? ur(i.apiKey) || window.alert(l === "zh" ? "浏览器拒绝本地保存 API Key；本次会话仍可继续使用。" : "The browser blocked local API Key storage; it remains available for this session.") : Qe();
+    }), _e(i), q && i.apiKey.trim() ? mr(i.apiKey) || window.alert(l === "zh" ? "浏览器拒绝本地保存 API Key；本次会话仍可继续使用。" : "The browser blocked local API Key storage; it remains available for this session.") : Qe();
   }, wn = () => {
-    Qe(), U(!1), _e((i) => ({ ...i, apiKey: "" })), R((i) => ({ ...i, apiKey: "" }));
+    Qe(), U(!1), _e((i) => ({ ...i, apiKey: "" })), T((i) => ({ ...i, apiKey: "" }));
   }, kn = (i) => {
     const m = Ft(i);
-    c(m), _e((x) => ({ ...x, taskMappings: m.project.runningHubTaskMappings ?? "" })), R((x) => ({ ...x, taskMappings: m.project.runningHubTaskMappings ?? "" })), p(0);
+    c(m), _e((x) => ({ ...x, taskMappings: m.project.runningHubTaskMappings ?? "" })), T((x) => ({ ...x, taskMappings: m.project.runningHubTaskMappings ?? "" })), p(0);
   };
   return ke(() => {
     let i = !1;
-    return $ ? (M(!0), ze.fetchShotResults(Re, s, $, G).then((m) => {
+    return $ ? (M(!0), ze.fetchShotResults(Te, s, $, G).then((m) => {
       if (i) return;
       const x = pe(m);
-      N(m), T((z) => {
+      N(m), A((z) => {
         var L;
         return x.some((J) => J.path === z) ? z : ((L = x[0]) == null ? void 0 : L.path) ?? "";
       });
     }).catch((m) => {
-      i || (N({ found: !1, results: [], error: String(m) }), T(""));
+      i || (N({ found: !1, results: [], error: String(m) }), A(""));
     }).finally(() => {
       i || M(!1);
     }), () => {
       i = !0;
-    }) : (N({ found: !1, results: [] }), T(""), M(!1), () => {
+    }) : (N({ found: !1, results: [] }), A(""), M(!1), () => {
       i = !0;
     });
-  }, [s.project.name, s.project.runId, $ == null ? void 0 : $.id, $ == null ? void 0 : $.enabled, G, A, ze.id, xe.apiKey, xe.taskMappings]), /* @__PURE__ */ n("div", { class: "td-shell", children: [
+  }, [s.project.name, s.project.runId, $ == null ? void 0 : $.id, $ == null ? void 0 : $.enabled, G, R, ze.id, xe.apiKey, xe.taskMappings]), /* @__PURE__ */ n("div", { class: "td-shell", children: [
     /* @__PURE__ */ n("header", { children: [
       /* @__PURE__ */ n("h1", { children: ge(l, "title") }),
       /* @__PURE__ */ n("div", { class: "td-actions", children: [
@@ -1573,7 +1575,7 @@ ${i.join(`
               return /* @__PURE__ */ n("div", { class: `td-shot-media-card ${m ? "" : "disabled"}`, children: [
                 /* @__PURE__ */ n("div", { class: "td-shot-media-frame", children: [
                   /* @__PURE__ */ n(Et, { asset: i, compact: !0 }),
-                  /* @__PURE__ */ n("span", { class: "td-shot-media-kind", children: l === "zh" ? hr[i.kind] : i.kind }),
+                  /* @__PURE__ */ n("span", { class: "td-shot-media-kind", children: l === "zh" ? fr[i.kind] : i.kind }),
                   /* @__PURE__ */ n("label", { class: "td-shot-media-toggle", title: m ? "禁用此素材 / Disable" : "启用此素材 / Enable", children: /* @__PURE__ */ n("input", { type: "checkbox", checked: m, onChange: (L) => j((J) => {
                     const te = J.shots[_].disabledAssetIds;
                     J.shots[_].disabledAssetIds = L.currentTarget.checked ? te.filter((ye) => ye !== i.id) : [.../* @__PURE__ */ new Set([...te, i.id])];
@@ -1582,7 +1584,7 @@ ${i.join(`
                 /* @__PURE__ */ n("button", { class: `td-shot-media-name ${W === i.id ? "copied" : ""}`, title: `${x}
 ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
                   try {
-                    await gr(z), Y(i.id), window.setTimeout(() => Y((L) => L === i.id ? "" : L), 1400);
+                    await vr(z), Y(i.id), window.setTimeout(() => Y((L) => L === i.id ? "" : L), 1400);
                   } catch (L) {
                     window.alert(`${l === "zh" ? "复制失败" : "Copy failed"}: ${String(L)}`);
                   }
@@ -1640,7 +1642,7 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
                 ] }),
                 /* @__PURE__ */ n("div", { class: "td-result-list", "aria-label": l === "zh" ? "全部生成结果" : "All generated results", children: ee.map((i, m) => {
                   const x = we(i), z = an(i.path, ee.length - m), L = i.modifiedAt ? new Date(i.modifiedAt * 1e3).toLocaleString(l === "zh" ? "zh-CN" : "en-US") : "";
-                  return /* @__PURE__ */ n("button", { class: `td-result-item ${i.path === le.path ? "selected" : ""}`, onClick: () => T(i.path), children: [
+                  return /* @__PURE__ */ n("button", { class: `td-result-item ${i.path === le.path ? "selected" : ""}`, onClick: () => A(i.path), children: [
                     x ? /* @__PURE__ */ n(Oe, { src: x, alt: `${l === "zh" ? "结果" : "Result"} ${z}` }) : /* @__PURE__ */ n("div", { class: "td-result-thumb", children: /* @__PURE__ */ n("span", { children: "×" }) }),
                     /* @__PURE__ */ n("span", { class: "td-result-item-copy", children: [
                       /* @__PURE__ */ n("strong", { children: [
@@ -1660,7 +1662,7 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
       u === "assets" && /* @__PURE__ */ n("div", { class: "td-assets", children: [
         Ve && /* @__PURE__ */ n("div", { class: `td-runtime-banner ${Ve.ready ? "ready" : ""}`, children: Ve.message }),
         /* @__PURE__ */ n("div", { class: "td-toolbar", children: [
-          ["image", "video", "audio"].map((i) => /* @__PURE__ */ n("button", { onClick: () => j((m) => m.assets.push(fr(i))), children: [
+          ["image", "video", "audio"].map((i) => /* @__PURE__ */ n("button", { onClick: () => j((m) => m.assets.push(br(i))), children: [
             "＋ ",
             i
           ] })),
@@ -1772,7 +1774,7 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
           /* @__PURE__ */ n("legend", { children: l === "zh" ? "运行环境" : "Runtime" }),
           /* @__PURE__ */ n("label", { children: [
             l === "zh" ? "适配器" : "Adapter",
-            /* @__PURE__ */ n("select", { value: v.mode, onChange: (i) => R((m) => ({ ...m, mode: i.currentTarget.value })), children: [
+            /* @__PURE__ */ n("select", { value: v.mode, onChange: (i) => T((m) => ({ ...m, mode: i.currentTarget.value })), children: [
               /* @__PURE__ */ n("option", { value: "auto", children: l === "zh" ? "自动检测" : "Auto detect" }),
               dt.map((i) => /* @__PURE__ */ n("option", { value: i.id, children: i.displayLabel(l) }, i.id))
             ] })
@@ -1786,7 +1788,7 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
             {
               language: l,
               settings: v,
-              onChange: R,
+              onChange: T,
               rememberSecret: q,
               onRememberSecretChange: U,
               onClearSavedSecret: wn,
@@ -1825,18 +1827,18 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
         ] }),
         /* @__PURE__ */ n("label", { children: [
           "提示词前缀",
-          /* @__PURE__ */ n(Ye, { value: s.promptPrefix, isReferenceValid: (i) => Tt(s, i), onInput: (i) => j((m) => {
+          /* @__PURE__ */ n(Ye, { value: s.promptPrefix, isReferenceValid: (i) => At(s, i), onInput: (i) => j((m) => {
             m.promptPrefix = i.currentTarget.value;
           }) })
         ] }),
         /* @__PURE__ */ n("label", { children: [
           "提示词后缀",
-          /* @__PURE__ */ n(Ye, { value: s.promptSuffix, isReferenceValid: (i) => Tt(s, i), onInput: (i) => j((m) => {
+          /* @__PURE__ */ n(Ye, { value: s.promptSuffix, isReferenceValid: (i) => At(s, i), onInput: (i) => j((m) => {
             m.promptSuffix = i.currentTarget.value;
           }) })
         ] })
       ] }),
-      u === "postprocess" && /* @__PURE__ */ n(er, { plan: s, language: l, adapter: ze, context: Re })
+      u === "postprocess" && /* @__PURE__ */ n(nr, { plan: s, language: l, adapter: ze, context: Te })
     ] }),
     he && /* @__PURE__ */ n("div", { class: "td-batch-overlay", role: "presentation", children: /* @__PURE__ */ n("section", { class: "td-batch-panel", role: "dialog", "aria-modal": "true", "aria-label": l === "zh" ? "批量处理镜头" : "Batch edit shots", children: [
       /* @__PURE__ */ n("header", { class: "td-batch-header", children: [
@@ -1865,7 +1867,7 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
           /* @__PURE__ */ n("label", { children: [
             l === "zh" ? "每个镜头时长" : "Duration per shot",
             /* @__PURE__ */ n("span", { children: [
-              /* @__PURE__ */ n("input", { type: "number", min: "0.1", step: "0.1", value: Ae, onInput: (i) => Ke(i.currentTarget.value) }),
+              /* @__PURE__ */ n("input", { type: "number", min: "0.1", step: "0.1", value: Re, onInput: (i) => Ke(i.currentTarget.value) }),
               /* @__PURE__ */ n("em", { children: l === "zh" ? "秒" : "sec" })
             ] })
           ] }),
@@ -1909,12 +1911,12 @@ ${l === "zh" ? "点击复制" : "Click to copy"} ${z}`, onClick: async () => {
         /* @__PURE__ */ n("button", { class: "primary", onClick: vn, children: l === "zh" ? "应用更改" : "Apply changes" })
       ] })
     ] }) }),
-    ie && /* @__PURE__ */ n(qn, { language: l, assets: s.assets, projectName: s.project.name, uploadFile: mt, onImported: (i) => j((m) => {
+    ie && /* @__PURE__ */ n(Vn, { language: l, assets: s.assets, projectName: s.project.name, uploadFile: mt, onImported: (i) => j((m) => {
       m.assets.push(...i);
     }), onClose: () => ae(!1) })
   ] });
 }
-function vr(e, t, r = !1, o, a) {
+function _r(e, t, r = !1, o, a) {
   const d = document.getElementById("theodore-director-modal");
   if (d) {
     d.focus();
@@ -1927,18 +1929,18 @@ function vr(e, t, r = !1, o, a) {
   }, h = () => {
     document.removeEventListener("keydown", c), yt(null, s), s.remove();
   };
-  document.addEventListener("keydown", c), yt(/* @__PURE__ */ n(br, { initial: e, onSave: (u) => {
+  document.addEventListener("keydown", c), yt(/* @__PURE__ */ n(xr, { initial: e, onSave: (u) => {
     t(u), h();
   }, onClose: h, supportsSecondSampling: r, queueSecondPass: o, queueMerge: a }), s), s.focus();
 }
-const xr = ":root{--td-bg:#11151b;--td-panel:#1a2029;--td-line:#354052;--td-text:#edf2f8;--td-muted:#9daabd;--td-accent:#74c7a5;--td-danger:#ff7d7d}.td-shot-media{position:relative}.td-form label.td-shot-media-display-toggle{position:absolute;top:-17px;right:10px;z-index:3;display:flex;flex-direction:row;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--td-line);border-radius:6px;background:var(--td-panel);color:var(--td-text);cursor:pointer;white-space:nowrap}.td-form label.td-shot-media-display-toggle:hover{border-color:var(--td-accent)}.td-form label.td-shot-media-display-toggle input{width:17px;height:17px;margin:0;cursor:pointer}.td-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;display:block;overflow:hidden;pointer-events:auto;background:#04070bf5;color:var(--td-text);font:14px/1.45 Inter,Segoe UI,sans-serif;isolation:isolate}.td-shell{height:100vh;display:grid;grid-template-rows:auto auto 1fr;background:var(--td-bg)}.td-shell header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--td-line)}.td-shell h1,.td-shell h2{margin:0;font-weight:650}.td-shell h1{font-size:20px}.td-shell h2{font-size:15px;margin-bottom:10px}.td-shell button,.td-shell input,.td-shell textarea,.td-shell select{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;box-sizing:border-box}.td-import{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;cursor:pointer}.td-import input{display:none}.td-shell button{cursor:pointer}.td-shell button:hover,.td-shell button.active{border-color:var(--td-accent)}.td-shell button.primary{background:var(--td-accent);color:#0a1913}.td-shell button.danger{color:var(--td-danger)}.td-actions,.td-toolbar,.td-flags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.td-shell nav{display:flex;gap:8px;padding:9px 20px;border-bottom:1px solid var(--td-line)}.td-shell main{overflow:auto;padding:16px 20px}.td-shots{display:grid;grid-template-columns:230px minmax(360px,1fr) minmax(300px,.8fr);gap:16px;height:100%}.td-shots>aside,.td-form,.td-assets article{background:var(--td-panel);border:1px solid var(--td-line);border-radius:9px;padding:12px;overflow:auto}.td-shot-card{padding:9px;border:1px solid transparent;border-radius:6px;margin-bottom:6px;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;row-gap:4px}.td-shot-card.selected{border-color:var(--td-accent);background:#202b31}.td-shot-card>strong,.td-shot-card>span{grid-column:2}.td-shot-card span{color:var(--td-muted);font-size:12px}.td-shot-delete-action{grid-column:1;grid-row:1/3;display:flex;align-items:center}.td-shot-move-actions{grid-column:3;grid-row:1/3;display:flex;align-items:start;gap:3px}.td-shot-card button{padding:3px 6px}.td-shot-card .td-shot-delete{color:var(--td-danger);font-weight:700}.td-shot-card .td-shot-delete:disabled{opacity:.35;cursor:not-allowed}.wide{width:100%}.td-form{display:flex;flex-direction:column;gap:10px}.td-form label,.td-grid label{display:flex;flex-direction:column;gap:4px;color:var(--td-muted)}.td-form label.check{flex-direction:row}.td-form input,.td-form textarea,.td-grid input,.td-grid select{width:100%}.td-form label.check input{width:auto}.td-form textarea{resize:vertical}.td-field-label{display:block;white-space:nowrap}.td-shot-meta{display:grid;grid-template-columns:minmax(100px,.75fr) minmax(120px,1.5fr) 105px 110px;gap:10px;align-items:end}.td-shot-meta>label{white-space:nowrap}.td-shot-enabled{height:35px;box-sizing:border-box;display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:7px!important;padding:0 8px;border:1px solid var(--td-line);border-radius:6px;background:#222a35;color:var(--td-text)!important;white-space:nowrap;cursor:pointer}.td-shot-enabled:hover{border-color:var(--td-accent)}.td-form .td-shot-enabled input{width:17px;height:17px;margin:0;cursor:pointer}.td-preview pre{white-space:pre-wrap;background:#0d1117;padding:10px;border-radius:6px}.td-preview code{color:#9ee6c7}.td-counters{color:var(--td-muted);margin-bottom:10px}.errors{color:var(--td-danger)}.ok{color:var(--td-accent)}.td-highlight-textarea{position:relative;display:block;width:100%;min-width:0}.td-highlight-backdrop,.td-form textarea.td-highlight-input{box-sizing:border-box;width:100%;margin:0;padding:7px 9px;font-family:ui-monospace,SFMono-Regular,Consolas,Liberation Mono,monospace;font-size:inherit;line-height:1.45;letter-spacing:normal;-moz-tab-size:8;tab-size:8;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}.td-highlight-backdrop{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;border:1px solid transparent;border-radius:6px;background:#222a35;color:var(--td-text);pointer-events:none}.td-form textarea.td-highlight-input{position:relative;z-index:1;display:block;background:transparent;color:transparent;caret-color:var(--td-text);-webkit-text-fill-color:transparent}.td-highlight-input::selection{background:#5898d46b}.td-highlight-backdrop mark{padding:0;border-radius:3px;color:inherit}.td-highlight-backdrop mark.valid{background:#1d6b50;color:#bfffe6}.td-highlight-backdrop mark.invalid{background:#7a2931;color:#ffd1d5;text-decoration:underline;text-decoration-color:#ff9aa4;text-underline-offset:2px}.td-preview{display:flex;flex-direction:column;gap:10px}.td-preview details{flex:none;border:1px solid var(--td-line);border-radius:8px;overflow:hidden;background:#151b23}.td-preview summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px 12px;cursor:pointer;background:#1d2530;list-style-position:inside}.td-preview summary:hover{background:#222c38}.td-preview details[open]>summary{border-bottom:1px solid var(--td-line)}.td-preview summary strong{color:var(--td-text);font-size:15px}.td-summary-counts{color:var(--td-muted);font-size:11px;white-space:nowrap}.td-preview-body{padding:12px;max-height:calc(100vh - 310px);overflow:auto}.td-preview-body>p:first-child{margin-top:0}.td-preview-body>pre:last-child{margin-bottom:0}.td-result-state{padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted);font-size:11px}.td-result-state.found{background:#183a2e;color:var(--td-accent)}.td-result-actions{display:flex;justify-content:flex-end;margin-bottom:9px}.td-result-actions button{padding:5px 8px}.td-result-empty{min-height:130px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--td-line);border-radius:7px;color:var(--td-muted);text-align:center;padding:12px;box-sizing:border-box}.td-generated-video video{display:block;width:100%;max-height:420px;background:#080b0f;border-radius:7px}.td-generated-meta{margin-top:7px;color:var(--td-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-generated-results{display:flex;flex-direction:column;gap:12px}.td-result-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;padding-right:3px}.td-shell button.td-result-item{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;width:100%;padding:6px;text-align:left;background:#151b23}.td-shell button.td-result-item.selected{border-color:var(--td-accent);background:#1c2a2a}.td-result-thumb{width:112px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;background:#090c10;color:var(--td-muted)}.td-result-thumb img,.td-result-thumb video{display:block;width:100%;height:100%;object-fit:contain}.td-result-item-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.td-result-item-copy>strong{display:flex;align-items:center;gap:7px;color:var(--td-text)}.td-result-item-copy>strong em{padding:1px 6px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-result-item-copy>span,.td-result-item-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-result-item-copy>small{font-size:10px}.td-assets{display:flex;flex-direction:column;gap:10px}.td-assets article{overflow:visible}.td-asset-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}.td-grid{display:grid;grid-template-columns:1fr 130px 2fr 120px;gap:10px;margin-bottom:10px}.td-form fieldset{border:1px solid var(--td-line);border-radius:6px}.settings{max-width:780px;margin:auto}.td-asset-batch-entry{margin-left:auto;border-color:#527061!important;background:#1b2c28!important;color:var(--td-accent)!important}.td-file-picker{display:flex;align-items:center;min-width:0;margin-top:2px}.td-file-button{display:block!important;flex:none;color:var(--td-text)!important;background:#3b4655;border:1px solid var(--td-line);border-radius:5px 0 0 5px;padding:6px 9px;cursor:pointer}.td-file-button:hover{border-color:var(--td-accent)}.td-file-button input{display:none}.td-file-name{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-text);background:#181e26;border:1px solid var(--td-line);border-left:0;border-radius:0 5px 5px 0;padding:6px 9px}.td-media-preview{min-height:150px;background:#0d1117;border:1px solid var(--td-line);border-radius:7px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--td-muted);text-align:center}.td-media-preview img,.td-media-preview video{display:block;width:100%;height:220px;object-fit:contain;background:#090c10}.td-media-preview audio{display:block;width:calc(100% - 16px)}.td-media-preview.empty,.td-media-preview.unavailable{padding:12px;box-sizing:border-box}.td-shot-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px}.td-shot-media legend{padding:0 5px}.td-shot-media-card{min-width:0;border:1px solid var(--td-line);border-radius:7px;overflow:hidden;background:#151b23;transition:opacity .15s,border-color .15s}.td-shot-media-card:hover{border-color:var(--td-accent)}.td-shot-media-card.disabled{opacity:.48}.td-shot-media-frame{position:relative}.td-shot-media-card .td-media-preview.compact{min-height:96px;border:0;border-bottom:1px solid var(--td-line);border-radius:0}.td-shot-media-card .td-media-preview.compact img,.td-shot-media-card .td-media-preview.compact video{height:112px}.td-shot-media-card .td-media-preview.compact audio{width:calc(100% - 10px)}.td-shot-media-kind{position:absolute;top:7px;left:7px;z-index:2;padding:2px 7px;border-radius:999px;background:#090d12d9;border:1px solid #ffffff2b;color:var(--td-text);font-size:12px;line-height:1.5;pointer-events:none}.td-form label.td-shot-media-toggle{position:absolute;top:7px;right:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:6px;background:#090d12d9;border:1px solid #ffffff38;cursor:pointer}.td-form label.td-shot-media-toggle:hover{border-color:var(--td-accent)}.td-form label.td-shot-media-toggle input{width:17px;height:17px;margin:0;cursor:pointer}.td-shell button.td-shot-media-name{position:relative;display:block;width:100%;border:0;border-radius:0;padding:8px 10px;color:var(--td-text);background:#151b23;font-weight:600;overflow:hidden;white-space:nowrap;text-align:left}.td-shot-media-name>span{display:block;overflow:hidden;text-overflow:ellipsis}.td-shell button.td-shot-media-name:hover,.td-shell button.td-shot-media-name:focus-visible{background:#202a35;color:var(--td-accent)}.td-shell button.td-shot-media-name.copied{background:#17372d;color:var(--td-accent)}.td-shot-media-name em{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:2px 6px;border-radius:999px;background:#0d1c17;color:var(--td-accent);font-size:11px;font-style:normal;box-shadow:0 0 0 1px #74c7a566}.td-shot-meta{grid-template-columns:minmax(100px,.75fr) minmax(140px,1.5fr) 105px}.td-shot-switches{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.td-shot-switches .td-shot-enabled{min-width:135px}.td-bulk-toggle{margin-bottom:9px}.td-bulk-toggle.active{background:#17372d;color:var(--td-accent)}.td-shot-sidebar{display:flex;flex-direction:column}.td-shot-list{flex:none}.td-shot-batch-entry{display:flex;align-items:flex-end;flex:1;min-height:90px;padding-top:14px}.td-shot-batch-entry button{border-color:#527061;background:#1b2c28;color:var(--td-accent)}.td-batch-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:28px;background:#05080dbd;box-sizing:border-box}.td-batch-panel{display:flex;flex-direction:column;width:min(1040px,100%);max-height:min(820px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-batch-header h2{font-size:18px;margin:0}.td-batch-header p{margin:3px 0 0;color:var(--td-muted)}.td-batch-header>button{font-size:20px;line-height:1;padding:5px 9px}.td-batch-tools{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;padding:14px 18px;border-bottom:1px solid var(--td-line);background:#151b23}.td-batch-tools>div{display:flex;align-items:end;gap:8px;padding:10px;border:1px solid var(--td-line);border-radius:7px}.td-batch-tools label{display:flex;flex:1;flex-direction:column;gap:4px;color:var(--td-muted);white-space:nowrap}.td-batch-tools label>span,.td-batch-duration{display:flex;align-items:center;gap:6px}.td-batch-tools input{width:100%}.td-batch-tools em{color:var(--td-muted);font-style:normal}.td-batch-tools button{white-space:nowrap}.td-batch-global-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:9px 22px;border-bottom:1px solid var(--td-line);background:#171e27;color:var(--td-muted)}.td-batch-global-actions button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-batch-table{overflow:auto;padding:0 18px}.td-batch-row{display:grid;grid-template-columns:42px minmax(180px,1fr) 100px 150px 120px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-batch-table-head{position:sticky;top:0;z-index:1;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-batch-duration input{min-width:0;width:100%}.td-batch-duration>span{color:var(--td-muted)}.td-batch-enabled,.td-batch-relay{display:flex;align-items:center;gap:7px;justify-content:flex-start;color:var(--td-text)}.td-batch-enabled input,.td-batch-relay input{width:17px;height:17px;margin:0}.td-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-batch-panel{display:flex;flex-direction:column;width:min(1420px,100%);max-height:min(880px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-asset-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-asset-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:92px;margin:14px 18px 10px;border:1px dashed #597084;border-radius:9px;background:#151b23;color:var(--td-text);cursor:pointer;transition:border-color .15s,background .15s}.td-asset-dropzone:hover,.td-asset-dropzone.dragging{border-color:var(--td-accent);background:#1b2c28}.td-asset-dropzone span{color:var(--td-muted);font-size:12px}.td-asset-dropzone input{display:none}.td-asset-batch-warning{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 18px 10px;padding:8px 10px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-asset-batch-warning span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-warning button{padding:2px 7px}.td-asset-batch-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--td-line);border-bottom:1px solid var(--td-line);background:#151b23;color:var(--td-muted)}.td-asset-batch-summary button{padding:5px 8px}.td-asset-batch-list{overflow:auto;padding:0 18px 10px}.td-asset-batch-row{display:grid;grid-template-columns:minmax(210px,1.4fr) minmax(150px,1fr) 115px 135px 105px 72px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-asset-batch-head{position:sticky;top:0;z-index:2;padding-top:10px;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-asset-batch-row.invalid{background:#3b202560}.td-asset-batch-row.imported{background:#17372d55}.td-asset-batch-file{display:flex;min-width:0;flex-direction:column;gap:2px}.td-asset-batch-file strong,.td-asset-batch-file small,.td-asset-batch-file em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-file small{color:var(--td-muted);font-weight:400}.td-asset-batch-file em{color:var(--td-danger);font-size:11px;font-style:normal}.td-asset-batch-duration,.td-asset-batch-audio{display:flex;align-items:center;gap:6px;color:var(--td-muted)}.td-asset-batch-duration input{min-width:0;width:100%}.td-asset-batch-audio input{width:17px;height:17px;margin:0}.td-asset-batch-empty{display:flex;min-height:130px;align-items:center;justify-content:center;color:var(--td-muted)}.td-asset-batch-panel button:disabled,.td-asset-batch-panel input:disabled,.td-asset-batch-panel select:disabled{opacity:.55;cursor:not-allowed}.td-postprocess{display:flex;flex-direction:column;gap:14px;max-width:1500px;margin:0 auto}.td-post-header,.td-post-summary,.td-post-merged{border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px}.td-post-header h2,.td-post-merged h2{margin:0;font-size:17px}.td-post-header p{margin:4px 0 0;color:var(--td-muted)}.td-post-actions{display:flex;gap:8px;flex:none}.td-post-summary{display:flex;align-items:center;gap:18px;padding:10px 14px;color:var(--td-muted)}.td-post-summary>button{margin-left:auto}.td-post-summary button:disabled{opacity:.5;cursor:not-allowed}.td-post-range{display:flex;align-items:center;gap:6px;margin-left:auto}.td-post-range input{width:64px;padding:6px 7px;text-align:center}.td-post-range button{white-space:nowrap}.td-post-summary>.td-post-range+button{margin-left:0}.td-post-error,.td-post-warning{padding:10px 13px;border-radius:7px}.td-post-error{border:1px solid #8b4149;background:#442228;color:#ffd1d5;white-space:pre-wrap}.td-post-warning{border:1px solid #836a32;background:#3a301c;color:#f4d991}.td-post-shot-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;align-items:start}.td-post-shot{min-width:0;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel);overflow:hidden}.td-post-shot.selected{border-color:#527e6c}.td-post-shot.disabled{opacity:.72}.td-post-shot>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--td-line);background:#1d2530}.td-post-shot>header>label{display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer}.td-post-shot>header input{width:18px;height:18px;margin:0;flex:none}.td-post-shot>header label>span{display:flex;min-width:0;gap:8px;align-items:baseline}.td-post-shot>header strong{color:var(--td-text)}.td-post-shot>header em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted);font-style:normal}.td-post-shot>header>span{flex:none;padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted)}.td-post-shot-disabled-note{padding:7px 10px;border-bottom:1px solid var(--td-line);background:#332b1d;color:#e5c77d;font-size:11px}.td-post-shot-empty{min-height:96px;display:flex;align-items:center;justify-content:center;padding:12px;color:var(--td-muted);text-align:center}.td-post-result-list{display:flex;flex-direction:column;gap:7px;max-height:360px;overflow:auto;padding:9px}.td-post-result{display:grid;grid-template-columns:minmax(0,1fr) 35px;gap:6px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:5px}.td-post-result.selected{border-color:var(--td-accent);background:#1c2a2a}.td-shell button.td-post-result-choice{display:grid;grid-template-columns:112px minmax(0,1fr);gap:9px;align-items:center;min-width:0;padding:0;border:0;background:transparent;text-align:left}.td-post-result-choice>span{display:flex;min-width:0;flex-direction:column;gap:3px}.td-post-result-choice>span>strong{display:flex;align-items:center;gap:6px}.td-post-result-choice>span>strong em{padding:1px 5px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-post-result-choice>span>span,.td-post-result-choice>span>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-post-result-choice>span>small{font-size:10px}.td-post-result-play{width:35px;height:35px;padding:0!important}.td-post-result-play:disabled{opacity:.35;cursor:not-allowed}.td-post-merged{padding:12px}.td-post-merged>header>div{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}.td-post-merged .td-generated-results{display:grid;grid-template-columns:minmax(360px,1.6fr) minmax(300px,1fr);align-items:start}.td-post-merged .td-result-list{max-height:420px}.td-post-preview-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:26px;background:#030609d6}.td-post-preview-overlay>section{width:min(980px,100%);max-height:calc(100vh - 52px);overflow:auto;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 80px #000c}.td-post-preview-overlay header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--td-line)}.td-post-preview-overlay header button{font-size:20px;line-height:1;padding:5px 9px}.td-post-preview-overlay video{display:block;width:100%;max-height:calc(100vh - 170px);background:#070a0e}.td-post-preview-overlay p{margin:0;padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}@media(max-width:1200px){.td-asset-layout{grid-template-columns:1fr}.td-asset-layout>.td-media-preview{min-height:120px}.td-asset-layout>.td-media-preview img,.td-asset-layout>.td-media-preview video{height:200px}.td-shot-meta{grid-template-columns:1fr 1.4fr 110px}.td-shot-enabled{grid-column:1/-1;justify-self:start}.td-post-summary{flex-wrap:wrap}.td-post-range{margin-left:0}.td-post-summary>button{margin-left:auto}}@media(max-width:1000px){.td-shots{grid-template-columns:190px 1fr}.td-preview{grid-column:1/-1}.td-grid{grid-template-columns:1fr 1fr}}@media(max-width:900px){.td-post-shot-list,.td-post-merged .td-generated-results{grid-template-columns:1fr}.td-post-header{align-items:flex-start;flex-direction:column}.td-post-actions{width:100%}.td-post-actions button{flex:1}.td-post-summary{align-items:stretch;flex-direction:column;gap:7px}.td-post-range{margin:3px 0;flex-wrap:wrap}.td-post-summary>button{margin:4px 0 0}.td-post-result-list{max-height:none}}@media(max-width:720px){.td-shot-meta{grid-template-columns:1fr 1fr}.td-shot-enabled{grid-column:auto;justify-self:stretch}}@media(max-width:1000px){.td-asset-batch-list{min-width:900px}.td-asset-batch-panel{overflow:auto}.td-asset-batch-panel>.td-batch-header,.td-asset-dropzone,.td-asset-batch-warning,.td-asset-batch-summary,.td-asset-batch-panel>footer{min-width:864px}}@media(max-width:720px){.td-asset-batch-entry{margin-left:0}}.td-postprocess-shell{display:flex;flex-direction:column;gap:12px;max-width:1500px;margin:0 auto}.td-postprocess-shell>.td-postprocess{max-width:none;width:100%;margin:0}.td-post-mode-tabs{display:flex;gap:7px;padding:5px;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-mode-tabs button{min-width:130px}.td-post-mode-tabs button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-second-pass-panel .td-post-shot>header>span:first-child{display:flex;min-width:0;gap:8px;align-items:baseline;padding:0;background:transparent}.td-second-pass-result{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:8px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:6px}.td-second-pass-result:has(.td-second-pass-run:disabled){border-color:#34404d}.td-second-pass-run{width:118px;min-height:38px;padding:6px!important}.td-second-pass-run:disabled{opacity:.62;cursor:not-allowed}.td-second-pass-error{grid-column:1/-1;padding:6px 8px;border-radius:5px;background:#442228;color:#ffd1d5;font-size:11px;white-space:pre-wrap}@media(max-width:620px){.td-post-mode-tabs{flex-direction:column}.td-post-mode-tabs button{width:100%}.td-second-pass-result{grid-template-columns:1fr}.td-second-pass-run{width:100%}}.td-runtime-settings{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;margin:0 0 8px}.td-runtime-settings legend{padding:0 7px;color:var(--td-accent)}.td-runtime-settings label:has(textarea),.td-runtime-settings label:has(input[type=password]),.td-runtime-key-controls,.td-runtime-apply{grid-column:1/-1}.td-runtime-settings small{display:block;margin-top:5px;color:var(--td-muted);line-height:1.45}.td-runtime-status{display:flex;align-items:center;padding:8px 10px;border:1px solid var(--td-line);border-radius:6px;background:#161d25;color:var(--td-muted)}.td-runtime-status strong{margin-left:4px;color:var(--td-accent)}.td-runtime-key-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--td-line);border-radius:6px;background:#161d25}.td-runtime-key-controls>label{display:flex;flex-direction:row;align-items:center;gap:7px}.td-runtime-key-controls>label input{width:auto}.td-runtime-key-controls small{flex-basis:100%;margin:0}.td-runtime-apply{display:flex;justify-content:flex-end}.td-runtime-banner{padding:10px 13px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-runtime-banner.ready{border-color:#356f59;background:#18372d;color:#8be1bd}@media(max-width:700px){.td-runtime-settings{grid-template-columns:1fr}.td-runtime-settings label:has(textarea),.td-runtime-settings label:has(input[type=password]),.td-runtime-key-controls,.td-runtime-apply{grid-column:auto}}", Ht = "theodore-director-styles";
-function _r() {
+const yr = ":root{--td-bg:#11151b;--td-panel:#1a2029;--td-line:#354052;--td-text:#edf2f8;--td-muted:#9daabd;--td-accent:#74c7a5;--td-danger:#ff7d7d}.td-shot-media{position:relative}.td-form label.td-shot-media-display-toggle{position:absolute;top:-17px;right:10px;z-index:3;display:flex;flex-direction:row;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--td-line);border-radius:6px;background:var(--td-panel);color:var(--td-text);cursor:pointer;white-space:nowrap}.td-form label.td-shot-media-display-toggle:hover{border-color:var(--td-accent)}.td-form label.td-shot-media-display-toggle input{width:17px;height:17px;margin:0;cursor:pointer}.td-modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;display:block;overflow:hidden;pointer-events:auto;background:#04070bf5;color:var(--td-text);font:14px/1.45 Inter,Segoe UI,sans-serif;isolation:isolate}.td-shell{height:100vh;display:grid;grid-template-rows:auto auto 1fr;background:var(--td-bg)}.td-shell header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--td-line)}.td-shell h1,.td-shell h2{margin:0;font-weight:650}.td-shell h1{font-size:20px}.td-shell h2{font-size:15px;margin-bottom:10px}.td-shell button,.td-shell input,.td-shell textarea,.td-shell select{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;box-sizing:border-box}.td-import{color:var(--td-text);background:#222a35;border:1px solid var(--td-line);border-radius:6px;padding:7px 9px;cursor:pointer}.td-import input{display:none}.td-shell button{cursor:pointer}.td-shell button:hover,.td-shell button.active{border-color:var(--td-accent)}.td-shell button.primary{background:var(--td-accent);color:#0a1913}.td-shell button.danger{color:var(--td-danger)}.td-actions,.td-toolbar,.td-flags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.td-shell nav{display:flex;gap:8px;padding:9px 20px;border-bottom:1px solid var(--td-line)}.td-shell main{overflow:auto;padding:16px 20px}.td-shots{display:grid;grid-template-columns:230px minmax(360px,1fr) minmax(300px,.8fr);gap:16px;height:100%}.td-shots>aside,.td-form,.td-assets article{background:var(--td-panel);border:1px solid var(--td-line);border-radius:9px;padding:12px;overflow:auto}.td-shot-card{padding:9px;border:1px solid transparent;border-radius:6px;margin-bottom:6px;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:8px;row-gap:4px}.td-shot-card.selected{border-color:var(--td-accent);background:#202b31}.td-shot-card>strong,.td-shot-card>span{grid-column:2}.td-shot-card span{color:var(--td-muted);font-size:12px}.td-shot-delete-action{grid-column:1;grid-row:1/3;display:flex;align-items:center}.td-shot-move-actions{grid-column:3;grid-row:1/3;display:flex;align-items:start;gap:3px}.td-shot-card button{padding:3px 6px}.td-shot-card .td-shot-delete{color:var(--td-danger);font-weight:700}.td-shot-card .td-shot-delete:disabled{opacity:.35;cursor:not-allowed}.wide{width:100%}.td-form{display:flex;flex-direction:column;gap:10px}.td-form label,.td-grid label{display:flex;flex-direction:column;gap:4px;color:var(--td-muted)}.td-form label.check{flex-direction:row}.td-form input,.td-form textarea,.td-grid input,.td-grid select{width:100%}.td-form label.check input{width:auto}.td-form textarea{resize:vertical}.td-field-label{display:block;white-space:nowrap}.td-shot-meta{display:grid;grid-template-columns:minmax(100px,.75fr) minmax(120px,1.5fr) 105px 110px;gap:10px;align-items:end}.td-shot-meta>label{white-space:nowrap}.td-shot-enabled{height:35px;box-sizing:border-box;display:flex!important;flex-direction:row!important;align-items:center;justify-content:center;gap:7px!important;padding:0 8px;border:1px solid var(--td-line);border-radius:6px;background:#222a35;color:var(--td-text)!important;white-space:nowrap;cursor:pointer}.td-shot-enabled:hover{border-color:var(--td-accent)}.td-form .td-shot-enabled input{width:17px;height:17px;margin:0;cursor:pointer}.td-preview pre{white-space:pre-wrap;background:#0d1117;padding:10px;border-radius:6px}.td-preview code{color:#9ee6c7}.td-counters{color:var(--td-muted);margin-bottom:10px}.errors{color:var(--td-danger)}.ok{color:var(--td-accent)}.td-highlight-textarea{position:relative;display:block;width:100%;min-width:0}.td-highlight-backdrop,.td-form textarea.td-highlight-input{box-sizing:border-box;width:100%;margin:0;padding:7px 9px;font-family:ui-monospace,SFMono-Regular,Consolas,Liberation Mono,monospace;font-size:inherit;line-height:1.45;letter-spacing:normal;-moz-tab-size:8;tab-size:8;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}.td-highlight-backdrop{position:absolute;top:0;right:0;bottom:0;left:0;z-index:0;overflow:hidden;border:1px solid transparent;border-radius:6px;background:#222a35;color:var(--td-text);pointer-events:none}.td-form textarea.td-highlight-input{position:relative;z-index:1;display:block;background:transparent;color:transparent;caret-color:var(--td-text);-webkit-text-fill-color:transparent}.td-highlight-input::selection{background:#5898d46b}.td-highlight-backdrop mark{padding:0;border-radius:3px;color:inherit}.td-highlight-backdrop mark.valid{background:#1d6b50;color:#bfffe6}.td-highlight-backdrop mark.invalid{background:#7a2931;color:#ffd1d5;text-decoration:underline;text-decoration-color:#ff9aa4;text-underline-offset:2px}.td-preview{display:flex;flex-direction:column;gap:10px}.td-preview details{flex:none;border:1px solid var(--td-line);border-radius:8px;overflow:hidden;background:#151b23}.td-preview summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px 12px;cursor:pointer;background:#1d2530;list-style-position:inside}.td-preview summary:hover{background:#222c38}.td-preview details[open]>summary{border-bottom:1px solid var(--td-line)}.td-preview summary strong{color:var(--td-text);font-size:15px}.td-summary-counts{color:var(--td-muted);font-size:11px;white-space:nowrap}.td-preview-body{padding:12px;max-height:calc(100vh - 310px);overflow:auto}.td-preview-body>p:first-child{margin-top:0}.td-preview-body>pre:last-child{margin-bottom:0}.td-result-state{padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted);font-size:11px}.td-result-state.found{background:#183a2e;color:var(--td-accent)}.td-result-actions{display:flex;justify-content:flex-end;margin-bottom:9px}.td-result-actions button{padding:5px 8px}.td-result-empty{min-height:130px;display:flex;align-items:center;justify-content:center;border:1px dashed var(--td-line);border-radius:7px;color:var(--td-muted);text-align:center;padding:12px;box-sizing:border-box}.td-generated-video video{display:block;width:100%;max-height:420px;background:#080b0f;border-radius:7px}.td-generated-meta{margin-top:7px;color:var(--td-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-generated-results{display:flex;flex-direction:column;gap:12px}.td-result-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;padding-right:3px}.td-shell button.td-result-item{display:grid;grid-template-columns:112px minmax(0,1fr);gap:10px;align-items:center;width:100%;padding:6px;text-align:left;background:#151b23}.td-shell button.td-result-item.selected{border-color:var(--td-accent);background:#1c2a2a}.td-result-thumb{width:112px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:5px;background:#090c10;color:var(--td-muted)}.td-result-thumb img,.td-result-thumb video{display:block;width:100%;height:100%;object-fit:contain}.td-result-item-copy{display:flex;min-width:0;flex-direction:column;gap:3px}.td-result-item-copy>strong{display:flex;align-items:center;gap:7px;color:var(--td-text)}.td-result-item-copy>strong em{padding:1px 6px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-result-item-copy>span,.td-result-item-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-result-item-copy>small{font-size:10px}.td-assets{display:flex;flex-direction:column;gap:10px}.td-assets article{overflow:visible}.td-asset-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}.td-grid{display:grid;grid-template-columns:1fr 130px 2fr 120px;gap:10px;margin-bottom:10px}.td-form fieldset{border:1px solid var(--td-line);border-radius:6px}.settings{max-width:780px;margin:auto}.td-asset-batch-entry{margin-left:auto;border-color:#527061!important;background:#1b2c28!important;color:var(--td-accent)!important}.td-file-picker{display:flex;align-items:center;min-width:0;margin-top:2px}.td-file-button{display:block!important;flex:none;color:var(--td-text)!important;background:#3b4655;border:1px solid var(--td-line);border-radius:5px 0 0 5px;padding:6px 9px;cursor:pointer}.td-file-button:hover{border-color:var(--td-accent)}.td-file-button input{display:none}.td-file-name{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-text);background:#181e26;border:1px solid var(--td-line);border-left:0;border-radius:0 5px 5px 0;padding:6px 9px}.td-media-preview{min-height:150px;background:#0d1117;border:1px solid var(--td-line);border-radius:7px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--td-muted);text-align:center}.td-media-preview img,.td-media-preview video{display:block;width:100%;height:220px;object-fit:contain;background:#090c10}.td-media-preview audio{display:block;width:calc(100% - 16px)}.td-media-preview.empty,.td-media-preview.unavailable{padding:12px;box-sizing:border-box}.td-shot-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px}.td-shot-media legend{padding:0 5px}.td-shot-media-card{min-width:0;border:1px solid var(--td-line);border-radius:7px;overflow:hidden;background:#151b23;transition:opacity .15s,border-color .15s}.td-shot-media-card:hover{border-color:var(--td-accent)}.td-shot-media-card.disabled{opacity:.48}.td-shot-media-frame{position:relative}.td-shot-media-card .td-media-preview.compact{min-height:96px;border:0;border-bottom:1px solid var(--td-line);border-radius:0}.td-shot-media-card .td-media-preview.compact img,.td-shot-media-card .td-media-preview.compact video{height:112px}.td-shot-media-card .td-media-preview.compact audio{width:calc(100% - 10px)}.td-shot-media-kind{position:absolute;top:7px;left:7px;z-index:2;padding:2px 7px;border-radius:999px;background:#090d12d9;border:1px solid #ffffff2b;color:var(--td-text);font-size:12px;line-height:1.5;pointer-events:none}.td-form label.td-shot-media-toggle{position:absolute;top:7px;right:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:6px;background:#090d12d9;border:1px solid #ffffff38;cursor:pointer}.td-form label.td-shot-media-toggle:hover{border-color:var(--td-accent)}.td-form label.td-shot-media-toggle input{width:17px;height:17px;margin:0;cursor:pointer}.td-shell button.td-shot-media-name{position:relative;display:block;width:100%;border:0;border-radius:0;padding:8px 10px;color:var(--td-text);background:#151b23;font-weight:600;overflow:hidden;white-space:nowrap;text-align:left}.td-shot-media-name>span{display:block;overflow:hidden;text-overflow:ellipsis}.td-shell button.td-shot-media-name:hover,.td-shell button.td-shot-media-name:focus-visible{background:#202a35;color:var(--td-accent)}.td-shell button.td-shot-media-name.copied{background:#17372d;color:var(--td-accent)}.td-shot-media-name em{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:2px 6px;border-radius:999px;background:#0d1c17;color:var(--td-accent);font-size:11px;font-style:normal;box-shadow:0 0 0 1px #74c7a566}.td-shot-meta{grid-template-columns:minmax(100px,.75fr) minmax(140px,1.5fr) 105px}.td-shot-switches{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.td-shot-switches .td-shot-enabled{min-width:135px}.td-bulk-toggle{margin-bottom:9px}.td-bulk-toggle.active{background:#17372d;color:var(--td-accent)}.td-shot-sidebar{display:flex;flex-direction:column}.td-shot-list{flex:none}.td-shot-batch-entry{display:flex;align-items:flex-end;flex:1;min-height:90px;padding-top:14px}.td-shot-batch-entry button{border-color:#527061;background:#1b2c28;color:var(--td-accent)}.td-batch-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:28px;background:#05080dbd;box-sizing:border-box}.td-batch-panel{display:flex;flex-direction:column;width:min(1040px,100%);max-height:min(820px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-batch-header h2{font-size:18px;margin:0}.td-batch-header p{margin:3px 0 0;color:var(--td-muted)}.td-batch-header>button{font-size:20px;line-height:1;padding:5px 9px}.td-batch-tools{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;padding:14px 18px;border-bottom:1px solid var(--td-line);background:#151b23}.td-batch-tools>div{display:flex;align-items:end;gap:8px;padding:10px;border:1px solid var(--td-line);border-radius:7px}.td-batch-tools label{display:flex;flex:1;flex-direction:column;gap:4px;color:var(--td-muted);white-space:nowrap}.td-batch-tools label>span,.td-batch-duration{display:flex;align-items:center;gap:6px}.td-batch-tools input{width:100%}.td-batch-tools em{color:var(--td-muted);font-style:normal}.td-batch-tools button{white-space:nowrap}.td-batch-global-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:9px 22px;border-bottom:1px solid var(--td-line);background:#171e27;color:var(--td-muted)}.td-batch-global-actions button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-batch-table{overflow:auto;padding:0 18px}.td-batch-row{display:grid;grid-template-columns:42px minmax(180px,1fr) 100px 150px 120px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-batch-table-head{position:sticky;top:0;z-index:1;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-batch-duration input{min-width:0;width:100%}.td-batch-duration>span{color:var(--td-muted)}.td-batch-enabled,.td-batch-relay{display:flex;align-items:center;gap:7px;justify-content:flex-start;color:var(--td-text)}.td-batch-enabled input,.td-batch-relay input{width:17px;height:17px;margin:0}.td-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-batch-panel{display:flex;flex-direction:column;width:min(1420px,100%);max-height:min(880px,calc(100vh - 56px));overflow:hidden;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 70px #000b}.td-asset-batch-panel>.td-batch-header{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid var(--td-line)}.td-asset-batch-panel>footer{display:flex;justify-content:flex-end;gap:8px;padding:13px 18px;border-top:1px solid var(--td-line)}.td-asset-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:92px;margin:14px 18px 10px;border:1px dashed #597084;border-radius:9px;background:#151b23;color:var(--td-text);cursor:pointer;transition:border-color .15s,background .15s}.td-asset-dropzone:hover,.td-asset-dropzone.dragging{border-color:var(--td-accent);background:#1b2c28}.td-asset-dropzone span{color:var(--td-muted);font-size:12px}.td-asset-dropzone input{display:none}.td-asset-batch-warning{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 18px 10px;padding:8px 10px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-asset-batch-warning span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-warning button{padding:2px 7px}.td-asset-batch-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;border-top:1px solid var(--td-line);border-bottom:1px solid var(--td-line);background:#151b23;color:var(--td-muted)}.td-asset-batch-summary button{padding:5px 8px}.td-asset-batch-list{overflow:auto;padding:0 18px 10px}.td-asset-batch-row{display:grid;grid-template-columns:minmax(210px,1.4fr) minmax(150px,1fr) 115px 135px 105px 72px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid #2a3442}.td-asset-batch-head{position:sticky;top:0;z-index:2;padding-top:10px;background:var(--td-panel);color:var(--td-muted);font-weight:600}.td-asset-batch-row.invalid{background:#3b202560}.td-asset-batch-row.imported{background:#17372d55}.td-asset-batch-file{display:flex;min-width:0;flex-direction:column;gap:2px}.td-asset-batch-file strong,.td-asset-batch-file small,.td-asset-batch-file em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.td-asset-batch-file small{color:var(--td-muted);font-weight:400}.td-asset-batch-file em{color:var(--td-danger);font-size:11px;font-style:normal}.td-asset-batch-duration,.td-asset-batch-audio{display:flex;align-items:center;gap:6px;color:var(--td-muted)}.td-asset-batch-duration input{min-width:0;width:100%}.td-asset-batch-audio input{width:17px;height:17px;margin:0}.td-asset-batch-empty{display:flex;min-height:130px;align-items:center;justify-content:center;color:var(--td-muted)}.td-asset-batch-panel button:disabled,.td-asset-batch-panel input:disabled,.td-asset-batch-panel select:disabled{opacity:.55;cursor:not-allowed}.td-postprocess{display:flex;flex-direction:column;gap:14px;max-width:1500px;margin:0 auto}.td-post-header,.td-post-summary,.td-post-merged{border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px}.td-post-header h2,.td-post-merged h2{margin:0;font-size:17px}.td-post-header p{margin:4px 0 0;color:var(--td-muted)}.td-post-actions{display:flex;gap:8px;flex:none}.td-post-summary{display:flex;align-items:center;gap:18px;padding:10px 14px;color:var(--td-muted)}.td-post-summary>button{margin-left:auto}.td-post-summary button:disabled{opacity:.5;cursor:not-allowed}.td-post-range{display:flex;align-items:center;gap:6px;margin-left:auto}.td-post-range input{width:64px;padding:6px 7px;text-align:center}.td-post-range button{white-space:nowrap}.td-post-summary>.td-post-range+button{margin-left:0}.td-post-error,.td-post-warning{padding:10px 13px;border-radius:7px}.td-post-error{border:1px solid #8b4149;background:#442228;color:#ffd1d5;white-space:pre-wrap}.td-post-warning{border:1px solid #836a32;background:#3a301c;color:#f4d991}.td-post-shot-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;align-items:start}.td-post-shot{min-width:0;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel);overflow:hidden}.td-post-shot.selected{border-color:#527e6c}.td-post-shot.disabled{opacity:.72}.td-post-shot>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid var(--td-line);background:#1d2530}.td-post-shot>header>label{display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer}.td-post-shot>header input{width:18px;height:18px;margin:0;flex:none}.td-post-shot>header label>span{display:flex;min-width:0;gap:8px;align-items:baseline}.td-post-shot>header strong{color:var(--td-text)}.td-post-shot>header em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted);font-style:normal}.td-post-shot>header>span{flex:none;padding:2px 7px;border-radius:999px;background:#29313d;color:var(--td-muted)}.td-post-shot-disabled-note{padding:7px 10px;border-bottom:1px solid var(--td-line);background:#332b1d;color:#e5c77d;font-size:11px}.td-post-shot-empty{min-height:96px;display:flex;align-items:center;justify-content:center;padding:12px;color:var(--td-muted);text-align:center}.td-post-result-list{display:flex;flex-direction:column;gap:7px;max-height:360px;overflow:auto;padding:9px}.td-post-result{display:grid;grid-template-columns:minmax(0,1fr) 35px;gap:6px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:5px}.td-post-result.selected{border-color:var(--td-accent);background:#1c2a2a}.td-shell button.td-post-result-choice{display:grid;grid-template-columns:112px minmax(0,1fr);gap:9px;align-items:center;min-width:0;padding:0;border:0;background:transparent;text-align:left}.td-post-result-choice>span{display:flex;min-width:0;flex-direction:column;gap:3px}.td-post-result-choice>span>strong{display:flex;align-items:center;gap:6px}.td-post-result-choice>span>strong em{padding:1px 5px;border-radius:999px;background:#183a2e;color:var(--td-accent);font-size:10px;font-style:normal}.td-post-result-choice>span>span,.td-post-result-choice>span>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}.td-post-result-choice>span>small{font-size:10px}.td-post-result-play{width:35px;height:35px;padding:0!important}.td-post-result-play:disabled{opacity:.35;cursor:not-allowed}.td-post-merged{padding:12px}.td-post-merged>header>div{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}.td-post-merged .td-generated-results{display:grid;grid-template-columns:minmax(360px,1.6fr) minmax(300px,1fr);align-items:start}.td-post-merged .td-result-list{max-height:420px}.td-post-preview-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:26px;background:#030609d6}.td-post-preview-overlay>section{width:min(980px,100%);max-height:calc(100vh - 52px);overflow:auto;border:1px solid var(--td-line);border-radius:10px;background:var(--td-panel);box-shadow:0 20px 80px #000c}.td-post-preview-overlay header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--td-line)}.td-post-preview-overlay header button{font-size:20px;line-height:1;padding:5px 9px}.td-post-preview-overlay video{display:block;width:100%;max-height:calc(100vh - 170px);background:#070a0e}.td-post-preview-overlay p{margin:0;padding:9px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--td-muted)}@media(max-width:1200px){.td-asset-layout{grid-template-columns:1fr}.td-asset-layout>.td-media-preview{min-height:120px}.td-asset-layout>.td-media-preview img,.td-asset-layout>.td-media-preview video{height:200px}.td-shot-meta{grid-template-columns:1fr 1.4fr 110px}.td-shot-enabled{grid-column:1/-1;justify-self:start}.td-post-summary{flex-wrap:wrap}.td-post-range{margin-left:0}.td-post-summary>button{margin-left:auto}}@media(max-width:1000px){.td-shots{grid-template-columns:190px 1fr}.td-preview{grid-column:1/-1}.td-grid{grid-template-columns:1fr 1fr}}@media(max-width:900px){.td-post-shot-list,.td-post-merged .td-generated-results{grid-template-columns:1fr}.td-post-header{align-items:flex-start;flex-direction:column}.td-post-actions{width:100%}.td-post-actions button{flex:1}.td-post-summary{align-items:stretch;flex-direction:column;gap:7px}.td-post-range{margin:3px 0;flex-wrap:wrap}.td-post-summary>button{margin:4px 0 0}.td-post-result-list{max-height:none}}@media(max-width:720px){.td-shot-meta{grid-template-columns:1fr 1fr}.td-shot-enabled{grid-column:auto;justify-self:stretch}}@media(max-width:1000px){.td-asset-batch-list{min-width:900px}.td-asset-batch-panel{overflow:auto}.td-asset-batch-panel>.td-batch-header,.td-asset-dropzone,.td-asset-batch-warning,.td-asset-batch-summary,.td-asset-batch-panel>footer{min-width:864px}}@media(max-width:720px){.td-asset-batch-entry{margin-left:0}}.td-postprocess-shell{display:flex;flex-direction:column;gap:12px;max-width:1500px;margin:0 auto}.td-postprocess-shell>.td-postprocess{max-width:none;width:100%;margin:0}.td-post-mode-tabs{display:flex;gap:7px;padding:5px;border:1px solid var(--td-line);border-radius:9px;background:var(--td-panel)}.td-post-mode-tabs button{min-width:130px}.td-post-mode-tabs button.active{border-color:#527e6c;background:#1b302a;color:var(--td-accent)}.td-second-pass-panel .td-post-shot>header>span:first-child{display:flex;min-width:0;gap:8px;align-items:baseline;padding:0;background:transparent}.td-second-pass-result{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:8px;align-items:center;border:1px solid var(--td-line);border-radius:7px;background:#151b23;padding:6px}.td-second-pass-result:has(.td-second-pass-run:disabled){border-color:#34404d}.td-second-pass-run{width:118px;min-height:38px;padding:6px!important}.td-second-pass-run:disabled{opacity:.62;cursor:not-allowed}.td-second-pass-error{grid-column:1/-1;padding:6px 8px;border-radius:5px;background:#442228;color:#ffd1d5;font-size:11px;white-space:pre-wrap}@media(max-width:620px){.td-post-mode-tabs{flex-direction:column}.td-post-mode-tabs button{width:100%}.td-second-pass-result{grid-template-columns:1fr}.td-second-pass-run{width:100%}}.td-runtime-settings{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;margin:0 0 8px}.td-runtime-settings legend{padding:0 7px;color:var(--td-accent)}.td-runtime-settings label:has(textarea),.td-runtime-settings label:has(input[type=password]),.td-runtime-key-controls,.td-runtime-apply{grid-column:1/-1}.td-runtime-settings small{display:block;margin-top:5px;color:var(--td-muted);line-height:1.45}.td-runtime-status{display:flex;align-items:center;padding:8px 10px;border:1px solid var(--td-line);border-radius:6px;background:#161d25;color:var(--td-muted)}.td-runtime-status strong{margin-left:4px;color:var(--td-accent)}.td-runtime-key-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 10px;border:1px solid var(--td-line);border-radius:6px;background:#161d25}.td-runtime-key-controls>label{display:flex;flex-direction:row;align-items:center;gap:7px}.td-runtime-key-controls>label input{width:auto}.td-runtime-key-controls small{flex-basis:100%;margin:0}.td-runtime-apply{display:flex;justify-content:flex-end}.td-runtime-banner{padding:10px 13px;border:1px solid #836a32;border-radius:7px;background:#3a301c;color:#f4d991}.td-runtime-banner.ready{border-color:#356f59;background:#18372d;color:#8be1bd}@media(max-width:700px){.td-runtime-settings{grid-template-columns:1fr}.td-runtime-settings label:has(textarea),.td-runtime-settings label:has(input[type=password]),.td-runtime-key-controls,.td-runtime-apply{grid-column:auto}}", Ht = "theodore-director-styles";
+function wr() {
   if (document.getElementById(Ht)) return;
   const e = document.createElement("style");
-  e.id = Ht, e.textContent = xr, document.head.append(e);
+  e.id = Ht, e.textContent = yr, document.head.append(e);
 }
-_r();
-function yr(e) {
+wr();
+function kr(e) {
   const t = e.output ?? {}, r = [t.gifs, t.videos, t.images].find((s) => Array.isArray(s)), o = r == null ? void 0 : r[0], a = String((o == null ? void 0 : o.filename) ?? "").trim();
   return a ? {
     path: [String((o == null ? void 0 : o.subfolder) ?? "").trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, ""), a].filter(Boolean).join("/"),
@@ -1946,18 +1948,8 @@ function yr(e) {
     stage: "legacy_unknown"
   } : void 0;
 }
-const wr = "/scripts/app.js", kr = "/scripts/api.js";
-Promise.all([
-  import(
-    /* @vite-ignore */
-    wr
-  ),
-  import(
-    /* @vite-ignore */
-    kr
-  )
-]).then(([{ app: e }, { api: t }]) => {
-  const r = async (a) => {
+function Sr() {
+  const e = zn, t = $n, r = async (a) => {
     var w, k;
     const d = ((w = e.graph) == null ? void 0 : w._nodes) ?? [], s = d.find((y) => y.type === "TheodoreDirector_PostprocessSecondPassSource"), c = d.find((y) => y.type === "TheodoreDirector_SaveSecondPass"), h = (k = s == null ? void 0 : s.widgets) == null ? void 0 : k.find((y) => y.name === "request_json");
     if (!s || !c || !h || c.id === void 0)
@@ -1973,18 +1965,18 @@ Promise.all([
     if (!I) throw new Error("ComfyUI 没有返回二采任务 ID");
     await new Promise((y, S) => {
       const P = () => {
-        t.removeEventListener("execution_success", A), t.removeEventListener("execution_error", H), t.removeEventListener("execution_interrupted", H);
+        t.removeEventListener("execution_success", R), t.removeEventListener("execution_error", H), t.removeEventListener("execution_interrupted", H);
       }, g = (D) => {
         var N;
         return String(((N = D.detail) == null ? void 0 : N.prompt_id) ?? "");
-      }, A = (D) => {
+      }, R = (D) => {
         g(D) === I && (P(), y());
       }, H = (D) => {
         if (g(D) !== I) return;
         const N = D.detail ?? {};
         P(), S(new Error(String(N.exception_message ?? N.error ?? "单独二采任务执行失败")));
       };
-      t.addEventListener("execution_success", A), t.addEventListener("execution_error", H), t.addEventListener("execution_interrupted", H);
+      t.addEventListener("execution_success", R), t.addEventListener("execution_error", H), t.addEventListener("execution_interrupted", H);
     });
   }, o = async (a) => {
     var l, I;
@@ -2003,10 +1995,10 @@ Promise.all([
     return new Promise((w, k) => {
       let y;
       const S = () => {
-        t.removeEventListener("executed", A), t.removeEventListener("execution_success", H), t.removeEventListener("execution_error", D), t.removeEventListener("execution_interrupted", D);
-      }, P = (N) => N.detail ?? {}, g = (N) => String(N.prompt_id ?? "") === p, A = (N) => {
+        t.removeEventListener("executed", R), t.removeEventListener("execution_success", H), t.removeEventListener("execution_error", D), t.removeEventListener("execution_interrupted", D);
+      }, P = (N) => N.detail ?? {}, g = (N) => String(N.prompt_id ?? "") === p, R = (N) => {
         const b = P(N);
-        !g(b) || String(b.node ?? "") !== String(s.id) || (y = yr(b) ?? y);
+        !g(b) || String(b.node ?? "") !== String(s.id) || (y = kr(b) ?? y);
       }, H = (N) => {
         const b = P(N);
         g(b) && (S(), w(y));
@@ -2014,7 +2006,7 @@ Promise.all([
         const b = P(N);
         g(b) && (S(), k(new Error(String(b.exception_message ?? b.error ?? "合并任务执行失败"))));
       };
-      t.addEventListener("executed", A), t.addEventListener("execution_success", H), t.addEventListener("execution_error", D), t.addEventListener("execution_interrupted", D);
+      t.addEventListener("executed", R), t.addEventListener("execution_success", H), t.addEventListener("execution_error", D), t.addEventListener("execution_interrupted", D);
     });
   };
   e.registerExtension({
@@ -2040,7 +2032,7 @@ Promise.all([
           var f;
           try {
             const _ = JSON.parse(String(c.value)), p = ((f = e.graph) == null ? void 0 : f._nodes) ?? [], l = p.some((w) => w.type === "TheodoreDirector_PostprocessSecondPassSource") && p.some((w) => w.type === "TheodoreDirector_SaveSecondPass"), I = p.some((w) => w.type === "TheodoreDirector_MergeVideos");
-            vr(_, (w) => {
+            _r(_, (w) => {
               var k, y;
               c.value = JSON.stringify(w, null, 2), this.setDirtyCanvas(!0, !0), (y = (k = e.graph) == null ? void 0 : k.setDirtyCanvas) == null || y.call(k, !0, !0);
             }, !0, l ? r : void 0, I ? o : void 0);
@@ -2051,4 +2043,5 @@ Promise.all([
       };
     }
   });
-});
+}
+Sr();

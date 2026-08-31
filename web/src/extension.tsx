@@ -3,6 +3,8 @@ import type { DirectorPlan } from "./types";
 import type { MergeQueueRequest, QueueMerge, QueueSecondPass, SecondPassQueueRequest } from "./types";
 import type { GeneratedVideoItem } from "./generated-results";
 import directorStyles from "./style.css?inline";
+import { app as comfyApp } from "../../scripts/app.js";
+import { api as comfyApi } from "../../scripts/api.js";
 
 const STYLE_ID = "theodore-director-styles";
 
@@ -43,13 +45,11 @@ function savedResultFromExecuted(detail: Record<string, unknown>): GeneratedVide
   };
 }
 
-// ComfyUI 在浏览器运行时提供此模块，使用动态导入可让前端独立构建与测试。
-const comfyAppUrl = "/scripts/app.js";
-const comfyApiUrl = "/scripts/api.js";
-void Promise.all([
-  import(/* @vite-ignore */ comfyAppUrl),
-  import(/* @vite-ignore */ comfyApiUrl),
-]).then(([{ app }, { api }]: [{ app: ComfyApp }, { api: ComfyApi }]) => {
+// 使用 ComfyUI 扩展约定的静态导入。RunningHub 会在部署时识别并重写这两个依赖，
+// 本地 ComfyUI 则按扩展目录相对路径解析到自身的 scripts 模块。
+function registerDirectorExtension(): void {
+  const app = comfyApp as unknown as ComfyApp;
+  const api = comfyApi as unknown as ComfyApi;
   const queueStandaloneSecondPass: QueueSecondPass = async (request: SecondPassQueueRequest) => {
     const nodes = app.graph?._nodes ?? [];
     const source = nodes.find((node) => node.type === "TheodoreDirector_PostprocessSecondPassSource");
@@ -203,4 +203,6 @@ void Promise.all([
       };
     },
   });
-});
+}
+
+registerDirectorExtension();

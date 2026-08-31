@@ -12,6 +12,8 @@ export default defineConfig({
       fileName: () => "theodore-director.js",
     },
     rollupOptions: {
+      // 保留 ComfyUI 运行时模块的静态导入，供本地 ComfyUI 或 RunningHub 自行解析。
+      external: ["../../scripts/app.js", "../../scripts/api.js"],
       output: { assetFileNames: "theodore-director.[ext]" },
     },
   },
