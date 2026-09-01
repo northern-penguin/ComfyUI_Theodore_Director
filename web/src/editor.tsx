@@ -7,7 +7,7 @@ import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoRe
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
-import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
+import { availableReferenceAssets, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass } from "./types";
 
@@ -25,7 +25,9 @@ function normalizePlan(value: DirectorPlan): DirectorPlan {
     ...shot,
     latentRelay: shot.latentRelay ?? true,
     secondSampling: shot.secondSampling ?? true,
+    disabledAssetIds: shot.disabledAssetIds ?? [],
   }));
+  plan.assets = plan.assets.map((asset) => ({ ...asset, shotIds: asset.shotIds ?? [] }));
   return plan;
 }
 
@@ -125,6 +127,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   }, []);
   const shot = plan.shots[Math.min(selected, plan.shots.length - 1)];
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
+  const mentionAssets = useMemo(() => shot ? availableReferenceAssets(plan, shot) : [], [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
   const allSecondSampling = plan.shots.length > 0 && plan.shots.every((item) => item.secondSampling);
   const allBatchEnabled = batchShots.length > 0 && batchShots.every((item) => item.enabled);
@@ -234,7 +237,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
               {supportsSecondSampling && <label class="td-shot-enabled" title="开启时执行 RTX 超分和第二次 H3 采样，关闭时直接使用第一采画面"><input type="checkbox" checked={shot.secondSampling} onChange={(event) => mutate((draft) => { draft.shots[selected].secondSampling = event.currentTarget.checked; })}/><span>二次采样 / 2nd pass</span></label>}
             </div>
           </div>
-          <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>）</span><HighlightedTextarea rows={10} value={shot.prompt} isReferenceValid={(alias) => referenceTokenIsAvailable(plan, shot, alias)} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
+          <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>，输入 <code>@</code> 快速选择）</span><HighlightedTextarea key={shot.id} rows={10} value={shot.prompt} mentionAssets={mentionAssets} mentionLanguage={language} isReferenceValid={(alias) => referenceTokenIsAvailable(plan, shot, alias)} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
           <label><span class="td-field-label">负面提示词 / Negative prompt</span><textarea rows={3} value={shot.negativePrompt} onInput={(event) => mutate((draft) => { draft.shots[selected].negativePrompt = event.currentTarget.value; })}/></label>
           <fieldset class="td-shot-media"><legend>本镜头素材 / Shot media</legend><label class="td-shot-media-display-toggle"><input type="checkbox" checked={showAssetAliases} onChange={(event) => setShowAssetAliases(event.currentTarget.checked)}/><span>{language === "zh" ? "显示别名" : "Show aliases"}</span></label>{plan.assets.map((asset) => { const checked = !shot.disabledAssetIds.includes(asset.id); const displayName = showAssetAliases ? asset.alias : (assetFileName(asset.path) || asset.alias); const reference = `{{ref:${asset.alias}}}`; return <div class={`td-shot-media-card ${checked ? "" : "disabled"}`} key={asset.id}><div class="td-shot-media-frame"><MediaPreview asset={asset} compact/><span class="td-shot-media-kind">{language === "zh" ? KIND_LABELS[asset.kind] : asset.kind}</span><label class="td-shot-media-toggle" title={checked ? "禁用此素材 / Disable" : "启用此素材 / Enable"}><input type="checkbox" checked={checked} onChange={(event) => mutate((draft) => { const disabled = draft.shots[selected].disabledAssetIds; draft.shots[selected].disabledAssetIds = event.currentTarget.checked ? disabled.filter((id) => id !== asset.id) : [...new Set([...disabled, asset.id])]; })}/></label></div><button class={`td-shot-media-name ${copiedAssetId === asset.id ? "copied" : ""}`} title={`${displayName}\n${language === "zh" ? "点击复制" : "Click to copy"} ${reference}`} onClick={async () => { try { await writeClipboardText(reference); setCopiedAssetId(asset.id); window.setTimeout(() => setCopiedAssetId((current) => current === asset.id ? "" : current), 1400); } catch (error) { window.alert(`${language === "zh" ? "复制失败" : "Copy failed"}: ${String(error)}`); } }}><span>{displayName}</span>{copiedAssetId === asset.id && <em>{language === "zh" ? "已复制" : "Copied"}</em>}</button></div>; })}</fieldset>
         </section>}

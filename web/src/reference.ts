@@ -6,13 +6,17 @@ function referenceTokenRegex(): RegExp {
   return new RegExp(REFERENCE_TOKEN_SOURCE, "g");
 }
 
+export function availableReferenceAssets(plan: DirectorPlan, shot: DirectorShot): DirectorAsset[] {
+  // 前端所有“当前镜头可用素材”入口共用这一规则，避免菜单、预检与高亮出现语义偏差。
+  return plan.assets.filter((asset) => asset.enabled
+    && asset.path.trim()
+    && (!(asset.shotIds ?? []).length || (asset.shotIds ?? []).includes(shot.id))
+    && !(shot.disabledAssetIds ?? []).includes(asset.id));
+}
+
 function availableAssetCatalog(plan: DirectorPlan, shot: DirectorShot): Map<string, DirectorAsset> {
   const catalog = new Map<string, DirectorAsset>();
-  for (const asset of plan.assets) {
-    if (asset.enabled && asset.path.trim() && (!asset.shotIds.length || asset.shotIds.includes(shot.id)) && !shot.disabledAssetIds.includes(asset.id)) {
-      catalog.set(asset.alias, asset);
-    }
-  }
+  for (const asset of availableReferenceAssets(plan, shot)) catalog.set(asset.alias, asset);
   return catalog;
 }
 

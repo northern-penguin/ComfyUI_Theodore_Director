@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
+import { availableReferenceAssets, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import type { DirectorPlan } from "./types";
 
 const plan: DirectorPlan = {
@@ -47,6 +47,14 @@ describe("H3 reference preview", () => {
     restricted.assets[0].shotIds = ["s1"];
     expect(referenceTokenIsAvailable(restricted, restricted.shots[1], "hero")).toBe(false);
     expect(referenceTokenIsAvailable(restricted, restricted.shots[1], "walk")).toBe(false);
+    expect(availableReferenceAssets(restricted, restricted.shots[1])).toEqual([]);
+  });
+
+  it("keeps legacy plans without per-shot arrays usable in the editor", () => {
+    const legacy = structuredClone(plan) as DirectorPlan;
+    delete (legacy.shots[0] as Partial<typeof legacy.shots[0]>).disabledAssetIds;
+    delete (legacy.assets[0] as Partial<typeof legacy.assets[0]>).shotIds;
+    expect(availableReferenceAssets(legacy, legacy.shots[0]).map((item) => item.id)).toEqual(["hero", "walk"]);
   });
 
   it("requires global references to work in every enabled shot", () => {
