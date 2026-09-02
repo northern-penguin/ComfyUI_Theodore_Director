@@ -29,12 +29,13 @@ def create_video(root, shot_id="shot_001", name="00001"):
     return path
 
 
-def request(plan, video, root, shot_id="shot_001"):
+def request(plan, video, root, shot_id="shot_001", processing_mode="super_resolution_second_pass"):
     return {
         "plan": plan,
         "shotId": shot_id,
         "sourcePath": video.relative_to(root).as_posix(),
         "requestId": "request-1",
+        "processingMode": processing_mode,
     }
 
 
@@ -63,7 +64,8 @@ def test_second_pass_request_accepts_first_pass_and_disabled_shot(tmp_path):
 
     assert parsed.shot.shot.id == "shot_001"
     assert parsed.shot.latent_relay is False
-    assert parsed.output_prefix.endswith("/shot_001_video_2nd")
+    assert parsed.output_prefix.endswith("/shot_001_video_2nd_sr")
+    assert parsed.processing_mode == "super_resolution_second_pass"
     assert parsed_disabled.shot.shot.enabled is False
 
 
@@ -74,6 +76,28 @@ def test_second_pass_request_rejects_known_second_pass(tmp_path):
 
     with pytest.raises(ValueError, match="不能再次"):
         parse_second_pass_request(tmp_path, request(plan, video, tmp_path))
+
+
+@pytest.mark.parametrize(
+    ("mode", "suffix"),
+    [
+        ("super_resolution_second_pass", "2nd_sr"),
+        ("latent_upscale_second_pass", "2nd_latent"),
+        ("super_resolution_only", "upscaled"),
+    ],
+)
+def test_postprocess_modes_use_distinct_output_prefixes(tmp_path, mode, suffix):
+    plan = make_plan()
+    video = create_video(tmp_path)
+    parsed = parse_second_pass_request(tmp_path, request(plan, video, tmp_path, processing_mode=mode))
+    assert parsed.output_prefix.endswith(f"/shot_001_video_{suffix}")
+
+
+def test_postprocess_rejects_off_mode(tmp_path):
+    plan = make_plan()
+    video = create_video(tmp_path)
+    with pytest.raises(ValueError, match="无效处理模式"):
+        parse_second_pass_request(tmp_path, request(plan, video, tmp_path, processing_mode="off"))
 
 
 def test_second_pass_request_rejects_cross_shot_and_traversal(tmp_path):

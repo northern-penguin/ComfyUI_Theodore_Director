@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parents[1]
-WORKFLOW = ROOT / "workflows" / "V7.2导播台.json"
+WORKFLOW = ROOT / "workflows" / "V7.3导播台.json"
 BRANCH_IDS = set(range(402, 417))
 
 
@@ -41,6 +41,9 @@ def base_node(node_id: int, kind: str, title: str, pos: list[float], size: list[
 
 
 def transform(data: dict) -> dict:
+    # V7.3 已内置三模式后处理支流；旧构建器仅保留为历史兼容入口，禁止覆盖新拓扑。
+    if data.get("extra", {}).get("theodoreDirector", {}).get("workflowVersion") == "7.3":
+        return copy.deepcopy(data)
     data = copy.deepcopy(data)
     data["nodes"] = [node for node in data["nodes"] if node["id"] not in BRANCH_IDS]
     data["links"] = [link for link in data["links"] if link[1] not in BRANCH_IDS and link[3] not in BRANCH_IDS]

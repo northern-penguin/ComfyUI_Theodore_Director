@@ -10,7 +10,7 @@ from theodore_director.paths import (
     resolve_output_file,
     shot_result_candidates,
 )
-from theodore_director.schema import DEFAULT_PLAN, load_plan
+from theodore_director.schema import DEFAULT_PLAN, SecondSamplingMode, load_plan
 from theodore_director.selection import select_shot, select_shot_for_postprocess
 
 
@@ -55,18 +55,22 @@ def test_latent_relay_uses_current_active_shot_switch():
     assert select_shot(plan, 2).latent_relay is True
 
 
-def test_second_sampling_uses_current_active_shot_switch():
+def test_processing_mode_uses_current_active_shot_switch():
     data = copy.deepcopy(DEFAULT_PLAN)
     data["shots"] = [
-        {"id": "one", "prompt": "x", "durationSeconds": 5, "secondSampling": False},
-        {"id": "disabled", "prompt": "skip", "durationSeconds": 5, "enabled": False, "secondSampling": False},
-        {"id": "two", "prompt": "y", "durationSeconds": 5, "secondSampling": True},
+        {"id": "one", "prompt": "x", "durationSeconds": 5, "secondSamplingMode": "off"},
+        {"id": "disabled", "prompt": "skip", "durationSeconds": 5, "enabled": False, "secondSamplingMode": "super_resolution_only"},
+        {"id": "two", "prompt": "y", "durationSeconds": 5, "secondSamplingMode": "latent_upscale_second_pass"},
     ]
     plan = load_plan(data)
 
     assert select_shot(plan, 0).second_sampling is False
     # Impact 索引 1 直接对应第二个启用分镜，不会被禁用分镜错位。
     assert select_shot(plan, 1).second_sampling is True
+    assert select_shot(plan, 1).second_sampling_mode == SecondSamplingMode.LATENT_UPSCALE_SECOND_PASS.value
+    assert select_shot(plan, 1).latent_upscale_second_pass is True
+    assert select_shot(plan, 1).super_resolution_second_pass is False
+    assert select_shot(plan, 1).super_resolution_only is False
 
 
 def test_postprocess_selection_accepts_disabled_shot_and_disables_relay():
@@ -82,6 +86,7 @@ def test_postprocess_selection_accepts_disabled_shot_and_disables_relay():
     assert selected.shot.id == "disabled"
     assert selected.latent_relay is False
     assert selected.second_sampling is True
+    assert selected.super_resolution_second_pass is True
     assert selected.seed == plan.base_seed + 1
 
 

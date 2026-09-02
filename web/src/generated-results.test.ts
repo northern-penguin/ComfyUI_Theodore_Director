@@ -31,5 +31,6 @@ describe("standalone second-pass eligibility", () => {
     expect(canRunStandaloneSecondPass({ path: "legacy.mp4", stage: "legacy_unknown" })).toBe(true);
     expect(canRunStandaloneSecondPass({ path: "old.mp4" })).toBe(true);
     expect(canRunStandaloneSecondPass({ path: "second.mp4", stage: "second_pass" })).toBe(false);
+    expect(canRunStandaloneSecondPass({ path: "upscaled.mp4", stage: "upscaled" })).toBe(false);
   });
 });

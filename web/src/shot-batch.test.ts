@@ -7,6 +7,7 @@ describe("shot batch helpers", () => {
     expect(result.map((shot) => shot.id)).toEqual(["shot_001", "shot_002", "shot_003", "shot_004"]);
     expect(result.slice(1).every((shot) => shot.durationSeconds === 7.5)).toBe(true);
     expect(result.slice(1).every((shot) => shot.latentRelay)).toBe(true);
+    expect(result.slice(1).every((shot) => shot.secondSamplingMode === "super_resolution_second_pass")).toBe(true);
   });
 
   it("continues after the largest existing shot id", () => {

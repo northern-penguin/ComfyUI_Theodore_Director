@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 
-from .schema import Plan, Shot
+from .schema import Plan, SecondSamplingMode, Shot
 
 
 @dataclass(frozen=True)
@@ -19,6 +19,10 @@ class ShotSelection:
     is_last: bool
     latent_relay: bool
     second_sampling: bool
+    second_sampling_mode: str
+    super_resolution_second_pass: bool
+    latent_upscale_second_pass: bool
+    super_resolution_only: bool
     next_index: int
     has_next: bool
     seed: int
@@ -55,6 +59,10 @@ def select_shot(plan: Plan, queue_index: int, base_seed: int | None = None) -> S
         is_last=not has_next,
         latent_relay=latent_relay,
         second_sampling=shot.second_sampling,
+        second_sampling_mode=shot.second_sampling_mode.value,
+        super_resolution_second_pass=shot.second_sampling_mode is SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS,
+        latent_upscale_second_pass=shot.second_sampling_mode is SecondSamplingMode.LATENT_UPSCALE_SECOND_PASS,
+        super_resolution_only=shot.second_sampling_mode is SecondSamplingMode.SUPER_RESOLUTION_ONLY,
         next_index=queue_index + 1 if has_next else 0,
         has_next=has_next,
         seed=shot.seed if shot.seed is not None else seed_base + queue_index,
@@ -83,6 +91,10 @@ def select_shot_for_postprocess(plan: Plan, shot_id: str) -> ShotSelection:
         is_last=True,
         latent_relay=False,
         second_sampling=True,
+        second_sampling_mode=SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value,
+        super_resolution_second_pass=True,
+        latent_upscale_second_pass=False,
+        super_resolution_only=False,
         next_index=0,
         has_next=False,
         seed=shot.seed if shot.seed is not None else plan.base_seed + source_index,

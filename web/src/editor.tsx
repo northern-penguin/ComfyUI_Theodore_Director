@@ -3,30 +3,53 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { BatchAssetImport } from "./batch-asset-import";
 import { HighlightedTextarea } from "./highlighted-textarea";
 import { t, type Language } from "./i18n";
-import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
+import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoItem, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
 import { availableReferenceAssets, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots } from "./shot-batch";
-import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass } from "./types";
+import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass, SecondSamplingMode } from "./types";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const KIND_LABELS: Record<AssetKind, string> = { image: "图片", video: "视频", audio: "音频" };
+const SECOND_SAMPLING_MODES: SecondSamplingMode[] = ["off", "super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"];
+
+function secondSamplingModeLabel(mode: SecondSamplingMode, language: Language): string {
+  const labels: Record<SecondSamplingMode, [string, string]> = {
+    off: ["关闭二采", "Off"],
+    super_resolution_second_pass: ["超分二采", "Super-res 2nd pass"],
+    latent_upscale_second_pass: ["Latent 放大二采", "Latent upscale 2nd pass"],
+    super_resolution_only: ["只超分", "Super-res only"],
+  };
+  return labels[mode][language === "zh" ? 0 : 1];
+}
+
+function generatedModeLabel(item: GeneratedVideoItem, language: Language): string {
+  if (item.processingMode === "latent_upscale_second_pass") return language === "zh" ? "Latent 二采" : "Latent 2nd";
+  if (item.processingMode === "super_resolution_second_pass" || item.stage === "second_pass") return language === "zh" ? "超分二采" : "Super-res 2nd";
+  if (item.processingMode === "super_resolution_only" || item.stage === "upscaled") return language === "zh" ? "只超分" : "Super-res only";
+  if (item.stage === "first_pass") return language === "zh" ? "一采" : "1st pass";
+  return language === "zh" ? "旧结果" : "Legacy";
+}
 
 function normalizePlan(value: DirectorPlan): DirectorPlan {
   const plan = clone(value);
-  plan.schemaVersion = 4;
+  plan.schemaVersion = 5;
   // 内部 ID 只用于兼容协议，不展示给用户，也不参与生成 hash。
   if (!plan.project.id?.trim()) plan.project.id = uid("project");
   // v1/v2 工作流没有逐镜头开关，默认保持原有接力流程。
-  plan.shots = plan.shots.map((shot) => ({
-    ...shot,
-    latentRelay: shot.latentRelay ?? true,
-    secondSampling: shot.secondSampling ?? true,
-    disabledAssetIds: shot.disabledAssetIds ?? [],
-  }));
+  plan.shots = plan.shots.map((shot) => {
+    const legacy = shot as DirectorShot & { secondSampling?: boolean };
+    return {
+      ...shot,
+      latentRelay: shot.latentRelay ?? true,
+      // 旧 BOOL 开关无损迁移到 V7.2 原有的超分二采模式。
+      secondSamplingMode: shot.secondSamplingMode ?? (legacy.secondSampling === false ? "off" : "super_resolution_second_pass"),
+      disabledAssetIds: shot.disabledAssetIds ?? [],
+    };
+  });
   plan.assets = plan.assets.map((asset) => ({ ...asset, shotIds: asset.shotIds ?? [] }));
   return plan;
 }
@@ -117,6 +140,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const [uniformDuration, setUniformDuration] = useState("5");
   const [appendCount, setAppendCount] = useState("1");
   const [appendDuration, setAppendDuration] = useState("5");
+  const [bulkSecondSamplingMode, setBulkSecondSamplingMode] = useState<SecondSamplingMode>("super_resolution_second_pass");
   useEffect(() => {
     // 点击素材名只负责复制，不应抢走提示词 textarea 的焦点和光标位置。
     const preservePromptSelection = (event: MouseEvent) => {
@@ -129,7 +153,6 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
   const preview = useMemo(() => shot ? previewReferences(plan, shot) : null, [plan, shot]);
   const mentionAssets = useMemo(() => shot ? availableReferenceAssets(plan, shot) : [], [plan, shot]);
   const activeIndex = shot?.enabled ? plan.shots.slice(0, selected).filter((item) => item.enabled).length : -1;
-  const allSecondSampling = plan.shots.length > 0 && plan.shots.every((item) => item.secondSampling);
   const allBatchEnabled = batchShots.length > 0 && batchShots.every((item) => item.enabled);
   const generatedResults = useMemo(() => normalizeGeneratedResults(generatedVideo), [generatedVideo]);
   const selectedGenerated = generatedResults.find((item) => item.path === selectedGeneratedPath) ?? generatedResults[0];
@@ -225,7 +248,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
     <nav>{(["shots", "assets", "settings", "postprocess"] as const).map((name) => <button class={tab === name ? "active" : ""} onClick={() => setTab(name)}>{t(language, name)}</button>)}</nav>
     <main>
       {tab === "shots" && <div class="td-shots">
-        <aside class="td-shot-sidebar">{supportsSecondSampling && <button class={`wide td-bulk-toggle ${allSecondSampling ? "active" : ""}`} onClick={() => mutate((draft) => { const enabled = !draft.shots.every((item) => item.secondSampling); draft.shots.forEach((item) => { item.secondSampling = enabled; }); })}>{language === "zh" ? `全部二次采样：${allSecondSampling ? "开" : "关"}` : `Second sampling for all: ${allSecondSampling ? "ON" : "OFF"}`}</button>}<div class="td-shot-list">{plan.shots.map((item, index) => <div key={item.id} class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><div class="td-shot-delete-action"><button class="td-shot-delete" disabled={plan.shots.length <= 1} title={language === "zh" ? (plan.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头") : (plan.shots.length <= 1 ? "Keep at least one shot" : "Delete shot")} aria-label={language === "zh" ? "删除镜头" : "Delete shot"} onClick={(event) => { event.stopPropagation(); deleteShot(index); }}>×</button></div><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div class="td-shot-move-actions"><button title={language === "zh" ? "上移镜头" : "Move shot up"} onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button title={language === "zh" ? "下移镜头" : "Move shot down"} onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}</div><button class="wide" onClick={() => mutate((draft) => { const addedIndex = draft.shots.length; draft.shots = appendShots(draft.shots, 1, 5); setSelected(addedIndex); })}>＋ {t(language, "addShot")}</button><div class="td-shot-batch-entry"><button class="wide" onClick={openBatchEditor}>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</button></div></aside>
+        <aside class="td-shot-sidebar">{supportsSecondSampling && <div class="td-bulk-processing"><select aria-label={language === "zh" ? "批量处理模式" : "Bulk processing mode"} value={bulkSecondSamplingMode} onChange={(event) => setBulkSecondSamplingMode(event.currentTarget.value as SecondSamplingMode)}>{SECOND_SAMPLING_MODES.map((mode) => <option value={mode}>{secondSamplingModeLabel(mode, language)}</option>)}</select><button class="wide td-bulk-toggle" onClick={() => mutate((draft) => { draft.shots.forEach((item) => { item.secondSamplingMode = bulkSecondSamplingMode; }); })}>{language === "zh" ? "应用到全部镜头" : "Apply to all shots"}</button></div>}<div class="td-shot-list">{plan.shots.map((item, index) => <div key={item.id} class={`td-shot-card ${index === selected ? "selected" : ""}`} onClick={() => setSelected(index)}><div class="td-shot-delete-action"><button class="td-shot-delete" disabled={plan.shots.length <= 1} title={language === "zh" ? (plan.shots.length <= 1 ? "至少保留一个镜头" : "删除镜头") : (plan.shots.length <= 1 ? "Keep at least one shot" : "Delete shot")} aria-label={language === "zh" ? "删除镜头" : "Delete shot"} onClick={(event) => { event.stopPropagation(); deleteShot(index); }}>×</button></div><strong>{index + 1}. {item.title}</strong><span>{item.durationSeconds}s · {item.enabled ? "ON" : "OFF"}</span><div class="td-shot-move-actions"><button title={language === "zh" ? "上移镜头" : "Move shot up"} onClick={(event) => { event.stopPropagation(); moveShot(index, -1); }}>↑</button><button title={language === "zh" ? "下移镜头" : "Move shot down"} onClick={(event) => { event.stopPropagation(); moveShot(index, 1); }}>↓</button></div></div>)}</div><button class="wide" onClick={() => mutate((draft) => { const addedIndex = draft.shots.length; draft.shots = appendShots(draft.shots, 1, 5); setSelected(addedIndex); })}>＋ {t(language, "addShot")}</button><div class="td-shot-batch-entry"><button class="wide" onClick={openBatchEditor}>{language === "zh" ? "批量处理镜头" : "Batch edit shots"}</button></div></aside>
         {shot && <section class="td-form">
           <div class="td-shot-meta">
             <label>ID<input value={shot.id} onInput={(event) => mutate((draft) => { draft.shots[selected].id = event.currentTarget.value; })}/></label>
@@ -234,7 +257,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
             <div class="td-shot-switches">
               <label class="td-shot-enabled"><input type="checkbox" checked={shot.enabled} onChange={(event) => mutate((draft) => { draft.shots[selected].enabled = event.currentTarget.checked; })}/><span>启用 / Enabled</span></label>
               <label class="td-shot-enabled" title={activeIndex === 0 ? "首个启用镜头没有上一段，执行时会自动忽略接力" : "开启后读取上一段 AV latent 作为 Motion Context"}><input type="checkbox" checked={shot.latentRelay} onChange={(event) => mutate((draft) => { draft.shots[selected].latentRelay = event.currentTarget.checked; })}/><span>latent接力 / Relay{activeIndex === 0 ? "（首段忽略）" : ""}</span></label>
-              {supportsSecondSampling && <label class="td-shot-enabled" title="开启时执行 RTX 超分和第二次 H3 采样，关闭时直接使用第一采画面"><input type="checkbox" checked={shot.secondSampling} onChange={(event) => mutate((draft) => { draft.shots[selected].secondSampling = event.currentTarget.checked; })}/><span>二次采样 / 2nd pass</span></label>}
+              {supportsSecondSampling && <label class="td-processing-mode"><span>{language === "zh" ? "高清处理" : "Processing"}</span><select value={shot.secondSamplingMode} onChange={(event) => mutate((draft) => { draft.shots[selected].secondSamplingMode = event.currentTarget.value as SecondSamplingMode; })}>{SECOND_SAMPLING_MODES.map((mode) => <option value={mode}>{secondSamplingModeLabel(mode, language)}</option>)}</select></label>}
             </div>
           </div>
           <label><span class="td-field-label">提示词（使用 <code>{"{{ref:别名}}"}</code>，输入 <code>@</code> 快速选择）</span><HighlightedTextarea key={shot.id} rows={10} value={shot.prompt} mentionAssets={mentionAssets} mentionLanguage={language} isReferenceValid={(alias) => referenceTokenIsAvailable(plan, shot, alias)} onInput={(event) => mutate((draft) => { draft.shots[selected].prompt = event.currentTarget.value; })}/></label>
@@ -250,7 +273,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
             <summary><strong>{language === "zh" ? "生成结果" : "Generated result"}</strong><span class={`td-result-state ${generatedResults.length ? "found" : ""}`}>{generatedLoading ? (language === "zh" ? "查询中" : "Checking") : generatedResults.length ? (language === "zh" ? `${generatedResults.length} 个结果` : `${generatedResults.length} results`) : (language === "zh" ? "空" : "Empty")}</span></summary>
             <div class="td-preview-body td-result-body">
               <div class="td-result-actions"><button onClick={() => setResultRevision((value) => value + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
-              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{language === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again."}</div> : selectedGenerated && generatedVideoUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedGenerated.path} src={generatedVideoUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedGenerated.path}>{selectedGenerated.path}{selectedGenerated.bytes ? ` · ${(selectedGenerated.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div><div class="td-result-list" aria-label={language === "zh" ? "全部生成结果" : "All generated results"}>{generatedResults.map((item, index) => { const url = comfyViewUrl(item.path, "output"); const number = generatedResultNumber(item.path, generatedResults.length - index); const time = item.modifiedAt ? new Date(item.modifiedAt * 1000).toLocaleString(language === "zh" ? "zh-CN" : "en-US") : ""; return <button class={`td-result-item ${item.path === selectedGenerated.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedGeneratedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "结果" : "Result"} ${number}`}/> : <div class="td-result-thumb"><span>×</span></div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `结果 ${number}` : `Result ${number}`}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{[item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : "", time].filter(Boolean).join(" · ")}</small></span></button>; })}</div></div> : <div class="td-result-empty">{language === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path"}</div>}
+              {generatedLoading ? <div class="td-result-empty">{language === "zh" ? "正在检查预期输出路径…" : "Checking the expected output path…"}</div> : generatedVideo.error ? <div class="td-result-empty errors">{language === "zh" ? "暂时无法查询生成结果；重启 ComfyUI 后再试。" : "Unable to query results. Restart ComfyUI and try again."}</div> : selectedGenerated && generatedVideoUrl ? <div class="td-generated-results"><div class="td-generated-video"><video key={selectedGenerated.path} src={generatedVideoUrl} controls preload="metadata" playsInline/><div class="td-generated-meta" title={selectedGenerated.path}>{generatedModeLabel(selectedGenerated, language)} · {selectedGenerated.path}{selectedGenerated.bytes ? ` · ${(selectedGenerated.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</div></div><div class="td-result-list" aria-label={language === "zh" ? "全部生成结果" : "All generated results"}>{generatedResults.map((item, index) => { const url = comfyViewUrl(item.path, "output"); const number = generatedResultNumber(item.path, generatedResults.length - index); const time = item.modifiedAt ? new Date(item.modifiedAt * 1000).toLocaleString(language === "zh" ? "zh-CN" : "en-US") : ""; return <button class={`td-result-item ${item.path === selectedGenerated.path ? "selected" : ""}`} key={item.path} onClick={() => setSelectedGeneratedPath(item.path)}>{url ? <LazyVideoThumbnail src={url} alt={`${language === "zh" ? "结果" : "Result"} ${number}`}/> : <div class="td-result-thumb"><span>×</span></div>}<span class="td-result-item-copy"><strong>{language === "zh" ? `结果 ${number}` : `Result ${number}`} · {generatedModeLabel(item, language)}{index === 0 && <em>{language === "zh" ? "最新" : "Latest"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{[item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : "", time].filter(Boolean).join(" · ")}</small></span></button>; })}</div></div> : <div class="td-result-empty">{language === "zh" ? "未在预期路径找到本段视频" : "No video found at the expected path"}</div>}
             </div>
           </details>
         </aside>

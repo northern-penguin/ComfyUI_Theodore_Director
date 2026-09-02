@@ -20,7 +20,7 @@ REMOVE_IDS = {
 
 def default_plan(variant: str) -> dict[str, Any]:
     return {
-        "schemaVersion": 4,
+        "schemaVersion": 5,
         "project": {
             "id": f"impact_v6_{variant}",
             "name": f"Impact V6 Theodore {variant.title()}",
@@ -45,7 +45,7 @@ def default_plan(variant: str) -> dict[str, Any]:
                 "durationSeconds": 5,
                 "enabled": True,
                 "latentRelay": True,
-                "secondSampling": True,
+                "secondSamplingMode": "super_resolution_second_pass",
                 "seed": None,
                 "disabledAssetIds": [],
             }
@@ -242,7 +242,7 @@ def transform(source: dict[str, Any], variant: str) -> dict[str, Any]:
         if item["id"] == 290 and item["type"] == "MarkdownNote":
             # 版权署名统一由构建工具写入，避免重新生成示例工作流时丢失。
             item["widgets_values"] = ["## Theodore Director 开源工作流\n\n### 本工作流由抖音博主Theodore（抖音号:q1503623946）以及 b站up主 南极来の企鹅制作。\n\n由通用导播台、H3 适配器和 Impact Pack 队列组成。导播台负责调度数据，并送入原先的 Impact 循环工作流。每段只有在视频、尾帧与 AV latent 清单全部提交后才进入下一段。\n\n工作流与 Theodore 节点按 Apache-2.0 发布；模型及第三方节点遵循各自许可证。"]
-    data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 4, "variant": variant, "generated": True}
+    data.setdefault("extra", {})["theodoreDirector"] = {"schemaVersion": 5, "variant": variant, "generated": True}
     return data
 
 
@@ -330,10 +330,11 @@ def transplant_director_plan(data: dict[str, Any], donor: dict[str, Any]) -> Non
     target_node = next(item for item in data["nodes"] if item["type"] == "TheodoreDirector_Project")
     donor_node = next(item for item in donor["nodes"] if item["type"] == "TheodoreDirector_Project")
     plan = json.loads(donor_node["widgets_values"][0])
-    plan["schemaVersion"] = 4
+    plan["schemaVersion"] = 5
     for shot in plan.get("shots", []):
         shot.setdefault("latentRelay", True)
-        shot.setdefault("secondSampling", True)
+        enabled = bool(shot.pop("secondSampling", True))
+        shot.setdefault("secondSamplingMode", "super_resolution_second_pass" if enabled else "off")
     target_node["widgets_values"][0] = json.dumps(plan, ensure_ascii=False, indent=2)
 
 

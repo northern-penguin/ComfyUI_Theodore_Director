@@ -1,4 +1,6 @@
 export type AssetKind = "image" | "video" | "audio";
+export type SecondSamplingMode = "off" | "super_resolution_second_pass" | "latent_upscale_second_pass" | "super_resolution_only";
+export type PostprocessMode = Exclude<SecondSamplingMode, "off">;
 
 export interface DirectorAsset {
   id: string;
@@ -23,13 +25,13 @@ export interface DirectorShot {
   durationSeconds: number;
   enabled: boolean;
   latentRelay: boolean;
-  secondSampling: boolean;
+  secondSamplingMode: SecondSamplingMode;
   seed: number | null;
   disabledAssetIds: string[];
 }
 
 export interface DirectorPlan {
-  schemaVersion: 4;
+  schemaVersion: 5;
   project: { id: string; name: string; runId: string };
   defaults: { fps: number; baseSeed: number };
   promptPrefix: string;
@@ -57,6 +59,7 @@ export interface SecondPassQueueRequest {
   shotId: string;
   sourcePath: string;
   requestId: string;
+  processingMode: PostprocessMode;
 }
 
 export type QueueSecondPass = (request: SecondPassQueueRequest) => Promise<void>;

@@ -1,8 +1,8 @@
 # ComfyUI Theodore Director
 
-一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带已经融合好的 V7.2 导播台二采工作流。
+一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带支持四种高清处理模式的 V7.3 导播台工作流。
 
-Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7.2 dual-sampling Director workflow is included.
+Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7.3 workflow with four per-shot processing modes is included.
 
 ## 版权说明
 
@@ -33,9 +33,9 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 然后导入仓库内的成品工作流：
 
-- [V7.2 导播台](workflows/V7.2导播台.json)
+- [V7.3 导播台](workflows/V7.3导播台.json)
 
-仓库不再附带旧版 V6 单采、双采示例；`V7.2导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
+仓库不再附带旧版 V6/V7.2 示例；`V7.3导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
 
 | 依赖 | V7 | 用途 |
 |---|---:|---|
@@ -45,6 +45,10 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 | ComfyUI-KJNodes | ✓ | 加速、图像处理与尾帧保存 |
 | ComfyUI-Easy-Use | ✓ | 尾帧索引 |
 | NVIDIA RTX Video Nodes | ✓ | 二采前的 1.5× 视频超分 |
+| Comfyui Minimax H3 Latent Upscaler | ✓ | 方案 C：学习型 3D 视频 latent 1.5× 放大 |
+| H3 Latent Upscaler | ✓ | 方案 C：conditioning 放大及视频/音频 latent 正确重加噪 |
+
+Latent 方案 C 需要模型 `minimax_h3_latent_upscaler_3d_fp16.safetensors`，放入 `ComfyUI/models/latent_upscale_models/`。对应节点仓库为 [LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler](https://github.com/LBH-123-AI/Comfyui_Minimax_h3_latent_Upscaler) 和 [rockerBOO/h3-latent-upscaler](https://github.com/rockerBOO/h3-latent-upscaler)。
 
 ## 快速使用
 
@@ -52,8 +56,8 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 2. 在“素材库”添加参考图、参考视频或音频。可以单独上传，也可以使用“批量导入素材”混合选择或拖入多个文件；文件会复制到 `ComfyUI/input/theodore_director/<Project name>/`，也可以填写 input 目录相对路径。
 3. 给素材设置唯一别名，例如 `hero_front`、`location_night`、`walk_cycle`。
 4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
-5. 设置每个分镜的时长和启用状态，保存到工作流，然后正常 Queue。
-6. 抽卡后可进入“后处理 → 单独二采”，对满意的一采结果直接精修；该任务不会重跑一采或启动 Impact 循环。
+5. 设置每个分镜的时长、启用状态和高清处理方式；可选关闭、超分二采、Latent 放大二采或只超分，然后保存并正常 Queue。
+6. 抽卡后可进入“后处理 → 单独二采”，选择三种高清处理方式之一处理满意的一采结果；该任务不会重跑一采或启动 Impact 循环。
 7. 全部分镜完成后进入“后处理 → 合并视频”，逐镜头选择一个结果并点击“合并所选视频”。
    也可以点击“打开结果文件夹”，直接在系统文件管理器中查看当前 Project name 与 Run ID 的全部分镜和合并结果。
 
@@ -80,17 +84,17 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 可视化导播计划
   → Project：冻结并哈希计划
   → Impact 当前索引
-  → SelectShot：跳过禁用分镜、续跑检查、计算 seed，输出当前 latentRelay / secondSampling BOOL
+  → SelectShot：跳过禁用分镜、续跑检查、计算 seed，输出当前 latentRelay 与高清处理模式
   → H3Adapter：解析别名、校验上限、只加载当前素材、编译标签与时长
   → V7 H3 条件编码与第一采样
   → Motion Context 分支：latentRelay=true 载入并裁切上一段 AV latent，false 直通
-  → 二采画面分支：secondSampling=true 执行 RTX 超分、重编码和第二次 H3 采样，false 惰性跳过整条分支
+  → 高清处理分支：关闭 / RTX 只超分 / RTX 超分二采 / 方案 C Latent 放大二采
   → SaveVideo + SaveLatent + SaveTail
   → CommitResult：原子写入结果和总清单
   → ImpactSetWidgetValue + ImpactQueueTrigger（有下一段时）
 ```
 
-续跑模式会从当前 Impact 索引向后检查结果清单。只有计划哈希、分镜哈希和实际文件全部匹配，才视为已完成；修改提示词、素材、latentRelay、secondSampling 或连续性配置会令对应旧结果失效。latentRelay 只控制是否消费上一段 latent；每段的 AV latent 仍会照常保存和校验。双采图中 secondSampling=false 会惰性跳过整条二采计算链。
+续跑模式会从当前 Impact 索引向后检查结果清单。只有计划哈希、分镜哈希和实际文件全部匹配，才视为已完成；修改提示词、素材、`latentRelay`、`secondSamplingMode` 或连续性配置会令对应旧结果失效。每段的第一采 AV latent 始终保存并校验；Impact 条件分支只执行当前模式需要的 RTX、二采或 Latent 放大链。
 
 输出默认位于：
 
@@ -109,7 +113,7 @@ ComfyUI/output/TheodoreDirector/<project>_<run>/
 
 项目名与 Run ID 被拼成一个目录名；AV latent、尾帧和分镜结果清单分别集中在一层 `latent_context/`、`tail_frames/` 与 `shot_results/` 目录，分镜视频、合并视频和项目级 `manifest.json` 位于项目目录。视频、尾帧和结果清单使用稳定 `shot ID` 命名，不受镜头禁用、启用或排序导致的 Impact 索引变化影响；旧版带数字执行序号前缀的文件仍可查询和用于续跑。升级前平铺在项目目录的旧结果清单也继续兼容，但新结果只写入 `shot_results/`。保存节点即使只返回纯文件名，`CommitResult` 也会按 `OutputPaths` 给出的实际保存目录回读，不会错误回退到 `ComfyUI/output/` 根目录。
 
-每个新视频旁会写入一个小型 `.theodore.json` 伴随文件，用于标记一采、二采及二采来源。旧视频没有该文件时按“旧结果”兼容，并允许进行一次单独二采；已明确标记为二采的结果不会再次开放二采按钮。
+每个新视频旁会写入一个小型 `.theodore.json` 伴随文件，用于标记一采、超分二采、Latent 二采、只超分及后处理来源。旧视频没有该文件时按“旧结果”兼容并允许处理一次；已经过任一种高清后处理的结果不会再次开放处理按钮。
 
 ## 节点分层
 
@@ -138,7 +142,7 @@ npm test
 npm run build
 ```
 
-当前分发的 `V7.2导播台.json` 接受 JSON 结构、链接端点、Theodore 核心节点、主流程二采、后处理独立二采与版权说明测试。[add_v7_postprocess_second_pass.py](tools/add_v7_postprocess_second_pass.py) 可幂等重建 V7.2 的局部二采支流；[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
+当前分发的 `V7.3导播台.json` 接受 JSON 结构、链接端点、四模式主流程、三模式后处理支流与版权说明测试。[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
 
 ## License
 

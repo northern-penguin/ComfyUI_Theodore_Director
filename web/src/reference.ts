@@ -84,6 +84,7 @@ export function previewReferences(plan: DirectorPlan, shot: DirectorShot): Resol
 
 export function validatePlan(plan: DirectorPlan): string[] {
   const errors: string[] = [];
+  const processingModes = new Set(["off", "super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"]);
   if (!plan.project?.name?.trim()) errors.push("Project name 不能为空");
   if (!plan.project?.runId?.trim()) errors.push("Run ID 不能为空");
   if (!Array.isArray(plan.shots) || !plan.shots.some((shot) => shot.enabled)) errors.push("至少需要一个启用分镜");
@@ -92,6 +93,7 @@ export function validatePlan(plan: DirectorPlan): string[] {
     if (!shot.id?.trim() || shotIds.has(shot.id)) errors.push(`分镜 ID 为空或重复：${shot.id || "(空)"}`);
     shotIds.add(shot.id);
     if (!(shot.durationSeconds > 0)) errors.push(`分镜 ${shot.id} 的时长必须大于 0`);
+    if (!processingModes.has(shot.secondSamplingMode)) errors.push(`分镜 ${shot.id} 的高清处理模式无效`);
   }
   const aliases = new Set<string>();
   for (const asset of plan.assets ?? []) {

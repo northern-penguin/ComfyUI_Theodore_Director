@@ -10,10 +10,11 @@ from typing import Any, Literal
 
 from .manifest import atomic_write_json
 from .paths import build_output_paths_from_values, find_generated_videos
-from .schema import Plan, load_plan
+from .schema import Plan, SecondSamplingMode, load_plan
 from .selection import ShotSelection, select_shot_for_postprocess
 
-VideoStage = Literal["first_pass", "second_pass", "legacy_unknown"]
+VideoStage = Literal["first_pass", "second_pass", "upscaled", "legacy_unknown"]
+PostprocessMode = Literal["super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"]
 
 
 @dataclass(frozen=True)
@@ -24,6 +25,7 @@ class VideoResultMetadata:
     plan_hash: str
     source_path: str
     completed_at: str
+    processing_mode: str = ""
 
 
 @dataclass(frozen=True)
@@ -34,6 +36,7 @@ class SecondPassRequest:
     source_relative: str
     output_prefix: str
     request_id: str
+    processing_mode: PostprocessMode
 
 
 def metadata_path(video_path: Path) -> Path:
@@ -48,14 +51,16 @@ def write_video_result_metadata(
     shot_id: str,
     plan_hash: str,
     source_path: str = "",
+    processing_mode: str = "",
 ) -> VideoResultMetadata:
     result = VideoResultMetadata(
-        schema_version=1,
+        schema_version=2,
         stage=stage,
         shot_id=shot_id,
         plan_hash=plan_hash,
         source_path=source_path,
         completed_at=datetime.now(timezone.utc).isoformat(),
+        processing_mode=processing_mode,
     )
     atomic_write_json(metadata_path(video_path), asdict(result))
     return result
@@ -65,7 +70,7 @@ def read_video_result_metadata(video_path: Path) -> VideoResultMetadata | None:
     try:
         data = json.loads(metadata_path(video_path).read_text(encoding="utf-8"))
         stage = str(data.get("stage", ""))
-        if stage not in {"first_pass", "second_pass", "legacy_unknown"}:
+        if stage not in {"first_pass", "second_pass", "upscaled", "legacy_unknown"}:
             return None
         return VideoResultMetadata(
             schema_version=int(data.get("schema_version", data.get("schemaVersion", 1))),
@@ -74,6 +79,9 @@ def read_video_result_metadata(video_path: Path) -> VideoResultMetadata | None:
             plan_hash=str(data.get("plan_hash", data.get("planHash", ""))),
             source_path=str(data.get("source_path", data.get("sourcePath", ""))),
             completed_at=str(data.get("completed_at", data.get("completedAt", ""))),
+            # V7.2 的旧 second_pass 都是 RTX 超分二采，可安全补齐具体模式。
+            processing_mode=str(data.get("processing_mode", data.get("processingMode", "")))
+            or (SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value if stage == "second_pass" else ""),
         )
     except (FileNotFoundError, json.JSONDecodeError, OSError, TypeError, ValueError):
         return None
@@ -85,6 +93,7 @@ def video_result_payload(root: Path, video_path: Path) -> dict[str, Any]:
         "stage": metadata.stage if metadata else "legacy_unknown",
         "sourcePath": metadata.source_path if metadata else "",
         "completedAt": metadata.completed_at if metadata else "",
+        "processingMode": metadata.processing_mode if metadata else "",
     }
 
 
@@ -98,8 +107,14 @@ def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> Second
     shot_id = str(data.get("shotId", "")).strip()
     source_value = str(data.get("sourcePath", "")).strip().replace("\\", "/")
     request_id = str(data.get("requestId", "")).strip()
-    if not shot_id or not source_value or not request_id:
-        raise ValueError("单独二采请求缺少 shotId、sourcePath 或 requestId")
+    processing_mode = str(data.get("processingMode", "")).strip()
+    allowed_modes = {
+        SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value,
+        SecondSamplingMode.LATENT_UPSCALE_SECOND_PASS.value,
+        SecondSamplingMode.SUPER_RESOLUTION_ONLY.value,
+    }
+    if not shot_id or not source_value or not request_id or processing_mode not in allowed_modes:
+        raise ValueError("后处理请求缺少 shotId、sourcePath、requestId 或包含无效处理模式")
 
     output_root = root.resolve()
     candidate = (output_root / source_value).resolve(strict=False)
@@ -111,8 +126,8 @@ def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> Second
     if candidate not in available:
         raise ValueError(f"选择的视频不属于镜头 {shot_id} 的生成结果: {source_value}")
     metadata = read_video_result_metadata(candidate)
-    if metadata and metadata.stage == "second_pass":
-        raise ValueError("已完成二采的结果不能再次进行单独二采")
+    if metadata and metadata.stage in {"second_pass", "upscaled"}:
+        raise ValueError("已经过高清处理的结果不能再次处理")
 
     shot = select_shot_for_postprocess(plan, shot_id)
     paths = build_output_paths_from_values(plan.project_name, plan.run_id, shot_id, max(0, shot.active_index))
@@ -121,6 +136,16 @@ def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> Second
         shot=shot,
         source_path=candidate,
         source_relative=candidate.relative_to(output_root).as_posix(),
-        output_prefix=f"{paths.video_prefix}_2nd",
+        output_prefix=f"{paths.video_prefix}_{_postprocess_suffix(processing_mode)}",
         request_id=request_id,
+        processing_mode=processing_mode,  # type: ignore[arg-type]
     )
+
+
+def _postprocess_suffix(processing_mode: str) -> str:
+    """让不同后处理结果在文件名中可直接辨认。"""
+    return {
+        SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value: "2nd_sr",
+        SecondSamplingMode.LATENT_UPSCALE_SECOND_PASS.value: "2nd_latent",
+        SecondSamplingMode.SUPER_RESOLUTION_ONLY.value: "upscaled",
+    }[processing_mode]

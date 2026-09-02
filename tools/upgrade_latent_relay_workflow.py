@@ -93,15 +93,16 @@ def upgrade(data: dict[str, Any]) -> dict[str, Any]:
         by_id[origin]["outputs"][origin_slot]["links"] = current
 
     plan = json.loads(project["widgets_values"][0])
-    plan["schemaVersion"] = 4
+    plan["schemaVersion"] = 5
     for shot in plan.get("shots", []):
         shot.setdefault("latentRelay", True)
-        shot.setdefault("secondSampling", True)
+        enabled = bool(shot.pop("secondSampling", True))
+        shot.setdefault("secondSamplingMode", "super_resolution_second_pass" if enabled else "off")
     project["widgets_values"][0] = json.dumps(plan, ensure_ascii=False, indent=2)
 
     data["links"] = sorted(links, key=lambda item: item[0])
     data["last_link_id"] = max(item[0] for item in links)
-    data.setdefault("extra", {}).setdefault("theodoreDirector", {})["schemaVersion"] = 4
+    data.setdefault("extra", {}).setdefault("theodoreDirector", {})["schemaVersion"] = 5
     return data
 
 

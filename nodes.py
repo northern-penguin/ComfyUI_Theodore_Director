@@ -15,7 +15,7 @@ from .theodore_director.manifest import commit_shot_result
 from .theodore_director.media import load_audio, load_image, load_video
 from .theodore_director.paths import OutputPaths, build_output_paths, resolve_output_file, shot_result_candidates
 from .theodore_director.references import resolve_references
-from .theodore_director.schema import DEFAULT_PLAN_JSON, Plan, load_plan
+from .theodore_director.schema import DEFAULT_PLAN_JSON, Plan, SecondSamplingMode, load_plan
 from .theodore_director.selection import ShotSelection, select_shot
 from .theodore_director.video_results import (
     SecondPassRequest,
@@ -100,6 +100,10 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
                 io.String.Output("shot_hash"),
                 io.Boolean.Output("latent_relay", display_name="latent relay"),
                 io.Boolean.Output("second_sampling", display_name="second sampling"),
+                io.String.Output("second_sampling_mode", display_name="processing mode"),
+                io.Boolean.Output("super_resolution_second_pass", display_name="super-res 2nd pass"),
+                io.Boolean.Output("latent_upscale_second_pass", display_name="latent upscale 2nd pass"),
+                io.Boolean.Output("super_resolution_only", display_name="super-res only"),
             ],
         )
 
@@ -150,6 +154,10 @@ class TheodoreDirectorSelectShot(io.ComfyNode):
             selected.shot_hash,
             selected.latent_relay,
             selected.second_sampling,
+            selected.second_sampling_mode,
+            selected.super_resolution_second_pass,
+            selected.latent_upscale_second_pass,
+            selected.super_resolution_only,
         )
 
 
@@ -306,11 +314,18 @@ class TheodoreDirectorCommitResult(io.ComfyNode):
             else None
         )
         # 为每个新结果记录一采/二采阶段；没有该伴随文件的旧视频仍按 legacy_unknown 兼容。
+        processing_mode = shot.shot.second_sampling_mode.value
+        stage = (
+            "second_pass"
+            if shot.shot.second_sampling
+            else "upscaled" if shot.shot.second_sampling_mode is SecondSamplingMode.SUPER_RESOLUTION_ONLY else "first_pass"
+        )
         write_video_result_metadata(
             video,
-            stage="second_pass" if shot.second_sampling else "first_pass",
+            stage=stage,
             shot_id=shot.shot.id,
             plan_hash=plan.plan_hash,
+            processing_mode=processing_mode,
         )
         result = commit_shot_result(
             result_path=root / paths.shot_result_path,
@@ -351,6 +366,10 @@ class TheodoreDirectorPostprocessSecondPassSource(io.ComfyNode):
                 io.Audio.Output("audio"),
                 io.Float.Output("fps"),
                 io.Int.Output("seed"),
+                io.String.Output("processing_mode", display_name="processing mode"),
+                io.Boolean.Output("super_resolution_second_pass", display_name="super-res 2nd pass"),
+                io.Boolean.Output("latent_upscale_second_pass", display_name="latent upscale 2nd pass"),
+                io.Boolean.Output("super_resolution_only", display_name="super-res only"),
             ],
         )
 
@@ -371,6 +390,10 @@ class TheodoreDirectorPostprocessSecondPassSource(io.ComfyNode):
             components.audio,
             float(components.frame_rate),
             request.shot.seed,
+            request.processing_mode,
+            request.processing_mode == SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value,
+            request.processing_mode == SecondSamplingMode.LATENT_UPSCALE_SECOND_PASS.value,
+            request.processing_mode == SecondSamplingMode.SUPER_RESOLUTION_ONLY.value,
         )
 
     @classmethod
@@ -418,12 +441,14 @@ class TheodoreDirectorSaveSecondPass(io.ComfyNode):
             raise ValueError(f"拒绝把二采结果写入 ComfyUI output 之外: {output_path}") from error
 
         video.save_to(str(output_path), format=Types.VideoContainer("mp4"), codec="auto")
+        stage = "upscaled" if request.processing_mode == SecondSamplingMode.SUPER_RESOLUTION_ONLY.value else "second_pass"
         write_video_result_metadata(
             output_path,
-            stage="second_pass",
+            stage=stage,
             shot_id=request.shot.shot.id,
             plan_hash=request.plan.plan_hash,
             source_path=request.source_relative,
+            processing_mode=request.processing_mode,
         )
         relative = output_path.relative_to(root).as_posix()
         return io.NodeOutput(

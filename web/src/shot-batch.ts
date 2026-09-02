@@ -18,7 +18,7 @@ export function createShot(ordinal: number, durationSeconds = 5): DirectorShot {
     durationSeconds,
     enabled: true,
     latentRelay: true,
-    secondSampling: true,
+    secondSamplingMode: "super_resolution_second_pass",
     seed: null,
     disabledAssetIds: [],
   };

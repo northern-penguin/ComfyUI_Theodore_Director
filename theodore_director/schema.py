@@ -14,7 +14,7 @@ from typing import Any
 
 from .errors import PlanValidationError
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 _ALIAS_INVALID = re.compile(r"[\s{}]")
 
 
@@ -22,6 +22,15 @@ class AssetKind(str, Enum):
     IMAGE = "image"
     VIDEO = "video"
     AUDIO = "audio"
+
+
+class SecondSamplingMode(str, Enum):
+    """逐镜头高清处理方式；字符串值会持久化到导播台计划中。"""
+
+    OFF = "off"
+    SUPER_RESOLUTION_SECOND_PASS = "super_resolution_second_pass"
+    LATENT_UPSCALE_SECOND_PASS = "latent_upscale_second_pass"
+    SUPER_RESOLUTION_ONLY = "super_resolution_only"
 
 
 @dataclass(frozen=True)
@@ -82,7 +91,7 @@ class Shot:
     duration_seconds: float
     enabled: bool = True
     latent_relay: bool = True
-    second_sampling: bool = True
+    second_sampling_mode: SecondSamplingMode = SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS
     negative_prompt: str = ""
     seed: int | None = None
     disabled_asset_ids: tuple[str, ...] = ()
@@ -96,6 +105,12 @@ class Shot:
         if duration <= 0:
             raise PlanValidationError(f"镜头 {shot_id} 的时长必须大于 0")
         seed_value = data.get("seed")
+        try:
+            processing_mode = SecondSamplingMode(
+                str(data.get("secondSamplingMode", SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value))
+            )
+        except ValueError as exc:
+            raise PlanValidationError(f"镜头 {shot_id} 的高清处理模式无效: {data.get('secondSamplingMode')!r}") from exc
         return cls(
             id=shot_id,
             title=str(data.get("title") or shot_id),
@@ -104,12 +119,19 @@ class Shot:
             enabled=bool(data.get("enabled", True)),
             # 旧计划默认开启，保持 V6 原有的逐段 latent 接力行为。
             latent_relay=bool(data.get("latentRelay", True)),
-            # 旧双采工作流始终执行第二采，缺省开启才能无损迁移。
-            second_sampling=bool(data.get("secondSampling", True)),
+            second_sampling_mode=processing_mode,
             negative_prompt=str(data.get("negativePrompt", "")),
             seed=None if seed_value is None else int(seed_value),
             disabled_asset_ids=tuple(str(item) for item in data.get("disabledAssetIds", []) if str(item)),
         )
+
+    @property
+    def second_sampling(self) -> bool:
+        """兼容旧工作流：只有真正重新采样的两种模式返回 True。"""
+        return self.second_sampling_mode in {
+            SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS,
+            SecondSamplingMode.LATENT_UPSCALE_SECOND_PASS,
+        }
 
 
 @dataclass(frozen=True)
@@ -193,7 +215,7 @@ class Plan:
                     "durationSeconds": shot.duration_seconds,
                     "enabled": shot.enabled,
                     "latentRelay": shot.latent_relay,
-                    "secondSampling": shot.second_sampling,
+                    "secondSamplingMode": shot.second_sampling_mode.value,
                     "seed": shot.seed,
                     "disabledAssetIds": list(shot.disabled_asset_ids),
                 }
@@ -209,7 +231,7 @@ def _optional_float(value: Any) -> float | None:
 
 
 def migrate_plan(data: dict[str, Any]) -> dict[str, Any]:
-    """将历史协议逐级迁移；v4 增加逐镜头二次采样开关。"""
+    """将历史协议逐级迁移；v5 将二采开关升级为可扩展模式。"""
     version = int(data.get("schemaVersion", 1))
     if version > SCHEMA_VERSION:
         raise PlanValidationError(f"计划版本 {version} 高于当前支持版本 {SCHEMA_VERSION}")
@@ -225,7 +247,14 @@ def migrate_plan(data: dict[str, Any]) -> dict[str, Any]:
         shot = dict(item)
         # v1/v2 只有全局接力流程，缺省值必须为开才能无损迁移。
         shot.setdefault("latentRelay", True)
-        shot.setdefault("secondSampling", True)
+        if "secondSamplingMode" not in shot:
+            # v4 及更早版本只有 BOOL；开启即对应 V7.2 的 RTX 超分二采。
+            shot["secondSamplingMode"] = (
+                SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value
+                if bool(shot.get("secondSampling", True))
+                else SecondSamplingMode.OFF.value
+            )
+        shot.pop("secondSampling", None)
         shots.append(shot)
     migrated["shots"] = shots
     migrated["schemaVersion"] = SCHEMA_VERSION
@@ -289,7 +318,7 @@ def load_plan(value: str | dict[str, Any]) -> Plan:
 
 
 DEFAULT_PLAN = {
-    "schemaVersion": 4,
+    "schemaVersion": SCHEMA_VERSION,
     "project": {"id": "", "name": "Theodore Project", "runId": "run_001"},
     "defaults": {"fps": 24, "baseSeed": 123456790},
     "promptPrefix": "",
@@ -309,7 +338,7 @@ DEFAULT_PLAN = {
             "durationSeconds": 5,
             "enabled": True,
             "latentRelay": True,
-            "secondSampling": True,
+            "secondSamplingMode": SecondSamplingMode.SUPER_RESOLUTION_SECOND_PASS.value,
         }
     ],
 }
