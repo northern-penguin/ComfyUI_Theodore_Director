@@ -52,3 +52,9 @@ export function standaloneProcessingBlockReason(item: GeneratedVideoItem, target
 export function canRunStandaloneSecondPass(item: GeneratedVideoItem, targetMode: PostprocessMode): boolean {
   return standaloneProcessingBlockReason(item, targetMode) === null;
 }
+
+export function availableStandaloneProcessingModes(item: GeneratedVideoItem): PostprocessMode[] {
+  // 每条结果独立计算可用方式，避免顶部选择把本来可执行的操作错误隐藏或禁用。
+  const modes: PostprocessMode[] = ["super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"];
+  return modes.filter((mode) => canRunStandaloneSecondPass(item, mode));
+}

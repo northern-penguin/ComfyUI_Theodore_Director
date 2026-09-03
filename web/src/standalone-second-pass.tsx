@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { Language } from "./i18n";
-import { canRunStandaloneSecondPass, normalizeGeneratedResults, standaloneProcessingBlockReason, type GeneratedVideoResponse } from "./generated-results";
+import { availableStandaloneProcessingModes, normalizeGeneratedResults, type GeneratedVideoResponse } from "./generated-results";
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl } from "./media";
 import { postprocessShotEntries } from "./postprocess-selection";
@@ -35,19 +35,13 @@ function postprocessModeLabel(mode: PostprocessMode, language: Language): string
   return language === "zh" ? "超分二采" : "Super-res 2nd pass";
 }
 
-function blockedLabel(reason: ReturnType<typeof standaloneProcessingBlockReason>, language: Language): string {
-  if (reason === "second_pass_requires_upscale_only") return language === "zh" ? "二采后仅可只超分" : "2nd pass: upscale only";
-  if (reason === "upscaled_is_terminal") return language === "zh" ? "只超分后不可再处理" : "Upscaled: no further processing";
-  return language === "zh" ? "不可处理" : "Unavailable";
-}
-
 export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: Props) {
   const entries = useMemo(() => postprocessShotEntries(plan), [plan]);
   const [states, setStates] = useState<Record<string, ShotState>>({});
   const [jobs, setJobs] = useState<Record<string, JobState>>({});
   const [preview, setPreview] = useState<PreviewTarget | null>(null);
   const [revision, setRevision] = useState(0);
-  const [processingMode, setProcessingMode] = useState<PostprocessMode>("super_resolution_second_pass");
+  const [selectedModes, setSelectedModes] = useState<Record<string, PostprocessMode>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +62,7 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
     return () => { cancelled = true; };
   }, [plan.project.name, plan.project.runId, plan.shots.map((shot) => shot.id).join("|"), revision]);
 
-  const startSecondPass = async (shotId: string, path: string) => {
+  const startSecondPass = async (shotId: string, path: string, processingMode: PostprocessMode) => {
     if (!queueSecondPass) return;
     const jobKey = `${path}:${processingMode}`;
     setJobs((current) => ({ ...current, [jobKey]: { state: "queued" } }));
@@ -90,7 +84,7 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
   return <section class="td-postprocess td-second-pass-panel">
     <div class="td-post-header">
       <div><h2>{language === "zh" ? "单独二采" : "Standalone processing"}</h2><p>{language === "zh" ? "对满意结果执行所选高清处理；二采结果只能继续只超分，不重跑一采或启动 Impact 循环。" : "Process a selected result; second-pass outputs may only continue with Super-res only, without rerunning the first pass or Impact loop."}</p></div>
-      <div class="td-post-actions td-second-pass-mode"><label><span>{language === "zh" ? "处理方式" : "Processing mode"}</span><select value={processingMode} onChange={(event) => setProcessingMode(event.currentTarget.value as PostprocessMode)}><option value="super_resolution_second_pass">{postprocessModeLabel("super_resolution_second_pass", language)}</option><option value="latent_upscale_second_pass">{postprocessModeLabel("latent_upscale_second_pass", language)}</option><option value="super_resolution_only">{postprocessModeLabel("super_resolution_only", language)}</option></select></label><button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
+      <div class="td-post-actions"><button onClick={() => setRevision((current) => current + 1)}>↻ {language === "zh" ? "刷新结果" : "Refresh"}</button></div>
     </div>
     {!queueSecondPass && <div class="td-post-warning">{language === "zh" ? "当前工作流缺少后处理二采支流，请重新载入仓库中的 V7 导播台示例工作流。" : "This workflow does not contain the standalone second-pass branch. Reload the V7 example workflow from the repository."}</div>}
     <div class="td-post-shot-list">
@@ -105,15 +99,19 @@ export function StandaloneSecondPassPanel({ plan, language, queueSecondPass }: P
             : !results.length ? <div class="td-post-shot-empty">{language === "zh" ? "没有可用的生成结果" : "No generated result available"}</div>
             : <div class="td-post-result-list">{results.map((item) => {
               const url = comfyViewUrl(item.path, "output");
-              const job = jobs[`${item.path}:${processingMode}`];
-              const blockReason = standaloneProcessingBlockReason(item, processingMode);
-              const eligible = canRunStandaloneSecondPass(item, processingMode);
+              const availableModes = availableStandaloneProcessingModes(item);
+              // 用户对每条视频分别选择处理方式；阶段变化时自动回退到该结果的第一个合法方式。
+              const selectedMode = availableModes.includes(selectedModes[item.path]) ? selectedModes[item.path] : availableModes[0];
+              const job = selectedMode ? jobs[`${item.path}:${selectedMode}`] : undefined;
               return <div class="td-second-pass-result" key={item.path}>
                 <button class="td-post-result-choice" onClick={() => url && setPreview({ path: item.path, title: `${entry.shot.id} · ${entry.shot.title}` })}>
                   {url ? <LazyVideoThumbnail src={url} alt={assetFileName(item.path)}/> : <div class="td-result-thumb">×</div>}
                   <span><strong>{stageLabel(item.stage, item.processingMode, language)}{(item.stage === "legacy_unknown" || !item.stage) && <em>{language === "zh" ? "兼容" : "Compatible"}</em>}</strong><span title={item.path}>{assetFileName(item.path)}</span><small>{item.bytes ? `${(item.bytes / 1024 / 1024).toFixed(1)} MB` : ""}</small></span>
                 </button>
-                <button class="primary td-second-pass-run" title={!eligible ? blockedLabel(blockReason, language) : undefined} disabled={!queueSecondPass || !eligible || job?.state === "queued"} onClick={() => void startSecondPass(entry.shot.id, item.path)}>{!eligible ? blockedLabel(blockReason, language) : job?.state === "queued" ? (language === "zh" ? "排队/执行中…" : "Queued/running…") : job?.state === "done" ? (language === "zh" ? "处理完成" : "Completed") : postprocessModeLabel(processingMode, language)}</button>
+                <div class="td-second-pass-actions">
+                  {selectedMode ? <select aria-label={language === "zh" ? "该视频可用的处理方式" : "Available processing modes for this video"} value={selectedMode} onChange={(event) => setSelectedModes((current) => ({ ...current, [item.path]: event.currentTarget.value as PostprocessMode }))}>{availableModes.map((mode) => <option value={mode}>{postprocessModeLabel(mode, language)}</option>)}</select> : <span class="td-second-pass-terminal">{language === "zh" ? "只超分后不可再处理" : "Upscaled: no further processing"}</span>}
+                  <button class="primary td-second-pass-run" disabled={!queueSecondPass || !selectedMode || job?.state === "queued"} onClick={() => selectedMode && void startSecondPass(entry.shot.id, item.path, selectedMode)}>{job?.state === "queued" ? (language === "zh" ? "排队/执行中…" : "Queued/running…") : job?.state === "done" ? (language === "zh" ? "处理完成" : "Completed") : (language === "zh" ? "开始处理" : "Process")}</button>
+                </div>
                 {job?.state === "error" && <div class="td-second-pass-error">{job.message}</div>}
               </div>;
             })}</div>}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canRunStandaloneSecondPass, generatedResultNumber, normalizeGeneratedResults } from "./generated-results";
+import { availableStandaloneProcessingModes, canRunStandaloneSecondPass, generatedResultNumber, normalizeGeneratedResults } from "./generated-results";
 
 describe("generated video results", () => {
   it("sorts the new result list from newest to oldest", () => {
@@ -44,5 +44,15 @@ describe("standalone second-pass eligibility", () => {
   it("treats an upscaled result as terminal", () => {
     const modes = ["super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"] as const;
     for (const mode of modes) expect(canRunStandaloneSecondPass({ path: "upscaled.mp4", stage: "upscaled" }, mode)).toBe(false);
+  });
+
+  it("lists processing modes independently for each result stage", () => {
+    expect(availableStandaloneProcessingModes({ path: "first.mp4", stage: "first_pass" })).toEqual([
+      "super_resolution_second_pass",
+      "latent_upscale_second_pass",
+      "super_resolution_only",
+    ]);
+    expect(availableStandaloneProcessingModes({ path: "second.mp4", stage: "second_pass" })).toEqual(["super_resolution_only"]);
+    expect(availableStandaloneProcessingModes({ path: "upscaled.mp4", stage: "upscaled" })).toEqual([]);
   });
 });
