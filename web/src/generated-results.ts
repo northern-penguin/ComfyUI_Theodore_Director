@@ -1,3 +1,5 @@
+import type { PostprocessMode } from "./types";
+
 export interface GeneratedVideoItem {
   path: string;
   bytes?: number;
@@ -38,7 +40,15 @@ export function generatedResultNumber(path: string, fallback: number): number {
   return match ? Number(match[1]) : fallback;
 }
 
-export function canRunStandaloneSecondPass(item: GeneratedVideoItem): boolean {
-  // 没有伴随元数据的旧结果按兼容来源处理；所有明确的高清处理结果均禁止重复处理。
-  return item.stage !== "second_pass" && item.stage !== "upscaled";
+export type StandaloneProcessingBlockReason = "second_pass_requires_upscale_only" | "upscaled_is_terminal";
+
+export function standaloneProcessingBlockReason(item: GeneratedVideoItem, targetMode: PostprocessMode): StandaloneProcessingBlockReason | null {
+  // 一采和无伴随元数据的旧结果仍兼容三种处理；二采结果只允许追加一次纯 RTX 超分。
+  if (item.stage === "second_pass" && targetMode !== "super_resolution_only") return "second_pass_requires_upscale_only";
+  if (item.stage === "upscaled") return "upscaled_is_terminal";
+  return null;
+}
+
+export function canRunStandaloneSecondPass(item: GeneratedVideoItem, targetMode: PostprocessMode): boolean {
+  return standaloneProcessingBlockReason(item, targetMode) === null;
 }

@@ -69,13 +69,61 @@ def test_second_pass_request_accepts_first_pass_and_disabled_shot(tmp_path):
     assert parsed_disabled.shot.shot.enabled is False
 
 
-def test_second_pass_request_rejects_known_second_pass(tmp_path):
+def test_second_pass_request_allows_only_upscale_for_known_second_pass(tmp_path):
+    plan = make_plan()
+    video = create_video(tmp_path)
+    write_video_result_metadata(
+        video,
+        stage="second_pass",
+        shot_id="shot_001",
+        plan_hash="hash",
+        processing_mode="latent_upscale_second_pass",
+    )
+
+    with pytest.raises(ValueError, match="只能继续执行只超分"):
+        parse_second_pass_request(tmp_path, request(plan, video, tmp_path))
+    with pytest.raises(ValueError, match="只能继续执行只超分"):
+        parse_second_pass_request(
+            tmp_path,
+            request(plan, video, tmp_path, processing_mode="latent_upscale_second_pass"),
+        )
+
+    parsed = parse_second_pass_request(
+        tmp_path,
+        request(plan, video, tmp_path, processing_mode="super_resolution_only"),
+    )
+    assert parsed.output_prefix.endswith("/shot_001_video_upscaled")
+
+
+def test_second_pass_request_treats_legacy_v72_second_pass_as_upscale_only(tmp_path):
     plan = make_plan()
     video = create_video(tmp_path)
     write_video_result_metadata(video, stage="second_pass", shot_id="shot_001", plan_hash="hash")
 
-    with pytest.raises(ValueError, match="不能再次"):
-        parse_second_pass_request(tmp_path, request(plan, video, tmp_path))
+    metadata = read_video_result_metadata(video)
+    assert metadata is not None
+    assert metadata.processing_mode == "super_resolution_second_pass"
+    parsed = parse_second_pass_request(
+        tmp_path,
+        request(plan, video, tmp_path, processing_mode="super_resolution_only"),
+    )
+    assert parsed.processing_mode == "super_resolution_only"
+
+
+def test_second_pass_request_rejects_upscaled_result_for_every_mode(tmp_path):
+    plan = make_plan()
+    video = create_video(tmp_path)
+    write_video_result_metadata(
+        video,
+        stage="upscaled",
+        shot_id="shot_001",
+        plan_hash="hash",
+        processing_mode="super_resolution_only",
+    )
+
+    for mode in ("super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"):
+        with pytest.raises(ValueError, match="只超分结果不能再次处理"):
+            parse_second_pass_request(tmp_path, request(plan, video, tmp_path, processing_mode=mode))
 
 
 @pytest.mark.parametrize(

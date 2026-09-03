@@ -26,11 +26,23 @@ describe("generated video results", () => {
 });
 
 describe("standalone second-pass eligibility", () => {
-  it("accepts first-pass and legacy results but blocks known second-pass results", () => {
-    expect(canRunStandaloneSecondPass({ path: "first.mp4", stage: "first_pass" })).toBe(true);
-    expect(canRunStandaloneSecondPass({ path: "legacy.mp4", stage: "legacy_unknown" })).toBe(true);
-    expect(canRunStandaloneSecondPass({ path: "old.mp4" })).toBe(true);
-    expect(canRunStandaloneSecondPass({ path: "second.mp4", stage: "second_pass" })).toBe(false);
-    expect(canRunStandaloneSecondPass({ path: "upscaled.mp4", stage: "upscaled" })).toBe(false);
+  it("allows first-pass and legacy results to use every processing mode", () => {
+    const modes = ["super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"] as const;
+    for (const mode of modes) {
+      expect(canRunStandaloneSecondPass({ path: "first.mp4", stage: "first_pass" }, mode)).toBe(true);
+      expect(canRunStandaloneSecondPass({ path: "legacy.mp4", stage: "legacy_unknown" }, mode)).toBe(true);
+      expect(canRunStandaloneSecondPass({ path: "old.mp4" }, mode)).toBe(true);
+    }
+  });
+
+  it("allows second-pass results to use only super-resolution without diffusion", () => {
+    expect(canRunStandaloneSecondPass({ path: "second.mp4", stage: "second_pass" }, "super_resolution_second_pass")).toBe(false);
+    expect(canRunStandaloneSecondPass({ path: "second.mp4", stage: "second_pass" }, "latent_upscale_second_pass")).toBe(false);
+    expect(canRunStandaloneSecondPass({ path: "second.mp4", stage: "second_pass" }, "super_resolution_only")).toBe(true);
+  });
+
+  it("treats an upscaled result as terminal", () => {
+    const modes = ["super_resolution_second_pass", "latent_upscale_second_pass", "super_resolution_only"] as const;
+    for (const mode of modes) expect(canRunStandaloneSecondPass({ path: "upscaled.mp4", stage: "upscaled" }, mode)).toBe(false);
   });
 });

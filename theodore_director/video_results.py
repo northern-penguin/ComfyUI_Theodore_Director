@@ -97,6 +97,19 @@ def video_result_payload(root: Path, video_path: Path) -> dict[str, Any]:
     }
 
 
+def postprocess_rejection_reason(metadata: VideoResultMetadata | None, processing_mode: str) -> str:
+    """按源结果阶段与目标模式判断是否允许继续后处理。"""
+    if metadata is None or metadata.stage in {"first_pass", "legacy_unknown"}:
+        return ""
+    if metadata.stage == "second_pass":
+        if processing_mode == SecondSamplingMode.SUPER_RESOLUTION_ONLY.value:
+            return ""
+        return "二采结果只能继续执行只超分，不能再次进行扩散采样"
+    if metadata.stage == "upscaled":
+        return "只超分结果不能再次处理"
+    return "当前结果阶段不能继续处理"
+
+
 def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> SecondPassRequest:
     """校验前端请求，只允许当前运行目录中属于该镜头的一采或旧结果。"""
     try:
@@ -126,8 +139,9 @@ def parse_second_pass_request(root: Path, value: str | dict[str, Any]) -> Second
     if candidate not in available:
         raise ValueError(f"选择的视频不属于镜头 {shot_id} 的生成结果: {source_value}")
     metadata = read_video_result_metadata(candidate)
-    if metadata and metadata.stage in {"second_pass", "upscaled"}:
-        raise ValueError("已经过高清处理的结果不能再次处理")
+    rejection_reason = postprocess_rejection_reason(metadata, processing_mode)
+    if rejection_reason:
+        raise ValueError(rejection_reason)
 
     shot = select_shot_for_postprocess(plan, shot_id)
     paths = build_output_paths_from_values(plan.project_name, plan.run_id, shot_id, max(0, shot.active_index))
