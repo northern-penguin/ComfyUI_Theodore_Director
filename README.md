@@ -1,8 +1,8 @@
 # ComfyUI Theodore Director
 
-一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带支持四种高清处理模式的 V7.3 导播台工作流。
+一个面向分段视频生产的开源 ComfyUI 导播台。核心层只描述“项目、素材、分镜、时长与连续性”，模型差异由适配器承担；首个适配器面向 MiniMax H3，并附带支持四种高清处理模式的 V7.4 导播台工作流。
 
-Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7.3 workflow with four per-shot processing modes is included.
+Theodore Director is an open-source, model-agnostic storyboard director for ComfyUI. Model-specific limits live in adapters; the first adapter targets MiniMax H3. A ready-to-import V7.4 workflow with four per-shot processing modes is included.
 
 ## 版权说明
 
@@ -33,9 +33,9 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 然后导入仓库内的成品工作流：
 
-- [V7.3 导播台](workflows/V7.3导播台.json)
+- [V7.4 导播台](workflows/V7.4导播台.json)
 
-仓库不再附带旧版 V6/V7.2 示例；`V7.3导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
+仓库不再附带旧版 V6/V7.2 示例；`V7.4导播台.json` 是当前唯一维护的示例工作流。工作流本身还需要下表中的第三方节点，模型文件名和放置位置沿用工作流节点中的配置。
 
 | 依赖 | V7 | 用途 |
 |---|---:|---|
@@ -57,13 +57,20 @@ Latent 方案 C 需要模型 `minimax_h3_latent_upscaler_3d_fp16.safetensors`，
 3. 给素材设置唯一别名，例如 `hero_front`、`location_night`、`walk_cycle`。
 4. 在分镜提示词中使用 `{{ref:hero_front}}`。若视频启用了伴音，可用 `{{ref:walk_cycle.audio}}` 单独指代其音轨。
 5. 设置每个分镜的时长、启用状态和高清处理方式；可选关闭、超分二采、Latent 放大二采或只超分，然后保存并正常 Queue。
-6. 抽卡后可进入“后处理 → 单独二采”，选择三种高清处理方式之一处理满意的一采结果；该任务不会重跑一采或启动 Impact 循环。
-7. 全部分镜完成后进入“后处理 → 合并视频”，逐镜头选择一个结果并点击“合并所选视频”。
+6. 可在右侧“AI 提示词优化”中连接本机 Ollama，优化当前镜头或串行优化全部启用镜头；结果通过严格 H3 校验后才可确认写回。模型会继续驻留，需点击“释放当前模型”手动释放。
+7. 抽卡后可进入“后处理 → 单独二采”，选择三种高清处理方式之一处理满意的一采结果；该任务不会重跑一采或启动 Impact 循环。
+8. 全部分镜完成后进入“后处理 → 合并视频”，逐镜头选择一个结果并点击“合并所选视频”。
    也可以点击“打开结果文件夹”，直接在系统文件管理器中查看当前 Project name 与 Run ID 的全部分镜和合并结果。
-8. 需要清理结果时进入“后处理 → 删除视频”，逐条确认后将分镜视频或合并视频移入系统回收站；素材、latent 和尾帧不会被删除。
-9. 若要清除某个 Project name + Run ID 的全部生成内容，可在“项目设置”底部点击“清空项目”。确认后该运行目录会整体移入系统回收站，包括视频、latent、尾帧、分镜结果、manifest 和元数据；输入素材及其他 Run 不会被删除。
-10. 若只想重新编写分镜，可点击同一区域的“清空分镜”。现有分镜及其正向、负向提示词会被清除，并保留一个空白镜头；素材库、全局提示词前后缀和磁盘生成文件不受影响。
-11. “清空素材库”只移除当前工作流计划中的素材引用，并清理分镜的素材禁用记录；本地输入文件不会被删除，提示词中的 `{{ref:别名}}` 文本也会保留，直到重新导入对应别名的素材。
+9. 需要清理结果时进入“后处理 → 删除视频”，逐条确认后将分镜视频或合并视频移入系统回收站；素材、latent 和尾帧不会被删除。
+10. 若要清除某个 Project name + Run ID 的全部生成内容，可在“项目设置”底部点击“清空项目”。确认后该运行目录会整体移入系统回收站，包括视频、latent、尾帧、分镜结果、manifest 和元数据；输入素材及其他 Run 不会被删除。
+11. 若只想重新编写分镜，可点击同一区域的“清空分镜”。现有分镜及其正向、负向提示词会被清除，并保留一个空白镜头；素材库、全局提示词前后缀和磁盘生成文件不受影响。
+12. “清空素材库”只移除当前工作流计划中的素材引用，并清理分镜的素材禁用记录；本地输入文件不会被删除，提示词中的 `{{ref:别名}}` 文本也会保留，直到重新导入对应别名的素材。
+
+### 本机 Ollama 提示词优化
+
+V7.4 第一版只连接 `127.0.0.1` 或 `localhost` 上的 Ollama，默认端口为 `11434`。用户需要自行安装 Ollama、启动服务并提前下载模型；导播台不会下载模型，也不会把 Ollama 地址、端口和模型名写入工作流。AI 会保留剧情、素材引用及 `<d>[Language] ...</d>` 对白，整理为 H3 基础或完整参考结构。首次结果不合格时会根据确定性错误自动修复一次，仍不合格则禁止写回，但不会限制旧提示词继续保存和生成。
+
+批量优化只处理启用镜头并逐个调用本地模型，候选不会自动覆盖分镜。用户可以逐条确认，也可以一次应用所有校验通过且上下文未变化的结果；提示词、时长、素材状态或全局前后缀变化后，旧候选会标为过期。Ollama 调用使用长期驻留，完成后不会自动释放显存；请在准备运行 H3 前点击“释放当前模型”。
 
 固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
 
@@ -146,7 +153,7 @@ npm test
 npm run build
 ```
 
-当前分发的 `V7.3导播台.json` 接受 JSON 结构、链接端点、四模式主流程、三模式后处理支流与版权说明测试。[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
+当前分发的 `V7.4导播台.json` 接受 JSON 结构、链接端点、四模式主流程、三模式后处理支流与版权说明测试。[build_v6_workflows.py](tools/build_v6_workflows.py) 仅保留为旧 V6 转换工具。项目只做静态工作流验收；模型实际推理由用户在自己的显存、模型和自定义节点组合上执行。
 
 ## License
 

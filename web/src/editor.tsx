@@ -8,6 +8,7 @@ import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoIt
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
+import { PromptOptimizerPanel } from "./prompt-optimizer-panel";
 import { availableReferenceAssets, clearAssetReferences, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import { appendShots, resetStoryboard } from "./shot-batch";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass, SecondSamplingMode } from "./types";
@@ -309,6 +310,13 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
             <summary><strong>{t(language, "preview")}</strong><span class="td-summary-counts">Picture {preview?.slots.filter((x) => x.kind === "picture").length ?? 0}/9 · Video {preview?.slots.filter((x) => x.kind === "video").length ?? 0}/3 · Audio {preview?.audioCount ?? 0}/3 · Files {preview?.mixedFiles ?? 0}/12</span></summary>
             <div class="td-preview-body">{preview?.errors.length ? <ul class="errors">{preview.errors.map((error) => <li>{error}</li>)}</ul> : <p class="ok">{t(language, "noErrors")}</p>}<ol>{preview?.slots.map((slot) => <li><code>{slot.label}</code> ← {slot.alias}</li>)}</ol><pre>{preview?.compiledPrompt}</pre></div>
           </details>
+          <PromptOptimizerPanel
+            plan={plan}
+            currentShotId={shot.id}
+            language={language}
+            onSelectShot={(shotId) => { const index = plan.shots.findIndex((item) => item.id === shotId); if (index >= 0) setSelected(index); }}
+            onApplyPrompts={(updates) => mutate((draft) => { for (const item of draft.shots) if (updates[item.id] !== undefined) item.prompt = updates[item.id]; })}
+          />
           <details open={resultOpen} onToggle={(event) => setResultOpen(event.currentTarget.open)}>
             <summary><strong>{language === "zh" ? "生成结果" : "Generated result"}</strong><span class={`td-result-state ${generatedResults.length ? "found" : ""}`}>{generatedLoading ? (language === "zh" ? "查询中" : "Checking") : generatedResults.length ? (language === "zh" ? `${generatedResults.length} 个结果` : `${generatedResults.length} results`) : (language === "zh" ? "空" : "Empty")}</span></summary>
             <div class="td-preview-body td-result-body">

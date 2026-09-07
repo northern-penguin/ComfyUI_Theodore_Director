@@ -5,7 +5,7 @@ from theodore_director.schema import load_plan
 
 
 COPYRIGHT_NOTICE = "### 本工作流由抖音博主Theodore（抖音号:q1503623946）以及 b站up主 南极来の企鹅制作。"
-WORKFLOW_NAME = "V7.3导播台.json"
+WORKFLOW_NAME = "V7.4导播台.json"
 REQUIRED_DIRECTOR_NODES = {
     "TheodoreDirector_Project",
     "TheodoreDirector_SelectShot",
@@ -40,7 +40,7 @@ def test_distributed_workflow_is_structurally_valid():
     plan = load_plan(project["widgets_values"][0])
     assert len(plan.active_shots) >= 1
     assert plan.schema_version == 5
-    assert data["extra"]["theodoreDirector"]["workflowVersion"] == "7.3"
+    assert data["extra"]["theodoreDirector"]["workflowVersion"] == "7.4"
     assert data["extra"]["theodoreDirector"]["variant"] == "multi_processing"
 
 

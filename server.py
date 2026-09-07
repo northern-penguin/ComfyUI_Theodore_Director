@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from aiohttp import web
+import json
 from pathlib import Path
 import tempfile
+
+from aiohttp import web
 
 from .theodore_director.paths import find_generated_videos
 from .theodore_director.video_results import video_result_payload
@@ -22,6 +24,16 @@ from .theodore_director.postprocess import (
     validate_merge_selections,
 )
 from .theodore_director.uploads import allocate_upload_path
+from .theodore_director.schema import load_plan
+from .theodore_director.ollama import chat as ollama_chat, list_models, list_running_models, unload_model
+from .theodore_director.prompt_optimizer import (
+    ollama_response_schema,
+    optimization_context,
+    optimizer_system_prompt,
+    parse_optimizer_response,
+    repair_system_prompt,
+    validate_optimized_prompt,
+)
 
 _ROUTES_REGISTERED = False
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
@@ -64,6 +76,101 @@ def register_routes() -> None:
     @routes.get("/theodore-director/v1/health")
     async def health(_request):
         return web.json_response({"ok": True, "apiVersion": 1})
+
+    @routes.get("/theodore-director/v1/ollama/models")
+    async def ollama_models(request):
+        """枚举本机 Ollama 已安装模型，不接受远程主机地址。"""
+        try:
+            models = await list_models(
+                request.rel_url.query.get("port", "11434"),
+                request.rel_url.query.get("host", "127.0.0.1"),
+            )
+            return web.json_response({"models": models})
+        except (RuntimeError, TypeError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.get("/theodore-director/v1/ollama/running")
+    async def ollama_running(request):
+        """查询 Ollama 当前驻留模型，供前端显示释放状态。"""
+        try:
+            models = await list_running_models(
+                request.rel_url.query.get("port", "11434"),
+                request.rel_url.query.get("host", "127.0.0.1"),
+            )
+            return web.json_response({"models": models})
+        except (RuntimeError, TypeError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.post("/theodore-director/v1/ollama/unload")
+    async def ollama_unload(request):
+        """只释放用户当前选择的本机 Ollama 模型。"""
+        try:
+            payload = await request.json()
+            model = str(payload.get("model", ""))
+            await unload_model(payload.get("port", 11434), model, payload.get("host", "127.0.0.1"))
+            return web.json_response({"ok": True, "model": model})
+        except (RuntimeError, TypeError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.post("/theodore-director/v1/prompt/optimize")
+    async def optimize_prompt(request):
+        """优化一个镜头，失败时按确定性校验结果自动修复一次。"""
+        try:
+            if request.content_length is not None and request.content_length > 4 * 1024 * 1024:
+                raise ValueError("提示词优化请求不能超过 4 MiB")
+            payload = await request.json()
+            plan = load_plan(payload.get("plan", {}))
+            shot_id = str(payload.get("shotId", ""))
+            shot = next((item for item in plan.shots if item.id == shot_id), None)
+            if shot is None:
+                raise ValueError(f"计划中不存在镜头: {shot_id}")
+            context = optimization_context(plan, shot)
+            mode = str(context["mode"])
+            messages = [
+                {"role": "system", "content": optimizer_system_prompt(mode)},
+                {"role": "user", "content": json.dumps(context, ensure_ascii=False, indent=2)},
+            ]
+            content = await ollama_chat(
+                payload.get("port", 11434),
+                str(payload.get("model", "")),
+                messages,
+                ollama_response_schema(),
+                payload.get("host", "127.0.0.1"),
+            )
+            candidate, notes = parse_optimizer_response(content)
+            validation = validate_optimized_prompt(plan, shot, shot.prompt, candidate)
+            repaired = False
+            attempts = 1
+            if not validation.valid:
+                repair_context = {
+                    "sourceContext": context,
+                    "invalidPrompt": candidate,
+                    "validatorErrors": list(validation.errors),
+                }
+                repair_content = await ollama_chat(
+                    payload.get("port", 11434),
+                    str(payload.get("model", "")),
+                    [
+                        {"role": "system", "content": repair_system_prompt(mode)},
+                        {"role": "user", "content": json.dumps(repair_context, ensure_ascii=False, indent=2)},
+                    ],
+                    ollama_response_schema(),
+                    payload.get("host", "127.0.0.1"),
+                )
+                candidate, repair_notes = parse_optimizer_response(repair_content)
+                notes.extend(repair_notes)
+                validation = validate_optimized_prompt(plan, shot, shot.prompt, candidate)
+                repaired = True
+                attempts = 2
+            return web.json_response({
+                "optimizedPrompt": candidate,
+                "notes": list(dict.fromkeys(notes)),
+                "validation": validation.to_dict(),
+                "repaired": repaired,
+                "attempts": attempts,
+            })
+        except (RuntimeError, TypeError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
 
     @routes.get("/theodore-director/v1/generated-video")
     async def generated_video(request):
