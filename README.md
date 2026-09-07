@@ -29,7 +29,7 @@ git clone https://github.com/northern-penguin/ComfyUI_Theodore_Director.git
 
 重启 ComfyUI。仓库已提交构建后的 `web/dist`，普通用户不需要安装 Node.js 或运行前端构建。
 
-“后处理 → 合并视频”需要 FFmpeg。程序依次查找 `THEODORE_DIRECTOR_FFMPEG` 环境变量、系统 `PATH` 和可选的 `imageio-ffmpeg` 内置程序；整合包若未提供 FFmpeg，请自行安装并加入 `PATH`。合并使用无损流复制，不重新编码，也不占用 ComfyUI 生成队列或 GPU。“后处理 → 删除视频”使用 `Send2Trash` 将结果移入系统回收站，该依赖会随节点一起安装。
+“后处理 → 合并视频”需要 FFmpeg。程序依次查找 `THEODORE_DIRECTOR_FFMPEG` 环境变量、系统 `PATH` 和可选的 `imageio-ffmpeg` 内置程序；整合包若未提供 FFmpeg，请自行安装并加入 `PATH`。合并使用无损流复制，不重新编码，也不占用 ComfyUI 生成队列或 GPU。“后处理 → 删除视频”和“项目设置 → 清空项目”使用 `Send2Trash` 将结果移入系统回收站，该依赖会随节点一起安装。
 
 然后导入仓库内的成品工作流：
 
@@ -61,6 +61,7 @@ Latent 方案 C 需要模型 `minimax_h3_latent_upscaler_3d_fp16.safetensors`，
 7. 全部分镜完成后进入“后处理 → 合并视频”，逐镜头选择一个结果并点击“合并所选视频”。
    也可以点击“打开结果文件夹”，直接在系统文件管理器中查看当前 Project name 与 Run ID 的全部分镜和合并结果。
 8. 需要清理结果时进入“后处理 → 删除视频”，逐条确认后将分镜视频或合并视频移入系统回收站；素材、latent 和尾帧不会被删除。
+9. 若要清除某个 Project name + Run ID 的全部生成内容，可在“项目设置”底部点击“清空项目”。确认后该运行目录会整体移入系统回收站，包括视频、latent、尾帧、分镜结果、manifest 和元数据；输入素材及其他 Run 不会被删除。
 
 固定引用先按 `fixedOrder` 排序；其余引用按提示词第一次出现的顺序排列。图片、视频和音频分别独立编号。素材库可以很大，但每个分镜必须通过 H3 限制预检。
 

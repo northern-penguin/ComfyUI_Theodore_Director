@@ -16,6 +16,8 @@ from .theodore_director.postprocess import (
     find_ffmpeg_executable,
     find_merged_videos,
     open_run_directory,
+    run_directory,
+    trash_run_directory,
     trash_video_result,
     validate_merge_selections,
 )
@@ -24,6 +26,11 @@ from .theodore_director.uploads import allocate_upload_path
 _ROUTES_REGISTERED = False
 MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
 _MERGE_LOCKS: dict[str, asyncio.Lock] = {}
+
+
+def _run_lock_key(root: Path, project_name: str, run_id: str) -> str:
+    """按实际运行目录加锁，避免不同原始名称清理后映射到同一路径。"""
+    return str(run_directory(root, project_name, run_id)).casefold()
 
 
 def _video_response(root: Path, videos: list[Path]) -> dict:
@@ -123,7 +130,7 @@ def register_routes() -> None:
                 run_id,
                 payload.get("selections", []),
             )
-            lock_key = f"{project_name}\0{run_id}"
+            lock_key = _run_lock_key(root, project_name, run_id)
             lock = _MERGE_LOCKS.setdefault(lock_key, asyncio.Lock())
             if lock.locked():
                 return web.json_response({"error": "当前项目已有一个视频合并任务正在执行"}, status=409)
@@ -183,7 +190,7 @@ def register_routes() -> None:
             requested_path = str(payload.get("path", ""))
             shot_id = str(payload.get("shotId", ""))
             root = Path(folder_paths.get_output_directory()).resolve()
-            lock_key = f"{project_name}\0{run_id}"
+            lock_key = _run_lock_key(root, project_name, run_id)
             lock = _MERGE_LOCKS.setdefault(lock_key, asyncio.Lock())
             if lock.locked():
                 return web.json_response({"error": "当前项目正在合并或删除视频，请稍后重试"}, status=409)
@@ -202,6 +209,35 @@ def register_routes() -> None:
                 "ok": True,
                 "path": candidate.relative_to(root).as_posix(),
                 "trashed": [path.relative_to(root).as_posix() for path in trashed],
+            })
+        except FileNotFoundError as exc:
+            return web.json_response({"error": str(exc)}, status=404)
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.post("/theodore-director/v1/project/clear")
+    async def clear_project(request):
+        """将当前 Project name 与 Run ID 的全部生成文件移入系统回收站。"""
+        try:
+            payload = await request.json()
+            project_name = str(payload.get("projectName", ""))
+            run_id = str(payload.get("runId", ""))
+            root = Path(folder_paths.get_output_directory()).resolve()
+            lock_key = _run_lock_key(root, project_name, run_id)
+            lock = _MERGE_LOCKS.setdefault(lock_key, asyncio.Lock())
+            if lock.locked():
+                return web.json_response({"error": "当前项目正在执行合并或删除操作，请稍后重试"}, status=409)
+
+            async with lock:
+                directory = await asyncio.to_thread(
+                    trash_run_directory,
+                    root,
+                    project_name,
+                    run_id,
+                )
+            return web.json_response({
+                "ok": True,
+                "path": directory.relative_to(root).as_posix(),
             })
         except FileNotFoundError as exc:
             return web.json_response({"error": str(exc)}, status=404)

@@ -1,6 +1,7 @@
 import { render } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { BatchAssetImport } from "./batch-asset-import";
+import { moveCurrentProjectToTrash } from "./clear-project";
 import { HighlightedTextarea } from "./highlighted-textarea";
 import { t, type Language } from "./i18n";
 import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoItem, type GeneratedVideoResponse } from "./generated-results";
@@ -116,6 +117,32 @@ async function writeClipboardText(value: string): Promise<void> {
     previousActive.setSelectionRange(previousSelection.start, previousSelection.end, previousSelection.direction ?? undefined);
   }
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
+}
+
+function ClearProjectSection({ language, projectName, runId, onCleared }: { language: Language; projectName: string; runId: string; onCleared: () => void }) {
+  const [clearing, setClearing] = useState(false);
+  const ready = Boolean(projectName.trim() && runId.trim());
+  const clearProject = async () => {
+    const target = `${projectName.trim()} / Run ${runId.trim()}`;
+    const message = language === "zh"
+      ? `确认清空 ${target}？\n\n该运行目录内的全部视频、latent、尾帧、结果文件和元数据都会移入系统回收站。输入素材及其他 Run 不会被删除。`
+      : `Clear ${target}?\n\nAll videos, latent files, tail frames, result files, and metadata in this run will be moved to the system trash. Input assets and other runs will not be deleted.`;
+    if (!window.confirm(message)) return;
+    setClearing(true);
+    try {
+      const path = await moveCurrentProjectToTrash(projectName, runId);
+      onCleared();
+      window.alert(language === "zh" ? `已移入系统回收站：${path}` : `Moved to system trash: ${path}`);
+    } catch (error) {
+      window.alert(`${language === "zh" ? "清空项目失败" : "Failed to clear project"}: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setClearing(false);
+    }
+  };
+  return <section class="td-clear-project">
+    <div><strong>{language === "zh" ? "清空当前项目" : "Clear current project"}</strong><p>{language === "zh" ? "清除当前 Project name + Run ID 的全部生成文件，并移入系统回收站。输入素材和其他 Run 不受影响。" : "Move every generated file for the current Project name + Run ID to the system trash. Input assets and other runs are unaffected."}</p></div>
+    <button class="danger" disabled={!ready || clearing} onClick={() => void clearProject()}>{clearing ? (language === "zh" ? "正在移入回收站…" : "Moving to trash…") : (language === "zh" ? "清空项目" : "Clear project")}</button>
+  </section>;
 }
 
 interface EditorProps { initial: DirectorPlan; onSave: (plan: DirectorPlan) => void; onClose: () => void; supportsSecondSampling: boolean; queueSecondPass?: QueueSecondPass }
@@ -285,7 +312,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
           <div class="td-flags"><label><input type="checkbox" checked={asset.enabled} onChange={(event) => mutate((draft) => { draft.assets[index].enabled = event.currentTarget.checked; })}/>启用</label><label><input type="checkbox" checked={asset.fixed} onChange={(event) => mutate((draft) => { draft.assets[index].fixed = event.currentTarget.checked; })}/>固定引用</label>{asset.kind === "video" && <label><input type="checkbox" checked={asset.includeVideoAudio} onChange={(event) => mutate((draft) => { draft.assets[index].includeVideoAudio = event.currentTarget.checked; })}/>启用视频伴音</label>}<button class="danger" onClick={() => mutate((draft) => { draft.assets.splice(index, 1); })}>删除</button></div>
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
-      {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label></section>}
+      {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label><ClearProjectSection language={language} projectName={plan.project.name} runId={plan.project.runId} onCleared={() => setResultRevision((value) => value + 1)}/></section>}
       {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>

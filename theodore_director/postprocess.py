@@ -174,6 +174,42 @@ def trash_video_result(
     return candidate, targets
 
 
+def trash_run_directory(
+    root: Path,
+    project_name: str,
+    run_id: str,
+    *,
+    trash: Callable[[str], None] | None = None,
+) -> Path:
+    """将当前 Project name + Run ID 的完整生成目录移入系统回收站。"""
+    if not str(project_name or "").strip():
+        raise ValueError("清空项目前必须填写 Project name")
+    if not str(run_id or "").strip():
+        raise ValueError("清空项目前必须填写 Run ID")
+
+    output_root = root.resolve()
+    paths = build_output_paths_from_values(project_name, run_id, "clear", 0)
+    unresolved = output_root / paths.run_prefix
+    lexical_director_root = output_root / "TheodoreDirector"
+    # Windows junction 与符号链接都可能把看似合法的项目名导向另一份用户数据。
+    is_link_like = lambda path: path.is_symlink() or bool(getattr(path, "is_junction", lambda: False)())
+    if is_link_like(lexical_director_root) or is_link_like(unresolved):
+        raise ValueError("拒绝清空符号链接或目录联接指向的运行目录")
+    directory = run_directory(output_root, project_name, run_id)
+    # 再次约束目录层级，绝不允许把 output 或 TheodoreDirector 根目录整体送入回收站。
+    director_root = (output_root / "TheodoreDirector").resolve(strict=False)
+    if directory.parent != director_root or directory in {output_root, director_root}:
+        raise ValueError("拒绝清空非当前运行目录")
+    if not directory.exists():
+        raise FileNotFoundError(f"当前项目运行目录不存在: {directory.name}")
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("当前项目运行目录不是可安全清空的普通文件夹")
+
+    # 整个运行目录一次移入回收站，失败时绝不回退为递归永久删除。
+    (trash or send2trash)(str(directory))
+    return directory
+
+
 def validate_merge_selections(
     root: Path,
     project_name: str,

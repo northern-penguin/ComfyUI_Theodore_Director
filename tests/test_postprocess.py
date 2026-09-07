@@ -10,6 +10,7 @@ from theodore_director.postprocess import (
     find_merged_videos,
     open_run_directory,
     resolve_deletable_video,
+    trash_run_directory,
     trash_video_result,
     validate_merge_selections,
 )
@@ -214,3 +215,70 @@ def test_resolve_deletable_video_rejects_symlink(tmp_path):
             link.relative_to(tmp_path).as_posix(),
             "shot_001",
         )
+
+
+def test_trash_run_directory_moves_complete_run_as_one_recoverable_target(tmp_path):
+    run_dir = tmp_path / "TheodoreDirector" / "Demo_run_001"
+    files = [
+        run_dir / "shot_001_video_00001_.mp4",
+        run_dir / "latent_context" / "clip.latent",
+        run_dir / "tail_frames" / "shot_001_tail.png",
+        run_dir / "shot_results" / "shot_001_result.json",
+        run_dir / "manifest.json",
+    ]
+    for path in files:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"generated")
+    trashed: list[str] = []
+
+    target = trash_run_directory(tmp_path, "Demo", "run_001", trash=trashed.append)
+
+    assert target == run_dir.resolve()
+    assert trashed == [str(run_dir.resolve())]
+    assert all(path.is_file() for path in files)
+
+
+def test_trash_run_directory_rejects_empty_missing_and_non_directory_targets(tmp_path):
+    with pytest.raises(ValueError, match="Project name"):
+        trash_run_directory(tmp_path, "", "run_001", trash=lambda _path: None)
+    with pytest.raises(ValueError, match="Run ID"):
+        trash_run_directory(tmp_path, "Demo", "", trash=lambda _path: None)
+    with pytest.raises(FileNotFoundError, match="不存在"):
+        trash_run_directory(tmp_path, "Demo", "run_001", trash=lambda _path: None)
+
+    run_path = tmp_path / "TheodoreDirector" / "Demo_run_001"
+    run_path.parent.mkdir(parents=True, exist_ok=True)
+    run_path.write_bytes(b"not a directory")
+    with pytest.raises(ValueError, match="普通文件夹"):
+        trash_run_directory(tmp_path, "Demo", "run_001", trash=lambda _path: None)
+
+
+def test_trash_run_directory_failure_never_falls_back_to_permanent_delete(tmp_path):
+    run_dir = tmp_path / "TheodoreDirector" / "Demo_run_001"
+    generated = run_dir / "latent_context" / "clip.latent"
+    generated.parent.mkdir(parents=True, exist_ok=True)
+    generated.write_bytes(b"keep")
+
+    def fail_trash(_path: str) -> None:
+        raise OSError("trash unavailable")
+
+    with pytest.raises(OSError, match="trash unavailable"):
+        trash_run_directory(tmp_path, "Demo", "run_001", trash=fail_trash)
+    assert generated.is_file()
+
+
+def test_trash_run_directory_rejects_link_to_another_run(tmp_path):
+    director = tmp_path / "TheodoreDirector"
+    other_run = director / "Other_run_001"
+    other_run.mkdir(parents=True)
+    protected = other_run / "protected.latent"
+    protected.write_bytes(b"keep")
+    linked_run = director / "Demo_run_001"
+    try:
+        linked_run.symlink_to(other_run, target_is_directory=True)
+    except OSError:
+        pytest.skip("当前系统未授权创建目录符号链接")
+
+    with pytest.raises(ValueError, match="符号链接|目录联接"):
+        trash_run_directory(tmp_path, "Demo", "run_001", trash=lambda _path: None)
+    assert protected.is_file()
