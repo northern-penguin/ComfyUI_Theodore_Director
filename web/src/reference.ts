@@ -35,6 +35,15 @@ export function referenceTokenIsGloballyAvailable(plan: DirectorPlan, rawAlias: 
   return activeShots.length > 0 && activeShots.every((shot) => referenceTokenIsAvailable(plan, shot, rawAlias));
 }
 
+export function clearAssetReferences(plan: DirectorPlan): DirectorPlan {
+  // 只移除计划内的素材引用及分镜禁用记录，不修改提示词，也不触碰本地素材文件。
+  return {
+    ...plan,
+    assets: [],
+    shots: plan.shots.map((shot) => ({ ...shot, disabledAssetIds: [] })),
+  };
+}
+
 // 浏览器端只负责即时预检；Python 后端始终是执行前校验的最终权威。
 export function previewReferences(plan: DirectorPlan, shot: DirectorShot): ResolvedPreview {
   const errors: string[] = [];

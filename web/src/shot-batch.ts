@@ -30,3 +30,8 @@ export function appendShots(shots: DirectorShot[], count: number, durationSecond
   const additions = Array.from({ length: count }, (_, index) => createShot(firstOrdinal + index, durationSeconds));
   return [...shots, ...additions];
 }
+
+export function resetStoryboard(durationSeconds = 5): DirectorShot[] {
+  // 计划协议要求至少保留一个启用镜头；重置时以一个无提示词的空白镜头代替零长度列表。
+  return [createShot(1, durationSeconds)];
+}

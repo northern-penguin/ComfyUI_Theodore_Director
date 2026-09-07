@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availableReferenceAssets, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
+import { availableReferenceAssets, clearAssetReferences, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
 import type { DirectorPlan } from "./types";
 
 const plan: DirectorPlan = {
@@ -63,5 +63,16 @@ describe("H3 reference preview", () => {
     expect(referenceTokenIsGloballyAvailable(global, "hero")).toBe(false);
     global.shots[1].enabled = false;
     expect(referenceTokenIsGloballyAvailable(global, "hero")).toBe(true);
+  });
+
+  it("clears only media references and per-shot disabled records", () => {
+    const source = structuredClone(plan);
+    source.shots[0].disabledAssetIds = ["hero"];
+    const cleared = clearAssetReferences(source);
+
+    expect(cleared.assets).toEqual([]);
+    expect(cleared.shots[0].disabledAssetIds).toEqual([]);
+    expect(cleared.shots[0].prompt).toBe(source.shots[0].prompt);
+    expect(source.assets).toHaveLength(2);
   });
 });

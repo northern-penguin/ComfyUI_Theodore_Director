@@ -8,8 +8,8 @@ import { generatedResultNumber, normalizeGeneratedResults, type GeneratedVideoIt
 import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl, MediaPreview } from "./media";
 import { PostprocessPanel } from "./postprocess";
-import { availableReferenceAssets, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
-import { appendShots } from "./shot-batch";
+import { availableReferenceAssets, clearAssetReferences, previewReferences, referenceTokenIsAvailable, referenceTokenIsGloballyAvailable, validatePlan } from "./reference";
+import { appendShots, resetStoryboard } from "./shot-batch";
 import type { AssetKind, DirectorAsset, DirectorPlan, DirectorShot, QueueSecondPass, SecondSamplingMode } from "./types";
 
 const uid = (prefix: string) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
@@ -119,7 +119,7 @@ async function writeClipboardText(value: string): Promise<void> {
   if (!copied) throw new Error("浏览器拒绝写入剪贴板");
 }
 
-function ClearProjectSection({ language, projectName, runId, onCleared }: { language: Language; projectName: string; runId: string; onCleared: () => void }) {
+function ProjectCleanupSection({ language, projectName, runId, onClearShots, onClearAssets, onProjectCleared }: { language: Language; projectName: string; runId: string; onClearShots: () => void; onClearAssets: () => void; onProjectCleared: () => void }) {
   const [clearing, setClearing] = useState(false);
   const ready = Boolean(projectName.trim() && runId.trim());
   const clearProject = async () => {
@@ -131,7 +131,7 @@ function ClearProjectSection({ language, projectName, runId, onCleared }: { lang
     setClearing(true);
     try {
       const path = await moveCurrentProjectToTrash(projectName, runId);
-      onCleared();
+      onProjectCleared();
       window.alert(language === "zh" ? `已移入系统回收站：${path}` : `Moved to system trash: ${path}`);
     } catch (error) {
       window.alert(`${language === "zh" ? "清空项目失败" : "Failed to clear project"}: ${error instanceof Error ? error.message : String(error)}`);
@@ -139,9 +139,22 @@ function ClearProjectSection({ language, projectName, runId, onCleared }: { lang
       setClearing(false);
     }
   };
-  return <section class="td-clear-project">
-    <div><strong>{language === "zh" ? "清空当前项目" : "Clear current project"}</strong><p>{language === "zh" ? "清除当前 Project name + Run ID 的全部生成文件，并移入系统回收站。输入素材和其他 Run 不受影响。" : "Move every generated file for the current Project name + Run ID to the system trash. Input assets and other runs are unaffected."}</p></div>
-    <button class="danger" disabled={!ready || clearing} onClick={() => void clearProject()}>{clearing ? (language === "zh" ? "正在移入回收站…" : "Moving to trash…") : (language === "zh" ? "清空项目" : "Clear project")}</button>
+  const clearShots = () => {
+    const message = language === "zh"
+      ? "确认清空全部分镜及其正向、负向提示词？\n\n操作后会保留一个空白镜头以便继续编辑。素材库、全局提示词前后缀和磁盘生成文件不会被删除。"
+      : "Clear every shot and its positive and negative prompts?\n\nOne blank shot will remain for editing. Media, global prompt prefix/suffix, and generated files on disk will not be deleted.";
+    if (window.confirm(message)) onClearShots();
+  };
+  const clearAssets = () => {
+    const message = language === "zh"
+      ? "确认清空素材库中的全部引用？\n\n素材条目会从当前工作流中移除，但本地图片、视频和音频文件不会被删除。提示词中的引用文本会保留并显示为不可用。"
+      : "Clear every media reference from this workflow?\n\nMedia entries will be removed, but local image, video, and audio files will not be deleted. Reference text in prompts will remain and be shown as unavailable.";
+    if (window.confirm(message)) onClearAssets();
+  };
+  return <section class="td-project-cleanup">
+    <article><div><strong>{language === "zh" ? "清空分镜" : "Clear shots"}</strong><p>{language === "zh" ? "删除全部分镜及其提示词，并保留一个空白镜头。不会删除磁盘生成文件。" : "Remove all shots and their prompts, leaving one blank shot. Generated files remain on disk."}</p></div><button class="danger" onClick={clearShots}>{language === "zh" ? "清空分镜" : "Clear shots"}</button></article>
+    <article><div><strong>{language === "zh" ? "清空素材库" : "Clear media library"}</strong><p>{language === "zh" ? "只移除当前工作流中的素材引用；本地图片、视频和音频文件保持不变。" : "Remove media references from this workflow only; local image, video, and audio files remain untouched."}</p></div><button class="danger" onClick={clearAssets}>{language === "zh" ? "清空素材库" : "Clear media"}</button></article>
+    <article><div><strong>{language === "zh" ? "清空当前项目" : "Clear current project"}</strong><p>{language === "zh" ? "清除当前 Project name + Run ID 的全部生成文件，并移入系统回收站。输入素材和其他 Run 不受影响。" : "Move every generated file for the current Project name + Run ID to the system trash. Input assets and other runs are unaffected."}</p></div><button class="danger" disabled={!ready || clearing} onClick={() => void clearProject()}>{clearing ? (language === "zh" ? "正在移入回收站…" : "Moving to trash…") : (language === "zh" ? "清空项目" : "Clear project")}</button></article>
   </section>;
 }
 
@@ -312,7 +325,7 @@ function Editor({ initial, onSave, onClose, supportsSecondSampling, queueSecondP
           <div class="td-flags"><label><input type="checkbox" checked={asset.enabled} onChange={(event) => mutate((draft) => { draft.assets[index].enabled = event.currentTarget.checked; })}/>启用</label><label><input type="checkbox" checked={asset.fixed} onChange={(event) => mutate((draft) => { draft.assets[index].fixed = event.currentTarget.checked; })}/>固定引用</label>{asset.kind === "video" && <label><input type="checkbox" checked={asset.includeVideoAudio} onChange={(event) => mutate((draft) => { draft.assets[index].includeVideoAudio = event.currentTarget.checked; })}/>启用视频伴音</label>}<button class="danger" onClick={() => mutate((draft) => { draft.assets.splice(index, 1); })}>删除</button></div>
         </div><MediaPreview asset={asset}/></div></article>)}
       </div>}
-      {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label><ClearProjectSection language={language} projectName={plan.project.name} runId={plan.project.runId} onCleared={() => setResultRevision((value) => value + 1)}/></section>}
+      {tab === "settings" && <section class="td-form settings"><label>Project name<input value={plan.project.name} onInput={(event) => mutate((draft) => { draft.project.name = event.currentTarget.value; })}/></label><label>Run ID<input value={plan.project.runId} onInput={(event) => mutate((draft) => { draft.project.runId = event.currentTarget.value; })}/></label><label>FPS<input type="number" value={plan.defaults.fps} onInput={(event) => mutate((draft) => { draft.defaults.fps = Number(event.currentTarget.value); })}/></label><label>Base seed<input type="number" value={plan.defaults.baseSeed} onInput={(event) => mutate((draft) => { draft.defaults.baseSeed = Number(event.currentTarget.value); })}/></label><label>提示词前缀<HighlightedTextarea value={plan.promptPrefix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptPrefix = event.currentTarget.value; })}/></label><label>提示词后缀<HighlightedTextarea value={plan.promptSuffix} isReferenceValid={(alias) => referenceTokenIsGloballyAvailable(plan, alias)} onInput={(event) => mutate((draft) => { draft.promptSuffix = event.currentTarget.value; })}/></label><ProjectCleanupSection language={language} projectName={plan.project.name} runId={plan.project.runId} onClearShots={() => { mutate((draft) => { draft.shots = resetStoryboard(); }); setSelected(0); setBatchShots([]); }} onClearAssets={() => { mutate((draft) => { const cleared = clearAssetReferences(draft); draft.assets = cleared.assets; draft.shots = cleared.shots; }); setCopiedAssetId(""); setUploadNames({}); }} onProjectCleared={() => setResultRevision((value) => value + 1)}/></section>}
       {tab === "postprocess" && <PostprocessPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
     </main>
     {batchOpen && <div class="td-batch-overlay" role="presentation"><section class="td-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量处理镜头" : "Batch edit shots"}>
