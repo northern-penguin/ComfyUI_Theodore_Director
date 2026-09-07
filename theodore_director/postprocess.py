@@ -8,9 +8,12 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Any
+from typing import Any, Callable
+
+from send2trash import send2trash
 
 from .paths import VIDEO_EXTENSIONS, build_output_paths_from_values, find_generated_videos
+from .video_results import metadata_path
 
 _MERGED_VIDEO = re.compile(r"^merged_video_(\d+)_?\.mp4$", re.IGNORECASE)
 
@@ -83,6 +86,92 @@ def allocate_merged_video(root: Path, project_name: str, run_id: str) -> Path:
         if match:
             largest = max(largest, int(match.group(1)))
     return directory / f"merged_video_{largest + 1:05d}_.mp4"
+
+
+def resolve_deletable_video(
+    root: Path,
+    project_name: str,
+    run_id: str,
+    kind: str,
+    requested_path: str,
+    shot_id: str = "",
+) -> tuple[Path, list[Path]]:
+    """把前端选择解析成当前运行目录内、由结果枚举器认可的视频。"""
+    output_root = root.resolve()
+    directory = run_directory(output_root, project_name, run_id)
+    normalized = str(requested_path or "").strip().replace("\\", "/")
+    raw = Path(normalized)
+    if not normalized or raw.is_absolute():
+        raise ValueError("删除请求必须提供 output 目录内的视频相对路径")
+
+    unresolved = output_root / raw
+    # 禁止通过符号链接把回收站操作导向运行目录之外的用户文件。
+    if unresolved.is_symlink():
+        raise ValueError("拒绝删除符号链接视频")
+    prospective = unresolved.resolve(strict=False)
+    try:
+        prospective.relative_to(directory)
+    except ValueError as error:
+        raise ValueError("拒绝删除当前 Project name 与 Run ID 运行目录之外的文件") from error
+    try:
+        candidate = unresolved.resolve(strict=True)
+    except FileNotFoundError as error:
+        raise FileNotFoundError(f"要删除的视频已经不存在: {normalized}") from error
+    try:
+        candidate.relative_to(directory)
+    except ValueError as error:
+        raise ValueError("拒绝删除当前 Project name 与 Run ID 目录之外的文件") from error
+    if not candidate.is_file() or candidate.suffix.lower() not in VIDEO_EXTENSIONS:
+        raise ValueError("删除目标不是受支持的视频文件")
+
+    if kind == "shot":
+        stable_shot_id = str(shot_id or "").strip()
+        if not stable_shot_id:
+            raise ValueError("删除分镜视频时必须提供 shotId")
+        available = find_generated_videos(output_root, project_name, run_id, stable_shot_id, -1)
+    elif kind == "merged":
+        available = find_merged_videos(output_root, project_name, run_id)
+    else:
+        raise ValueError("删除类型必须是 shot 或 merged")
+    if candidate not in available:
+        raise ValueError("选择的文件不属于当前项目的对应视频结果")
+
+    targets = [candidate]
+    sidecar = metadata_path(candidate)
+    if sidecar.exists():
+        if sidecar.is_symlink() or not sidecar.is_file():
+            raise ValueError("视频伴随元数据不是可安全删除的普通文件")
+        resolved_sidecar = sidecar.resolve(strict=True)
+        try:
+            resolved_sidecar.relative_to(directory)
+        except ValueError as error:
+            raise ValueError("拒绝删除当前运行目录之外的伴随元数据") from error
+        targets.append(resolved_sidecar)
+    return candidate, targets
+
+
+def trash_video_result(
+    root: Path,
+    project_name: str,
+    run_id: str,
+    kind: str,
+    requested_path: str,
+    shot_id: str = "",
+    *,
+    trash: Callable[[list[str]], None] | None = None,
+) -> tuple[Path, list[Path]]:
+    """将一个已验证视频及其伴随元数据移入系统回收站。"""
+    candidate, targets = resolve_deletable_video(
+        root,
+        project_name,
+        run_id,
+        kind,
+        requested_path,
+        shot_id,
+    )
+    # 一次提交整组路径；失败时绝不回退为不可恢复的 unlink。
+    (trash or send2trash)([str(path) for path in targets])
+    return candidate, targets
 
 
 def validate_merge_selections(

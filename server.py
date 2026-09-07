@@ -16,6 +16,7 @@ from .theodore_director.postprocess import (
     find_ffmpeg_executable,
     find_merged_videos,
     open_run_directory,
+    trash_video_result,
     validate_merge_selections,
 )
 from .theodore_director.uploads import allocate_upload_path
@@ -169,6 +170,42 @@ def register_routes() -> None:
                     if list_path is not None:
                         list_path.unlink(missing_ok=True)
         except (OSError, RuntimeError, TypeError, ValueError, FileNotFoundError) as exc:
+            return web.json_response({"error": str(exc)}, status=400)
+
+    @routes.post("/theodore-director/v1/postprocess/delete-video")
+    async def delete_video(request):
+        """仅将当前项目枚举到的视频及其伴随元数据移入系统回收站。"""
+        try:
+            payload = await request.json()
+            project_name = str(payload.get("projectName", ""))
+            run_id = str(payload.get("runId", ""))
+            kind = str(payload.get("kind", ""))
+            requested_path = str(payload.get("path", ""))
+            shot_id = str(payload.get("shotId", ""))
+            root = Path(folder_paths.get_output_directory()).resolve()
+            lock_key = f"{project_name}\0{run_id}"
+            lock = _MERGE_LOCKS.setdefault(lock_key, asyncio.Lock())
+            if lock.locked():
+                return web.json_response({"error": "当前项目正在合并或删除视频，请稍后重试"}, status=409)
+
+            async with lock:
+                candidate, trashed = await asyncio.to_thread(
+                    trash_video_result,
+                    root,
+                    project_name,
+                    run_id,
+                    kind,
+                    requested_path,
+                    shot_id,
+                )
+            return web.json_response({
+                "ok": True,
+                "path": candidate.relative_to(root).as_posix(),
+                "trashed": [path.relative_to(root).as_posix() for path in trashed],
+            })
+        except FileNotFoundError as exc:
+            return web.json_response({"error": str(exc)}, status=404)
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
             return web.json_response({"error": str(exc)}, status=400)
 
     @routes.post("/theodore-director/v1/assets")

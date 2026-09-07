@@ -5,6 +5,7 @@ import { LazyVideoThumbnail } from "./lazy-video-thumbnail";
 import { assetFileName, comfyViewUrl } from "./media";
 import { buildMergeSelections, postprocessShotEntries, selectShotRange } from "./postprocess-selection";
 import { StandaloneSecondPassPanel } from "./standalone-second-pass";
+import { DeleteVideosPanel } from "./delete-videos";
 import type { DirectorPlan, QueueSecondPass } from "./types";
 
 interface PostprocessProps {
@@ -46,13 +47,14 @@ function mergedResultUrl(plan: DirectorPlan): string {
 }
 
 export function PostprocessPanel({ plan, language, queueSecondPass }: PostprocessProps) {
-  const [mode, setMode] = useState<"merge" | "second-pass">("merge");
+  const [mode, setMode] = useState<"merge" | "second-pass" | "delete">("merge");
   return <section class="td-postprocess-shell">
     <div class="td-post-mode-tabs" role="tablist">
       <button class={mode === "merge" ? "active" : ""} role="tab" aria-selected={mode === "merge"} onClick={() => setMode("merge")}>{language === "zh" ? "合并视频" : "Merge videos"}</button>
       <button class={mode === "second-pass" ? "active" : ""} role="tab" aria-selected={mode === "second-pass"} onClick={() => setMode("second-pass")}>{language === "zh" ? "单独二采" : "Standalone second pass"}</button>
+      <button class={mode === "delete" ? "active" : ""} role="tab" aria-selected={mode === "delete"} onClick={() => setMode("delete")}>{language === "zh" ? "删除视频" : "Delete videos"}</button>
     </div>
-    {mode === "merge" ? <MergePanel plan={plan} language={language}/> : <StandaloneSecondPassPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/>}
+    {mode === "merge" ? <MergePanel plan={plan} language={language}/> : mode === "second-pass" ? <StandaloneSecondPassPanel plan={plan} language={language} queueSecondPass={queueSecondPass}/> : <DeleteVideosPanel plan={plan} language={language}/>}
   </section>;
 }
 
