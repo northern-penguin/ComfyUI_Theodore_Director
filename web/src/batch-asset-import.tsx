@@ -1,5 +1,6 @@
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { createBatchDrafts, detectAssetKind, importedAssetFromDraft, validateBatchAlias, type BatchAssetDraft } from "./batch-assets";
+import { folderAssetFilesFromDrop, folderAssetFilesFromFileList, type FolderAssetFile } from "./folder-assets";
 import type { Language } from "./i18n";
 import { readMediaDuration } from "./media-metadata";
 import type { AssetKind, DirectorAsset } from "./types";
@@ -20,14 +21,43 @@ export function BatchAssetImport({ language, assets, projectName, onClose, onImp
   const [drafts, setDrafts] = useState<BatchAssetDraft[]>([]);
   const [rejected, setRejected] = useState<string[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanFound, setScanFound] = useState(0);
   const [importing, setImporting] = useState(false);
   const draftsRef = useRef<BatchAssetDraft[]>([]);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const lifecycleRef = useRef(0);
   draftsRef.current = drafts;
   const existingAliases = assets.map((asset) => asset.alias);
 
+  useEffect(() => {
+    // Chromium/Edge 使用 webkitdirectory 暴露目录选择；directory 兼容部分嵌入式浏览器。
+    folderInputRef.current?.setAttribute("webkitdirectory", "");
+    folderInputRef.current?.setAttribute("directory", "");
+    return () => { lifecycleRef.current += 1; };
+  }, []);
+
   const updateDraft = (id: string, update: Partial<BatchAssetDraft>) => setDrafts((current) => current.map((item) => item.id === id ? { ...item, ...update } : item));
 
-  const addFiles = (incoming: File[]) => {
+  const probeDurations = (prepared: BatchAssetDraft[], lifecycle: number) => {
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < prepared.length && lifecycleRef.current === lifecycle) {
+        const draft = prepared[cursor++];
+        if (draft.kind === "image") continue;
+        const duration = await readMediaDuration(draft.file, draft.kind);
+        if (duration == null || lifecycleRef.current !== lifecycle) continue;
+        setDrafts((current) => current.map((item) => {
+          // 用户已经手动修改时长或类型后，不用迟到的元数据结果覆盖其输入。
+          return item.id === draft.id && item.kind === draft.kind && item.durationSeconds === 2 ? { ...item, durationSeconds: duration } : item;
+        }));
+      }
+    };
+    // 文件夹可能包含大量媒体，限制并发可避免同时创建过多 video/audio 元素。
+    void Promise.all(Array.from({ length: Math.min(4, prepared.length) }, worker));
+  };
+
+  const addFiles = (incoming: FolderAssetFile[]) => {
     if (!incoming.length || importing) return;
     const occupied = [...existingAliases, ...draftsRef.current.map((item) => item.alias)];
     const prepared = createBatchDrafts(incoming, occupied, batchUid);
@@ -35,15 +65,25 @@ export function BatchAssetImport({ language, assets, projectName, onClose, onImp
     if (!prepared.drafts.length) return;
     setDrafts((current) => [...current, ...prepared.drafts]);
     // 元数据读取与文件上传分离，用户可以在真正写盘前检查和修改内容。
-    prepared.drafts.forEach((draft) => {
-      void readMediaDuration(draft.file, draft.kind).then((duration) => {
-        if (duration == null) return;
-        setDrafts((current) => current.map((item) => {
-          // 用户已经手动修改时长或类型后，不用迟到的元数据结果覆盖其输入。
-          return item.id === draft.id && item.kind === draft.kind && item.durationSeconds === 2 ? { ...item, durationSeconds: duration } : item;
-        }));
-      });
-    });
+    probeDurations(prepared.drafts, lifecycleRef.current);
+  };
+
+  const scanFiles = async (operation: (onFound: (count: number) => void, isActive: () => boolean) => Promise<FolderAssetFile[]>) => {
+    if (scanning || importing) return;
+    const lifecycle = lifecycleRef.current;
+    setScanning(true);
+    setScanFound(0);
+    try {
+      const isActive = () => lifecycleRef.current === lifecycle;
+      const incoming = await operation((count) => { if (isActive()) setScanFound(count); }, isActive);
+      if (lifecycleRef.current !== lifecycle) return;
+      setScanFound(incoming.length);
+      addFiles(incoming);
+    } catch (error) {
+      if (lifecycleRef.current === lifecycle) setRejected((current) => [...current, String(error)]);
+    } finally {
+      if (lifecycleRef.current === lifecycle) setScanning(false);
+    }
   };
 
   const editableDrafts = drafts.filter((item) => item.status !== "imported");
@@ -61,7 +101,7 @@ export function BatchAssetImport({ language, assets, projectName, onClose, onImp
   const startImport = async () => {
     const snapshot = draftsRef.current;
     const queue = snapshot.filter((item) => item.status === "pending" || item.status === "error");
-    if (!queue.length) return;
+    if (!queue.length || scanning) return;
     if (queue.some(validationError)) {
       window.alert(language === "zh" ? "请先修正列表中标红的项目。" : "Fix the highlighted rows before importing.");
       return;
@@ -91,21 +131,29 @@ export function BatchAssetImport({ language, assets, projectName, onClose, onImp
   const importedCount = drafts.filter((item) => item.status === "imported").length;
   const errorCount = drafts.filter((item) => item.status === "error").length;
   const pendingCount = drafts.length - importedCount;
+  const closePanel = () => {
+    // 递增生命周期令尚未开始的扫描和元数据任务停止，不影响浏览器中的原文件。
+    lifecycleRef.current += 1;
+    onClose();
+  };
 
   return <div class="td-batch-overlay" role="presentation"><section class="td-asset-batch-panel" role="dialog" aria-modal="true" aria-label={language === "zh" ? "批量导入素材" : "Batch import assets"}>
-    <header class="td-batch-header"><div><h2>{language === "zh" ? "批量导入素材" : "Batch import assets"}</h2><p>{language === "zh" ? "可混合选择图片、视频和音频；确认列表后再写入素材库。" : "Select images, videos, and audio together; review before uploading."}</p></div><button disabled={importing} aria-label={language === "zh" ? "关闭" : "Close"} onClick={onClose}>×</button></header>
-    <label class={`td-asset-dropzone ${dragging ? "dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); addFiles(Array.from(event.dataTransfer?.files ?? [])); }}>
-      <strong>{language === "zh" ? "拖拽素材到这里，或点击选择多个文件" : "Drop media here, or click to select multiple files"}</strong>
-      <span>{language === "zh" ? "支持图片、视频、音频混合导入" : "Mixed image, video, and audio selection is supported"}</span>
-      <input type="file" multiple accept="image/*,video/*,audio/*" disabled={importing} onChange={(event) => { addFiles(Array.from(event.currentTarget.files ?? [])); event.currentTarget.value = ""; }}/>
-    </label>
+    <header class="td-batch-header"><div><h2>{language === "zh" ? "批量导入素材" : "Batch import assets"}</h2><p>{language === "zh" ? "可混合选择文件或递归导入文件夹；确认列表后再写入素材库。" : "Select files or recursively import folders; review before uploading."}</p></div><button disabled={importing} aria-label={language === "zh" ? "关闭" : "Close"} onClick={closePanel}>×</button></header>
+    <div class={`td-asset-dropzone ${dragging ? "dragging" : ""}`} onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={(event) => { event.preventDefault(); setDragging(false); const transfer = event.dataTransfer; if (transfer) void scanFiles((onFound, isActive) => folderAssetFilesFromDrop(transfer, onFound, isActive)); }}>
+      <strong>{scanning ? (language === "zh" ? `正在扫描文件夹…已发现 ${scanFound} 个文件` : `Scanning folders… ${scanFound} files found`) : (language === "zh" ? "拖拽文件或文件夹到这里" : "Drop files or folders here")}</strong>
+      <span>{language === "zh" ? "递归识别子文件夹中的图片、视频和音频" : "Images, videos, and audio are detected recursively"}</span>
+      <div class="td-asset-picker-actions">
+        <label class="td-asset-picker-button">{language === "zh" ? "选择多个文件" : "Choose files"}<input type="file" multiple accept="image/*,video/*,audio/*" disabled={importing || scanning} onChange={(event) => { addFiles(folderAssetFilesFromFileList(event.currentTarget.files ?? [])); event.currentTarget.value = ""; }}/></label>
+        <label class="td-asset-picker-button">{language === "zh" ? "选择文件夹" : "Choose folder"}<input ref={folderInputRef} type="file" multiple disabled={importing || scanning} onChange={(event) => { const incoming = folderAssetFilesFromFileList(event.currentTarget.files ?? []); event.currentTarget.value = ""; void scanFiles(async (onFound) => { onFound(incoming.length); return incoming; }); }}/></label>
+      </div>
+    </div>
     {rejected.length > 0 && <div class="td-asset-batch-warning"><span>{language === "zh" ? `已跳过 ${rejected.length} 个不支持的文件：${rejected.join("、")}` : `Skipped ${rejected.length} unsupported files: ${rejected.join(", ")}`}</span><button onClick={() => setRejected([])}>×</button></div>}
     <div class="td-asset-batch-summary"><span>{language === "zh" ? `共 ${drafts.length} 项 · 已导入 ${importedCount} · 待处理 ${pendingCount}${errorCount ? ` · 失败 ${errorCount}` : ""}` : `${drafts.length} items · ${importedCount} imported · ${pendingCount} pending${errorCount ? ` · ${errorCount} failed` : ""}`}</span><button disabled={importing || !drafts.length} onClick={() => setDrafts([])}>{language === "zh" ? "清空列表" : "Clear list"}</button></div>
     <div class="td-asset-batch-list">
       <div class="td-asset-batch-row td-asset-batch-head"><span>{language === "zh" ? "状态 / 文件" : "Status / File"}</span><span>{language === "zh" ? "别名" : "Alias"}</span><span>{language === "zh" ? "类型" : "Kind"}</span><span>{language === "zh" ? "时长" : "Duration"}</span><span>{language === "zh" ? "视频伴音" : "Video audio"}</span><span>{language === "zh" ? "操作" : "Action"}</span></div>
       {!drafts.length && <div class="td-asset-batch-empty">{language === "zh" ? "尚未选择素材" : "No media selected"}</div>}
       {drafts.map((draft) => { const rowError = validationError(draft); const locked = importing || draft.status === "imported" || draft.status === "uploading"; return <div class={`td-asset-batch-row ${rowError || draft.status === "error" ? "invalid" : ""} ${draft.status === "imported" ? "imported" : ""}`} key={draft.id}>
-        <div class="td-asset-batch-file"><strong title={draft.file.name}>{draft.file.name}</strong><small>{(draft.file.size / 1024 / 1024).toFixed(1)} MB · {draft.status === "pending" ? (language === "zh" ? "待导入" : "Pending") : draft.status === "uploading" ? (language === "zh" ? "上传中" : "Uploading") : draft.status === "imported" ? (language === "zh" ? "已完成" : "Imported") : (language === "zh" ? "失败" : "Failed")}</small>{(rowError || draft.error) && <em title={rowError || draft.error}>{rowError || draft.error}</em>}</div>
+        <div class="td-asset-batch-file"><strong title={draft.sourcePath}>{draft.sourcePath}</strong><small>{(draft.file.size / 1024 / 1024).toFixed(1)} MB · {draft.status === "pending" ? (language === "zh" ? "待导入" : "Pending") : draft.status === "uploading" ? (language === "zh" ? "上传中" : "Uploading") : draft.status === "imported" ? (language === "zh" ? "已完成" : "Imported") : (language === "zh" ? "失败" : "Failed")}</small>{(rowError || draft.error) && <em title={rowError || draft.error}>{rowError || draft.error}</em>}</div>
         <input disabled={locked} value={draft.alias} onInput={(event) => updateDraft(draft.id, { alias: event.currentTarget.value, status: "pending", error: "" })}/>
         <select disabled={locked} value={draft.kind} onChange={(event) => { const kind = event.currentTarget.value as AssetKind; updateDraft(draft.id, { kind, durationSeconds: kind === "image" ? null : (draft.durationSeconds ?? 2), includeVideoAudio: kind === "video" && draft.includeVideoAudio, status: "pending", error: "" }); }}><option value="image">{kindLabel("image", language)}</option><option value="video">{kindLabel("video", language)}</option><option value="audio">{kindLabel("audio", language)}</option></select>
         <label class="td-asset-batch-duration"><input type="number" min="0.1" step="0.1" disabled={locked || draft.kind === "image"} value={draft.durationSeconds ?? ""} onInput={(event) => updateDraft(draft.id, { durationSeconds: event.currentTarget.value ? Number(event.currentTarget.value) : null, status: "pending", error: "" })}/><span>{draft.kind === "image" ? "—" : (language === "zh" ? "秒" : "sec")}</span></label>
@@ -113,6 +161,6 @@ export function BatchAssetImport({ language, assets, projectName, onClose, onImp
         <button class="danger" disabled={locked} onClick={() => setDrafts((current) => current.filter((item) => item.id !== draft.id))}>{language === "zh" ? "移除" : "Remove"}</button>
       </div>; })}
     </div>
-    <footer><button disabled={importing} onClick={onClose}>{language === "zh" ? "关闭" : "Close"}</button><button class="primary" disabled={importing || !drafts.some((item) => item.status === "pending" || item.status === "error")} onClick={() => void startImport()}>{importing ? (language === "zh" ? "正在导入…" : "Importing…") : errorCount ? (language === "zh" ? "重试失败项" : "Retry failed") : (language === "zh" ? "开始导入" : "Start import")}</button></footer>
+    <footer><button disabled={importing} onClick={closePanel}>{language === "zh" ? "关闭" : "Close"}</button><button class="primary" disabled={importing || scanning || !drafts.some((item) => item.status === "pending" || item.status === "error")} onClick={() => void startImport()}>{scanning ? (language === "zh" ? "正在扫描…" : "Scanning…") : importing ? (language === "zh" ? "正在导入…" : "Importing…") : errorCount ? (language === "zh" ? "重试失败项" : "Retry failed") : (language === "zh" ? "开始导入" : "Start import")}</button></footer>
   </section></div>;
 }

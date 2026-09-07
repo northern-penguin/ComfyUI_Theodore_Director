@@ -28,6 +28,18 @@ describe("批量素材导入", () => {
     expect(result.rejected).toEqual(["x.exe"]);
   });
 
+  it("按文件夹来源路径排序并在列表中保留该路径", () => {
+    let ordinal = 0;
+    const result = createBatchDrafts([
+      { file: fakeFile("same.png"), relativePath: "root/z/same.png" },
+      { file: fakeFile("same.png"), relativePath: "root/a/same.png" },
+    ], [], () => `id_${++ordinal}`);
+    expect(result.drafts.map((item) => [item.sourcePath, item.alias])).toEqual([
+      ["root/a/same.png", "same"],
+      ["root/z/same.png", "same_2"],
+    ]);
+  });
+
   it("校验非法和重复别名", () => {
     expect(validateBatchAlias("bad alias", [], ["bad alias"])).toBe("invalid");
     expect(validateBatchAlias("hero", ["Hero"], ["hero"])).toBe("duplicate");

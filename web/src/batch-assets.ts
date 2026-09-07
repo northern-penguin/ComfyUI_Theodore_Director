@@ -9,12 +9,18 @@ const EXTENSION_KINDS: Record<string, AssetKind> = {
 export interface BatchAssetDraft {
   id: string;
   file: File;
+  sourcePath: string;
   alias: string;
   kind: AssetKind;
   durationSeconds: number | null;
   includeVideoAudio: boolean;
   status: "pending" | "uploading" | "imported" | "error";
   error: string;
+}
+
+export interface BatchAssetSource {
+  file: File;
+  relativePath: string;
 }
 
 export function detectAssetKind(file: Pick<File, "name" | "type">): AssetKind | null {
@@ -55,19 +61,22 @@ export function validateBatchAlias(alias: string, occupiedAliases: Iterable<stri
   return matches.length > 1 ? "duplicate" : null;
 }
 
-export function createBatchDrafts(files: File[], occupiedAliases: Iterable<string>, idFactory: () => string): { drafts: BatchAssetDraft[]; rejected: string[] } {
+export function createBatchDrafts(files: Array<File | BatchAssetSource>, occupiedAliases: Iterable<string>, idFactory: () => string): { drafts: BatchAssetDraft[]; rejected: string[] } {
   const used = new Set(Array.from(occupiedAliases));
   const drafts: BatchAssetDraft[] = [];
   const rejected: string[] = [];
-  for (const file of files) {
+  const sources = files.map((value) => "file" in value ? value : ({ file: value, relativePath: value.webkitRelativePath || value.name }));
+  sources.sort((left, right) => left.relativePath.localeCompare(right.relativePath, "en", { numeric: true, sensitivity: "base" }));
+  for (const source of sources) {
+    const { file } = source;
     const kind = detectAssetKind(file);
     if (!kind) {
-      rejected.push(file.name);
+      rejected.push(source.relativePath);
       continue;
     }
     const alias = uniqueAlias(aliasFromFileName(file.name), used);
     used.add(alias);
-    drafts.push({ id: idFactory(), file, alias, kind, durationSeconds: kind === "image" ? null : 2, includeVideoAudio: false, status: "pending", error: "" });
+    drafts.push({ id: idFactory(), file, sourcePath: source.relativePath, alias, kind, durationSeconds: kind === "image" ? null : 2, includeVideoAudio: false, status: "pending", error: "" });
   }
   return { drafts, rejected };
 }
